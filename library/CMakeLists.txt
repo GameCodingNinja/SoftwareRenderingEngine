@@ -1,0 +1,80 @@
+
+# Add the files to the library
+add_library(
+    library STATIC
+        gui/uibutton.cpp
+        gui/menumanager.cpp
+        gui/menutree.cpp
+        gui/uicontrol.cpp
+        gui/uicontrolfactory.cpp
+        gui/menu.cpp
+        gui/uilabel.cpp
+        gui/menusprite.cpp
+        gui/uisubcontrol.cpp
+        gui/ismartguibase.cpp
+        gui/uibuttonlist.cpp
+        gui/uicheckbox.cpp
+        gui/uislider.cpp
+        gui/uiscrollbox.cpp
+        objectdata/objectdata2d.cpp
+        objectdata/objectdatamanager2d.cpp
+        objectdata/objectphysicsdata2d.cpp
+        objectdata/objectvisualdata2d.cpp
+        script/scriptmanager.cpp
+        script/scriptglobals.cpp
+        script/scriptcolor.cpp
+        script/scriptcomponent.cpp
+        softwareRender/softwareRender.cpp
+        softwareRender/srtexture.cpp
+        softwareRender/triangleslope.cpp
+        system/worldcamera.cpp
+        system/basegame.cpp
+        system/device.cpp
+        utilities/xmlparsehelper.cpp
+        utilities/statcounter.cpp
+        utilities/genfunc.cpp
+        utilities/settings.cpp
+        utilities/highresolutiontimer.cpp
+        utilities/timer.cpp
+        utilities/xmlParser.cpp
+        utilities/mathfunc.cpp
+        managers/texturemanager.cpp
+        managers/soundmanager.cpp
+        managers/managerbase.cpp
+        managers/fontmanager.cpp
+        managers/vertexbuffermanager.cpp
+        managers/shadermanager.cpp
+        managers/actionmanager.cpp
+        managers/signalmanager.cpp
+        physics/physicsworldmanager.cpp
+        physics/physicsworld.cpp
+        2d/font.cpp
+        2d/sprite2d.cpp
+        2d/physicscomponent2d.cpp
+        2d/visualcomponent2d.cpp
+        2d/spritescriptcomponent2d.cpp
+        common/object.cpp
+        common/sound.cpp
+        common/playlist.cpp
+        common/worldvalue.cpp
+        common/shaderdata.cpp
+        common/matrix.cpp
+        common/bitmask.cpp
+        soil/stb_image_aug.c
+        soil/SOIL.c
+        soil/image_helper.c
+        soil/image_DXT.c )
+
+include_directories(
+    gui
+    objectdata
+    script
+    softwareRender
+    system
+    utilities
+    managers
+    physics
+    2d
+    common
+    soil )
+

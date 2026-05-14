@@ -1,0 +1,42 @@
+<objectDataList2D>
+
+  <!-- DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT -->
+  <default  name="">
+    <visual>
+      <mesh genType="quad">
+        <quad uv.x1="0" uv.y1="0" uv.x2="1" uv.y2="1"/>
+        <scaledFrame thicknessWidth="" thicknessHeight="" centerQuad=""/>
+        <file name=""/>
+      </mesh>
+      <color r="1" g="1" b="1" a="1"/>
+      <shader id="shader_2d"/>
+    </visual>
+    <physics file="" world="" type="static">
+      <size width="0" height="0"/>
+      <sizeMod top="0" bottom="0" left="0" right="0"/>
+      <body density="0" restitution="0" damping="0" angDamping="0" fixedRotation="false"/>
+      <color r="1" g="1" b="1" a="1"/>
+    </physics>
+    <scale x="1" y="1" z="1"/>
+    <size width="0" height="0"/>
+  </default>
+  <!-- DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT -->
+  
+  <objectList>
+
+    <object name="background">
+      <visual>
+          <texture file="data/textures/titleScreen/title_background_small.png" compressed="true"/>
+      </visual>
+    </object>
+
+    <object name="background2">
+      <visual>
+        <texture file="data/textures/titleScreen/title_background_small299.png" compressed="true"/>
+      </visual>
+    </object>
+
+  </objectList>
+
+</objectDataList2D>
+

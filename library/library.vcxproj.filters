@@ -1,0 +1,501 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="2d">
+      <UniqueIdentifier>{4067a83e-5fd3-4267-946f-608a3220fb48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{3cf88b0a-5dbd-40a5-b534-fe755be34b63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="managers">
+      <UniqueIdentifier>{f29b6258-1cfa-4625-8993-fb7034978e44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="objectdata">
+      <UniqueIdentifier>{5bb7c3a2-9375-4a20-bbbc-19f7932139e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="soil">
+      <UniqueIdentifier>{23ab8cf0-860d-4154-967c-daabb9b4bd61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system">
+      <UniqueIdentifier>{b1627fc6-a604-45b3-bf07-8eb2979dc5da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utilities">
+      <UniqueIdentifier>{2b1f1c67-ad91-4d80-91dc-894ac37c00d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="script">
+      <UniqueIdentifier>{e634bdfe-ae23-4e2e-a98f-f9a309fe8791}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gui">
+      <UniqueIdentifier>{ea2e54c0-8502-43a2-bd0c-39e580e3d7c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="physics">
+      <UniqueIdentifier>{fa38cd09-d1fb-45ff-a9d2-25954e0400a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="softwareRender">
+      <UniqueIdentifier>{821ae450-cacc-4c6b-a143-962023448040}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="2d\physicscomponent2d.cpp">
+      <Filter>2d</Filter>
+    </ClCompile>
+    <ClCompile Include="2d\sprite2d.cpp">
+      <Filter>2d</Filter>
+    </ClCompile>
+    <ClCompile Include="2d\visualcomponent2d.cpp">
+      <Filter>2d</Filter>
+    </ClCompile>
+    <ClCompile Include="common\matrix.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\shaderdata.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\worldvalue.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="managers\shadermanager.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="managers\texturemanager.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="managers\vertexbuffermanager.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="objectdata\objectdata2d.cpp">
+      <Filter>objectdata</Filter>
+    </ClCompile>
+    <ClCompile Include="objectdata\objectphysicsdata2d.cpp">
+      <Filter>objectdata</Filter>
+    </ClCompile>
+    <ClCompile Include="objectdata\objectvisualdata2d.cpp">
+      <Filter>objectdata</Filter>
+    </ClCompile>
+    <ClCompile Include="soil\image_DXT.c">
+      <Filter>soil</Filter>
+    </ClCompile>
+    <ClCompile Include="soil\image_helper.c">
+      <Filter>soil</Filter>
+    </ClCompile>
+    <ClCompile Include="soil\SOIL.c">
+      <Filter>soil</Filter>
+    </ClCompile>
+    <ClCompile Include="soil\stb_image_aug.c">
+      <Filter>soil</Filter>
+    </ClCompile>
+    <ClCompile Include="system\basegame.cpp">
+      <Filter>system</Filter>
+    </ClCompile>
+    <ClCompile Include="system\device.cpp">
+      <Filter>system</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\genfunc.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\highresolutiontimer.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\settings.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\statcounter.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\timer.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\xmlparsehelper.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\xmlParser.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="2d\font.cpp">
+      <Filter>2d</Filter>
+    </ClCompile>
+    <ClCompile Include="managers\fontmanager.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="common\bitmask.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="system\worldcamera.cpp">
+      <Filter>system</Filter>
+    </ClCompile>
+    <ClCompile Include="common\object.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="script\scriptcolor.cpp">
+      <Filter>script</Filter>
+    </ClCompile>
+    <ClCompile Include="script\scriptglobals.cpp">
+      <Filter>script</Filter>
+    </ClCompile>
+    <ClCompile Include="managers\soundmanager.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="objectdata\objectdatamanager2d.cpp">
+      <Filter>objectdata</Filter>
+    </ClCompile>
+    <ClCompile Include="managers\managerbase.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="common\sound.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="script\scriptmanager.cpp">
+      <Filter>script</Filter>
+    </ClCompile>
+    <ClCompile Include="common\playlist.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\menumanager.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\menutree.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\menu.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\uicontrol.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\uilabel.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\uicontrolfactory.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="script\scriptcomponent.cpp">
+      <Filter>script</Filter>
+    </ClCompile>
+    <ClCompile Include="2d\spritescriptcomponent2d.cpp">
+      <Filter>2d</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\uibutton.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\menusprite.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="managers\actionmanager.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\ismartguibase.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="managers\signalmanager.cpp">
+      <Filter>managers</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\uisubcontrol.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\uibuttonlist.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\uicheckbox.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="physics\physicsworld.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="physics\physicsworldmanager.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="utilities\mathfunc.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\uislider.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\uiscrollbox.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="softwareRender\softwareRender.cpp">
+      <Filter>softwareRender</Filter>
+    </ClCompile>
+    <ClCompile Include="softwareRender\srtexture.cpp">
+      <Filter>softwareRender</Filter>
+    </ClCompile>
+    <ClCompile Include="softwareRender\triangleslope.cpp">
+      <Filter>softwareRender</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="2d\physicscomponent2d.h">
+      <Filter>2d</Filter>
+    </ClInclude>
+    <ClInclude Include="2d\sprite2d.h">
+      <Filter>2d</Filter>
+    </ClInclude>
+    <ClInclude Include="2d\visualcomponent2d.h">
+      <Filter>2d</Filter>
+    </ClInclude>
+    <ClInclude Include="common\color.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\defs.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\face2d.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\glvertbuf.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\matrix.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\normal.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\point.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\quad.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\quad2d.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\quaternion.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\radian.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\rect.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\shaderdata.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\size.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\texture.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\uv.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\vertex2d.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\worldvalue.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="managers\shadermanager.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="managers\texturemanager.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="managers\vertexbuffermanager.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="objectdata\objectdata2d.h">
+      <Filter>objectdata</Filter>
+    </ClInclude>
+    <ClInclude Include="objectdata\objectphysicsdata2d.h">
+      <Filter>objectdata</Filter>
+    </ClInclude>
+    <ClInclude Include="objectdata\objectvisualdata2d.h">
+      <Filter>objectdata</Filter>
+    </ClInclude>
+    <ClInclude Include="soil\image_DXT.h">
+      <Filter>soil</Filter>
+    </ClInclude>
+    <ClInclude Include="soil\image_helper.h">
+      <Filter>soil</Filter>
+    </ClInclude>
+    <ClInclude Include="soil\SOIL.h">
+      <Filter>soil</Filter>
+    </ClInclude>
+    <ClInclude Include="soil\stb_image_aug.h">
+      <Filter>soil</Filter>
+    </ClInclude>
+    <ClInclude Include="soil\stbi_DDS_aug.h">
+      <Filter>soil</Filter>
+    </ClInclude>
+    <ClInclude Include="soil\stbi_DDS_aug_c.h">
+      <Filter>soil</Filter>
+    </ClInclude>
+    <ClInclude Include="system\basegame.h">
+      <Filter>system</Filter>
+    </ClInclude>
+    <ClInclude Include="system\device.h">
+      <Filter>system</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\deletefuncs.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\exceptionhandling.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\genfunc.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\highresolutiontimer.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\settings.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\smartpointers.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\statcounter.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\timer.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\xmlparsehelper.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\xmlParser.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="2d\font.h">
+      <Filter>2d</Filter>
+    </ClInclude>
+    <ClInclude Include="managers\fontmanager.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="common\bitmask.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="system\worldcamera.h">
+      <Filter>system</Filter>
+    </ClInclude>
+    <ClInclude Include="common\object.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="script\scriptcolor.h">
+      <Filter>script</Filter>
+    </ClInclude>
+    <ClInclude Include="script\scriptglobals.h">
+      <Filter>script</Filter>
+    </ClInclude>
+    <ClInclude Include="managers\soundmanager.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="objectdata\objectdatamanager2d.h">
+      <Filter>objectdata</Filter>
+    </ClInclude>
+    <ClInclude Include="managers\managerbase.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="common\sound.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="script\scriptmanager.h">
+      <Filter>script</Filter>
+    </ClInclude>
+    <ClInclude Include="common\playlist.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\menumanager.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\menutree.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\menu.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="common\dynamicoffset.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uicontrol.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uilabel.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uicontroldefs.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\menudefs.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uicontrolfactory.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="script\scriptcomponent.h">
+      <Filter>script</Filter>
+    </ClInclude>
+    <ClInclude Include="2d\spritescriptcomponent2d.h">
+      <Filter>2d</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uibutton.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\menusprite.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="managers\actionmanager.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="common\keybuttonaction.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\ismartguibase.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="managers\signalmanager.h">
+      <Filter>managers</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uicontrolnavnode.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uisubcontrol.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uibuttonlist.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uicheckbox.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="physics\physicsworld.h">
+      <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="physics\physicsworldmanager.h">
+      <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\mathfunc.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="utilities\thread.h">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uislider.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\scrollparam.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\uiscrollbox.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="softwareRender\softwareRender.h">
+      <Filter>softwareRender</Filter>
+    </ClInclude>
+    <ClInclude Include="softwareRender\srtexture.h">
+      <Filter>softwareRender</Filter>
+    </ClInclude>
+    <ClInclude Include="softwareRender\triangleslope.h">
+      <Filter>softwareRender</Filter>
+    </ClInclude>
+    <ClInclude Include="softwareRender\renderdefs.h">
+      <Filter>softwareRender</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+  </ItemGroup>
+</Project>

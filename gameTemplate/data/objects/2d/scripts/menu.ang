@@ -1,0 +1,208 @@
+
+
+void Control_OnActive()
+{
+    PlaySound( "(menu)", "active" );
+}
+
+void Control_OnSelect()
+{
+    PlaySound( "(menu)", "select" );
+}
+
+
+void Menu_TransIn( CSpriteScript2d & script )
+{
+    script.SetAlpha( 0 );
+    FadeTo( 250, script.GetDefaultAlpha(), script );
+}
+
+void Menu_TransOut( CSpriteScript2d & script )
+{
+    FadeTo( 250, 0, script );
+}
+
+void Control_TransIn( CSpriteScript2d & script )
+{
+    g_allowEvent = true;
+
+    script.SetAlpha( 0 );
+    FadeTo( 250, script.GetDefaultAlpha(), script );
+
+    if( g_allowEvent )
+    {
+        g_allowEvent = false;
+        DispatchEvent( EGE_MENU_TRANS_IN, ETC_END );
+    }
+}
+
+void Control_TransOut( CSpriteScript2d & script )
+{
+    g_allowEvent = true;
+
+    FadeTo( 250, 0, script );
+
+    if( g_allowEvent )
+    {
+        g_allowEvent = false;
+        DispatchEvent( EGE_MENU_TRANS_OUT, ETC_END );
+    }
+}
+
+void Control_Disabled( CSpriteScript2d & script )
+{
+    CColor color = script.GetDefaultColor();
+    color.TransformHSV( 0, 0, 1 );
+
+    script.SetColor( color );
+}
+
+void Control_Inactive( CSpriteScript2d & script )
+{
+    script.SetDefaultColor();
+}
+
+void Control_Hidden( CSpriteScript2d & script )
+{
+    script.SetVisible( false );
+}
+
+
+void Ctrl_Active( CSpriteScript2d & script, float hiHSV, float lowHSV )
+{
+    script.SetVisible( true );
+
+    CColor hiColor = script.GetDefaultColor();
+    hiColor.TransformHSV( 0, 1, hiHSV );
+
+    CColor lowColor = script.GetDefaultColor();
+    lowColor.TransformHSV( 0, 1, lowHSV );
+
+    while(true)
+    {
+        ColorTo( 500, hiColor, script );
+        ColorTo( 500, lowColor, script );
+    }
+}
+
+void Control_Active( CSpriteScript2d & script )
+{
+    Ctrl_Active( script, 1.3, .5 );
+}
+
+void Control_Solid_Active( CSpriteScript2d & script )
+{
+    Ctrl_Active( script, 1.1, .5 );
+}
+
+
+void Ctrl_Selected( CSpriteScript2d & script, float hiHSV, float lowHSV )
+{
+    script.SetVisible( true );
+
+    CColor hiColor = script.GetDefaultColor();
+    hiColor.TransformHSV( 0, 1, hiHSV );
+
+    CColor lowColor = script.GetDefaultColor();
+    lowColor.TransformHSV( 0, 1, lowHSV );
+
+    script.SetColor( hiColor );
+
+    ColorTo( 120, lowColor, script );
+    ColorTo( 100, hiColor, script );
+}
+
+void Control_Selected_Dispatch_Exe( CSpriteScript2d & script )
+{
+    Ctrl_Selected( script, 1.7, .6 );
+
+    script.SetColor( script.GetDefaultColor() );
+
+    DispatchEvent( EGE_MENU_SELECT_EXECUTE );
+}
+
+void Control_Selected_Dispatch_Exe_Act( CSpriteScript2d & script )
+{
+    Ctrl_Selected( script, 1.7, .6 );
+
+    script.SetColor( script.GetDefaultColor() );
+
+    DispatchEvent( EGE_MENU_SELECT_EXECUTE );
+    DispatchEvent( EGE_MENU_REACTIVATE );
+}
+
+void Control_Solid_Selected_visible( CSpriteScript2d & script )
+{
+    Ctrl_Selected( script, 1.5, .6 );
+
+    script.SetColor( script.GetDefaultColor() );
+}
+
+void Control_Selected( CSpriteScript2d & script )
+{
+    Ctrl_Selected( script, 1.7, .6 );
+
+    script.SetVisible( false );
+}
+
+void Control_Solid_Selected( CSpriteScript2d & script )
+{
+    Ctrl_Selected( script, 1.5, .6 );
+
+    script.SetVisible( false );
+}
+
+
+void Ctrl_Fast_Selected( CSpriteScript2d & script, float hiHSV )
+{
+    script.SetVisible( true );
+
+    CColor hiColor = script.GetDefaultColor();
+    hiColor.TransformHSV( 0, 1, hiHSV );
+
+    script.SetColor( hiColor );
+}
+
+void Control_Fast_Face_Selected( CSpriteScript2d & script )
+{
+    Ctrl_Fast_Selected( script, 1.7 );
+
+    Hold( 80 );
+
+    script.SetDefaultColor();
+}
+
+void Control_Fast_Face_Selected_Act( CSpriteScript2d & script )
+{
+    Ctrl_Fast_Selected( script, 1.7 );
+
+    Hold( 80 );
+
+    script.SetDefaultColor();
+
+    DispatchEvent( EGE_MENU_REACTIVATE );
+}
+
+void Control_Fast_Selected( CSpriteScript2d & script )
+{
+    Ctrl_Fast_Selected( script, 1.5 );
+
+    Hold( 80 );
+
+    script.SetVisible( false );
+}
+
+void Control_Fast_Solid_Selected( CSpriteScript2d & script )
+{
+    Ctrl_Fast_Selected( script, 1.3 );
+
+    Hold( 80 );
+
+    script.SetVisible( false );
+}
+
+
+void Control_slider_btn_Selected( CSpriteScript2d & script )
+{
+    Ctrl_Fast_Selected( script, 1.7 );
+}

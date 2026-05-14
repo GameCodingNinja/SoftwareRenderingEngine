@@ -1,0 +1,73 @@
+<menu group="(menu)">
+
+  <staticMenuControls>
+
+    <!-- Pause Label -->
+    <control controltype="label" defaultState="inactive">
+      <filePath file="data/objects/2d/menu/control/menu_label.ctrl"/>
+      <position x="0" y="320" z="0"/>
+      <fontStringLst>
+        <string text="Key Bindings"/>
+      </fontStringLst>
+    </control>
+
+    <!-- Key Bind Controls Label -->
+    <control controltype="label" defaultState="inactive">
+      <filePath file="data/objects/2d/menu/control/key_binding_label.ctrl"/>
+      <position x="-17" y="260" z="0"/>
+      <fontStringLst>
+        <string text="Action:"/>
+        <string text="Keyboard                 Mouse             Controller"/>
+      </fontStringLst>
+    </control>
+
+  </staticMenuControls>
+
+  <mouseOnlyControls>
+
+    <!-- mouse-only close Button -->
+    <control name="close_btn" controltype="button" defaultState="inactive">
+      <filePath file="data/objects/2d/menu/control/close_button.ctrl"/>
+      <position x="495" y="325" z="0"/>
+      <action actionType="close"/>
+      <stateScript onActive="Control_OnActive" onSelect="Control_OnSelect"/>
+    </control>
+
+    <!-- mouse-only close Button -->
+    <control name="back_btn" controltype="button" defaultState="inactive">
+      <filePath file="data/objects/2d/menu/control/back_button.ctrl"/>
+      <position x="470" y="325" z="0"/>
+      <action actionType="back"/>
+      <stateScript onActive="Control_OnActive" onSelect="Control_OnSelect"/>
+    </control>
+    
+  </mouseOnlyControls>
+  
+  <menuControls>
+    
+    <focusGroup>
+
+      <!-- Key binding scroll box -->
+      <control name="key_binding_scroll_box" controltype="scroll_box" defaultState="inactive">
+        <filePath file="data/objects/2d/menu/control/key_binding_scroll_box.ctrl"/>
+        <position x="-37" y="-50" z="0"/>
+        <scroll startDelay="750" scrollDelay="350" up="true" down="true"/>
+      </control>
+
+    </focusGroup>
+
+    </menuControls>
+
+  <spriteList>
+
+    <sprite objectName="key_bindings_menu_bg">
+      <script>
+        <transition in="Menu_TransIn" out="Menu_TransOut"/>
+      </script>
+    </sprite>
+    
+  </spriteList>
+  
+  
+</menu>
+

@@ -1,0 +1,33 @@
+<UIControl>
+
+  <group name="(menu)"/>
+
+  <spriteList>
+
+    <sprite objectName="key_binding_button_solid">
+      <script>
+        <state disabled="Control_Disabled" inactive="Control_Hidden" active="Control_Solid_Active" selected="Control_Solid_Selected"/>
+      </script>
+    </sprite>
+    
+    <sprite objectName="key_binding_button_frame">
+      <script>
+        <transition in="Control_TransIn" out="Control_TransOut"/>
+        <state disabled="Control_Disabled" inactive="Control_Inactive" active="Control_Active" selected="Control_Selected"/>
+      </script>
+    </sprite>
+
+    <sprite objectName="control_font">
+      <font fontName="dejavu_sans_cond_32">
+        <alignment horzAlign="left" vertAlign="center"/>
+      </font>
+      <position x="-435" y="0" z="0"/>
+      <script>
+        <transition in="Control_TransIn" out="Control_TransOut"/>
+        <state disabled="Control_Disabled" inactive="Control_Inactive" active="Control_Active" selected="Control_Selected_Dispatch_Exe"/>
+      </script>
+    </sprite>
+
+  </spriteList>
+
+</UIControl>

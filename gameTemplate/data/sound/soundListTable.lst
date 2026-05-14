@@ -1,0 +1,7 @@
+<listTable max_channels="16">
+
+  <groupList groupName="(menu)">
+    <file path="data/sound/menuSound.lst"/>
+  </groupList>
+  
+</listTable>
