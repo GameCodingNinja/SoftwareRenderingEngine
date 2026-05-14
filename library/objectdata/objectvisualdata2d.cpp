@@ -11,14 +11,12 @@
 // Physical component dependency
 #include <objectdata/objectvisualdata2d.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <managers/texturemanager.h>
 #include <managers/vertexbuffermanager.h>
 #include <utilities/xmlparsehelper.h>
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <common/defs.h>
 
 /************************************************************************
@@ -66,7 +64,7 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
                 m_textureFileVec.reserve( count );
 
                 for( uint i = 0; i < count; ++i )
-                    m_textureFileVec.push_back( boost::str( boost::format(file) % i ) );
+                    m_textureFileVec.push_back( NGenFunc::FormatString(file.c_str(), i) );
             }
             else
             {
@@ -139,7 +137,7 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
         if( (m_genType != NDefs::EGT_NULL) && m_shaderID.empty() )
         {
             throw NExcept::CCriticalException("Shader effect or techique not set!",
-                boost::str( boost::format("Shader object data missing.\n\n%s\nLine: %s") % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Shader object data missing.\n\n%s\nLine: %d", __FUNCTION__, __LINE__));
         }
     }
 
@@ -170,7 +168,7 @@ void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> 
     {
         uint indexData[] = {0, 1, 2, 0, 2, 3};
 
-        std::string vboName = boost::str( boost::format("quad_%s_%s_%s_%s") % m_uv.x1 % m_uv.y1 % m_uv.x2 % m_uv.y2 );
+        std::string vboName = NGenFunc::FormatString("quad_%g_%g_%g_%g", m_uv.x1, m_uv.y1, m_uv.x2, m_uv.y2);
 
         m_vbo = CVertBufMgr::Instance().CreateQuadVBO( group, vboName, m_uv );
         m_ibo = CVertBufMgr::Instance().CreateIBO( group, "quad_0123", indexData, sizeof(indexData) );
@@ -187,8 +185,7 @@ void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> 
     }
     else if( m_genType == NDefs::EGT_SCALED_FRAME )
     {
-        std::string vboName = boost::str( boost::format("scaled_frame_%d_%d_%d_%d_%d_%d") 
-            % rSize.w % rSize.h % m_scaledFrame.m_frame.w % m_scaledFrame.m_frame.h % texture.m_size.w % texture.m_size.h );
+        std::string vboName = NGenFunc::FormatString("scaled_frame_%d_%d_%d_%d_%d_%d", (int)rSize.w, (int)rSize.h, (int)m_scaledFrame.m_frame.w, (int)m_scaledFrame.m_frame.h, (int)texture.m_size.w, (int)texture.m_size.h);
 
         m_vbo = CVertBufMgr::Instance().CreateScaledFrame(
             group, vboName,m_scaledFrame, texture.GetSize(), rSize );

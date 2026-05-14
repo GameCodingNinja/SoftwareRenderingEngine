@@ -7,12 +7,10 @@
 // Physical component dependency
 #include <2d/font.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/xmlParser.h>
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <managers/texturemanager.h>
 #include <common/texture.h>
 
@@ -108,7 +106,7 @@ const CCharData & CFont::GetCharData( char id ) const
 
     if( iter == m_charDataMap.end() )
         throw NExcept::CCriticalException("Font character data Error!",
-                boost::str( boost::format("Font character ID can't be found (%s).\n\n%s\nLine: %s") % id % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Font character ID can't be found (%s).\n\n%s\nLine: %d", id, __FUNCTION__, __LINE__));
 
     return iter->second;
 

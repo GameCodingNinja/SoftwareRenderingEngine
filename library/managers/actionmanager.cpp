@@ -8,9 +8,6 @@
 // Physical component dependency
 #include <managers/actionmanager.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>

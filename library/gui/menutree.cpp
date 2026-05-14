@@ -8,9 +8,6 @@
 // Physical component dependency
 #include <gui/menutree.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/xmlParser.h>
 #include <utilities/xmlparsehelper.h>
@@ -171,7 +168,7 @@ void CMenuTree::TransitionMenu()
         // Make sure the menu exists
         if( m_pMenuMap.find(m_defaultMenu) == m_pMenuMap.end() )
             throw NExcept::CCriticalException("Menu Display Error!",
-                boost::str( boost::format("Menu does not exist (%s).\n\n%s\nLine: %s") % m_defaultMenu % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Menu does not exist (%s).\n\n%s\nLine: %d", m_defaultMenu, __FUNCTION__, __LINE__));
 
         // Add the default menu to the path
         m_pathVector.push_back( m_defaultMenu );
@@ -271,7 +268,7 @@ void CMenuTree::OnToMenu( const SDL_Event & rEvent )
 
     if( m_pMenuMap.find(m_toMenu) == m_pMenuMap.end() )
         throw NExcept::CCriticalException("Menu Display Error!",
-            boost::str( boost::format("Menu does not exist (%s).\n\n%s\nLine: %s") % m_toMenu % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Menu does not exist (%s).\n\n%s\nLine: %d", m_toMenu, __FUNCTION__, __LINE__));
 
     // Start the transition out
     NGenFunc::DispatchEvent( NMenu::EGE_MENU_TRANS_OUT, NMenu::ETC_BEGIN );
@@ -337,7 +334,7 @@ CMenu * CMenuTree::GetActiveMenu()
 {
     if( m_pathVector.empty() )
         throw NExcept::CCriticalException("Menu Error!",
-            boost::str( boost::format("There is no active menu.\n\n%s\nLine: %s") % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("There is no active menu.\n\n%s\nLine: %d", __FUNCTION__, __LINE__));
 
     return m_pMenuMap.find(m_pathVector.back())->second;
 
@@ -351,7 +348,7 @@ CScrollParam & CMenuTree::GetScrollParam( int msg )
 {
     if( m_pathVector.empty() )
         throw NExcept::CCriticalException("Menu Error!",
-            boost::str( boost::format("There is no active menu.\n\n%s\nLine: %s") % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("There is no active menu.\n\n%s\nLine: %d", __FUNCTION__, __LINE__));
 
     return m_pMenuMap.find(m_pathVector.back())->second->GetScrollParam( msg );
 

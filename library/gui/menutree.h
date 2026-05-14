@@ -16,9 +16,6 @@
 #include <vector>
 #include <map>
 
-// Boost lib dependencies
-#include <boost/noncopyable.hpp>
-
 // Game lib dependencies
 #include <common/defs.h>
 #include <common/matrix.h>
@@ -29,9 +26,12 @@
 struct XMLNode;
 class CMenu;
 
-class CMenuTree : public boost::noncopyable
+class CMenuTree
 {
 public:
+
+    CMenuTree(const CMenuTree&) = delete;
+    CMenuTree& operator=(const CMenuTree&) = delete;
 
     // Constructor
     CMenuTree(

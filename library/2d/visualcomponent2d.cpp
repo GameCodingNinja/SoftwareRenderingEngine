@@ -12,10 +12,7 @@
 #include <2d/visualcomponent2d.h>
 
 // Standard lib dependencies
-
-// Boost lib dependencies
-#include <boost/scoped_array.hpp>
-#include <boost/format.hpp>
+#include <memory>
 
 // Game lib dependencies
 #include <objectdata/objectdata2d.h>
@@ -264,10 +261,10 @@ void CVisualComponent2d::CreateFontString(
         const int quadValueMax = m_charCount * 4;
 
         // Allocate the quad array
-        boost::scoped_array<CQuad2D> quadBuf( new CQuad2D[m_charCount] );
+        auto quadBuf = std::make_unique<CQuad2D[]>(m_charCount);
 
         // Create a buffer to hold the indicies
-        boost::scoped_array<GLushort> indxBuf( new GLushort[m_vertexCount] );
+        auto indxBuf = std::make_unique<GLushort[]>(m_vertexCount);
 
         float xOffset = 0.f;
         float width = 0.f;

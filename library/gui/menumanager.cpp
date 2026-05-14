@@ -10,9 +10,6 @@
 
 // Standard lib dependencies
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <common/defs.h>
 #include <utilities/xmlParser.h>
@@ -74,7 +71,7 @@ void CMenuManager::ActivateTree( const std::string & treeStr )
     else
     {
         throw NExcept::CCriticalException("Menu Tree Acticate Error!",
-            boost::str( boost::format("Menu tree doesn't exist (%s).\n\n%s\nLine: %s") % treeStr % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Menu tree doesn't exist (%s).\n\n%s\nLine: %d", treeStr, __FUNCTION__, __LINE__));
     }
 
 }   // ActivateTree
@@ -135,7 +132,7 @@ void CMenuManager::LoadFromXML( const std::string & filePath )
         if( !iter.second )
         {
             throw NExcept::CCriticalException("Menu Tree Load Error!",
-                boost::str( boost::format("Duplicate tree name (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Duplicate tree name (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
         }
 
         // Check that the root menu exists
@@ -144,7 +141,7 @@ void CMenuManager::LoadFromXML( const std::string & filePath )
             if( m_pMenuMap.find(rootMenu) == m_pMenuMap.end() )
             {
                 throw NExcept::CCriticalException("Menu Load Error!",
-                    boost::str( boost::format("Root menu doesn't exist (%s - %s).\n\n%s\nLine: %s") % rootMenu % filePath % __FUNCTION__ % __LINE__ ));
+                    NGenFunc::FormatString("Root menu doesn't exist (%s - %s).\n\n%s\nLine: %d", rootMenu, filePath, __FUNCTION__, __LINE__));
             }
         }
     }
@@ -175,7 +172,7 @@ void CMenuManager::LoadMenusFromXML( const std::string & filePath )
         if( !iter.second )
         {
             throw NExcept::CCriticalException("Menu Load Error!",
-                boost::str( boost::format("Duplicate menu name (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Duplicate menu name (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
         }
 
         // Load the transform data from node
@@ -200,36 +197,36 @@ void CMenuManager::HandleEvent( const SDL_Event & rEvent )
     {
         // Message testing code
         /*if( rEvent.type == SDL_CONTROLLERBUTTONDOWN )
-            NGenFunc::PostDebugMsg( boost::str( boost::format("Controller Button: %d") % ((int)rEvent.cbutton.button) ) );
+            NGenFunc::PostDebugMsg( NGenFunc::FormatString("Controller Button: %d", (int)rEvent.cbutton.button) );
         else if( rEvent.type == SDL_JOYBUTTONDOWN )
-            NGenFunc::PostDebugMsg( boost::str( boost::format("Joystick Button: %d") % ((int)rEvent.cbutton.button) ) );
+            NGenFunc::PostDebugMsg( NGenFunc::FormatString("Joystick Button: %d", (int)rEvent.cbutton.button) );
         else if( rEvent.type == SDL_MOUSEBUTTONDOWN )
-            NGenFunc::PostDebugMsg( boost::str( boost::format("Mouse Button: %d") % ((int)rEvent.button.button) ) );
+            NGenFunc::PostDebugMsg( NGenFunc::FormatString("Mouse Button: %d", (int)rEvent.button.button) );
         else if( rEvent.type == SDL_KEYDOWN )
-            NGenFunc::PostDebugMsg( boost::str( boost::format("Key Button: %d") % ((int)rEvent.key.keysym.sym) ) );
+            NGenFunc::PostDebugMsg( NGenFunc::FormatString("Key Button: %d", (int)rEvent.key.keysym.sym) );
         else if( rEvent.type == SDL_MOUSEMOTION )
-            NGenFunc::PostDebugMsg( boost::str( boost::format("Mouse Motion: x = %d, y = %d") % ((int)rEvent.motion.x) % ((int)rEvent.motion.y) ) );
+            NGenFunc::PostDebugMsg( NGenFunc::FormatString("Mouse Motion: x = %d, y = %d", (int)rEvent.motion.x, (int)rEvent.motion.y) );
         else if( rEvent.type == SDL_CONTROLLERAXISMOTION )
         {
             if( rEvent.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX )
-                NGenFunc::PostDebugMsg( boost::str( boost::format("CAxis Left: x = %d") % ((int)rEvent.caxis.value) ) );
+                NGenFunc::PostDebugMsg( NGenFunc::FormatString("CAxis Left: x = %d", (int)rEvent.caxis.value) );
             else if( rEvent.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY )
-                NGenFunc::PostDebugMsg( boost::str( boost::format("CAxis Left: y = %d") % ((int)rEvent.caxis.value) ) );
+                NGenFunc::PostDebugMsg( NGenFunc::FormatString("CAxis Left: y = %d", (int)rEvent.caxis.value) );
             if( rEvent.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTX )
-                NGenFunc::PostDebugMsg( boost::str( boost::format("CAxis Right: x = %d") % ((int)rEvent.caxis.value) ) );
+                NGenFunc::PostDebugMsg( NGenFunc::FormatString("CAxis Right: x = %d", (int)rEvent.caxis.value) );
             else if( rEvent.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTY )
-                NGenFunc::PostDebugMsg( boost::str( boost::format("CAxis Right: y = %d") % ((int)rEvent.caxis.value) ) );
+                NGenFunc::PostDebugMsg( NGenFunc::FormatString("CAxis Right: y = %d", (int)rEvent.caxis.value) );
             else if( rEvent.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT )
-                NGenFunc::PostDebugMsg( boost::str( boost::format("CTrigger Left: %d") % ((int)rEvent.caxis.value) ) );
+                NGenFunc::PostDebugMsg( NGenFunc::FormatString("CTrigger Left: %d", (int)rEvent.caxis.value) );
             else if( rEvent.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT )
-                NGenFunc::PostDebugMsg( boost::str( boost::format("CTrigger Right: %d") % ((int)rEvent.caxis.value) ) );
+                NGenFunc::PostDebugMsg( NGenFunc::FormatString("CTrigger Right: %d", (int)rEvent.caxis.value) );
         }
         else if( rEvent.type == SDL_JOYAXISMOTION )
         {
             if( rEvent.jaxis.axis == SDL_CONTROLLER_AXIS_LEFTX )
-                NGenFunc::PostDebugMsg( boost::str( boost::format("Joystick Left: x = %d") % ((int)rEvent.jaxis.value) ) );
+                NGenFunc::PostDebugMsg( NGenFunc::FormatString("Joystick Left: x = %d", (int)rEvent.jaxis.value) );
             else if( rEvent.jaxis.axis == SDL_CONTROLLER_AXIS_LEFTY )
-                NGenFunc::PostDebugMsg( boost::str( boost::format("Joystick Left: y = %d") % ((int)rEvent.jaxis.value) ) );
+                NGenFunc::PostDebugMsg( NGenFunc::FormatString("Joystick Left: y = %d", (int)rEvent.jaxis.value) );
         }*/
         
         if( CActionManager::Instance().WasAction( rEvent, m_escapeAction, NMenu::EAP_DOWN ) )
@@ -378,7 +375,7 @@ CMenu * CMenuManager::GetPtrToMenu( const std::string & nameStr )
         return iter->second;
 
     throw NExcept::CCriticalException("UIMenu Error!",
-        boost::str( boost::format("Menu being asked for is missing (%s).\n\n%s\nLine: %s") % nameStr.c_str() % __FUNCTION__ % __LINE__ ));
+        NGenFunc::FormatString("Menu being asked for is missing (%s).\n\n%s\nLine: %d", nameStr, __FUNCTION__, __LINE__));
 
     return NULL;
 

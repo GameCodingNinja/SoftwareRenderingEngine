@@ -14,9 +14,6 @@
 // Standard lib dependencies
 #include <string>
 
-// Boost lib dependencies
-#include <boost/noncopyable.hpp>
-
 // Game lib dependencies
 #include <utilities/deletefuncs.h>
 #include <utilities/exceptionhandling.h>
@@ -29,12 +26,15 @@ namespace thread
     enum{ EXIT_CODE = 12345 };
 
     template<class T>
-    class CThread : public boost::noncopyable
+    class CThread
     {
         // new type Method: pointer to a object's method (this call)
         typedef int (T::* Method)();
 
     public:
+
+        CThread(const CThread&) = delete;
+        CThread& operator=(const CThread&) = delete;
 
         // Creates a new Thread object. object: the one which method should be
         // executed. method: pointer to the object's method.

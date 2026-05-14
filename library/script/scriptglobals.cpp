@@ -8,9 +8,6 @@
 // Physical component dependency
 #include <script/scriptglobals.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // AngelScript lib dependencies
 #include <angelscript.h>
 
@@ -29,7 +26,7 @@ namespace NScriptGlobals
     {
         if( value < 0 )
             throw NExcept::CCriticalException("Error Registering Globals!",
-                boost::str( boost::format("Globals could not be created.\n\n%s\nLine: %s") % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Globals could not be created.\n\n%s\nLine: %d", __FUNCTION__, __LINE__));
 
     }   // Throw
 

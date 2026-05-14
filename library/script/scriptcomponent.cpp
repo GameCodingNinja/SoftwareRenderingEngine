@@ -11,12 +11,10 @@
 // AngelScript lib dependencies
 #include <angelscript.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <script/scriptmanager.h>
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <utilities/statcounter.h>
 
 /************************************************************************
@@ -55,7 +53,7 @@ void CScriptComponent::PrepareScript( const std::string & name, const std::strin
     if( m_pContextVec.back()->Prepare(pScriptFunc) < 0 )
     {
         throw NExcept::CCriticalException("Error Preparing Script!",
-            boost::str( boost::format("There was an error preparing the script (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("There was an error preparing the script (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
     }
 
 }   // PrepareScript
@@ -83,7 +81,7 @@ void CScriptComponent::Update()
                 if( (*iter)->Execute() < 0 )
                 {
                     throw NExcept::CCriticalException("Error Calling Script!",
-                        boost::str( boost::format("There was an error executing the script.\n\n%s\nLine: %s") % __FUNCTION__ % __LINE__ ));
+                        NGenFunc::FormatString("There was an error executing the script.\n\n%s\nLine: %d", __FUNCTION__, __LINE__));
                 }
 
                 // Return the context to the pool if it has not been suspended

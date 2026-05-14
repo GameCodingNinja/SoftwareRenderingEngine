@@ -22,9 +22,6 @@
 #include <iostream>
 #include <algorithm>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/smartpointers.h>
 #include <utilities/exceptionhandling.h>
@@ -60,7 +57,7 @@ namespace NGenFunc
     /************************************************************************
     *    desc:  Read in a file and return it as a buffer
     ************************************************************************/
-    boost::shared_array<char> FileToBuf( const std::string & file, size_t & sizeInBytes )
+    std::shared_ptr<char[]> FileToBuf( const std::string & file, size_t & sizeInBytes )
     {
         const size_t TERMINATOR_SIZE(1);
 
@@ -68,7 +65,7 @@ namespace NGenFunc
         NSmart::scoped_filehandle_ptr<FILE> scpFile( fopen(file.c_str(), "rb") );
         if( scpFile.isNull() )
             throw NExcept::CCriticalException("File Load Error!",
-                boost::str( boost::format("Error Loading file (%s).\n\n%s\nLine: %s") % file % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Error Loading file (%s).\n\n%s\nLine: %d", file, __FUNCTION__, __LINE__));
 
         // Seek to the end of the file to find out how many 
         // bytes into the file we are and add one for temination
@@ -77,7 +74,7 @@ namespace NGenFunc
 
         // Allocate a buffer for the entire length
         // of the file and a null termination
-        boost::shared_array<char> spChar( new char[sizeInBytes] );
+        std::shared_ptr<char[]> spChar( new char[sizeInBytes] );
 
         // zero out the string
         memset(spChar.get(), 0, sizeInBytes);
@@ -87,21 +84,11 @@ namespace NGenFunc
         fseek( scpFile.get(), 0, SEEK_SET );
         fread( spChar.get(), sizeInBytes-TERMINATOR_SIZE, 1, scpFile.get() );
 
-        /* Test Code to output contents of buffer
-        if( file == "data/objects/2d/scripts/menu.ang" )
-        {
-            NSmart::scoped_filehandle_ptr<FILE> scpFileTest( fopen("c:/test.txt", "wb") );
-            if( !scpFileTest.isNull() )
-            {
-                fwrite( spChar.get(), sizeInBytes, 1, scpFileTest.get() );
-            }
-        }*/
-
         return spChar;
 
     }	// FileToBuf
 
-    boost::shared_array<char> FileToBuf( const std::string & file )
+    std::shared_ptr<char[]> FileToBuf( const std::string & file )
     {
         size_t sizeInBytes;
         return FileToBuf( file, sizeInBytes );
@@ -141,4 +128,3 @@ namespace NGenFunc
     }   // PostDebugMsg
 
 }	// NGenFunc
-

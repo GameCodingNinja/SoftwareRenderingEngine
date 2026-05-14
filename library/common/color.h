@@ -11,9 +11,6 @@
 #include <string>
 #include <cmath>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <common/defs.h>
 
@@ -519,10 +516,10 @@ public:
     std::string Dump() const
     {
         std::string printout = "Color( " +
-            str( boost::format("%d") % r ) + "r, " +
-            str( boost::format("%d") % g ) + "g, " +
-            str( boost::format("%d") % b ) + "b, " +
-            str( boost::format("%d") % a ) + "a )";
+            std::to_string(r) + "r, " +
+            std::to_string(g) + "g, " +
+            std::to_string(b) + "b, " +
+            std::to_string(a) + "a )";
 
         return printout;
 

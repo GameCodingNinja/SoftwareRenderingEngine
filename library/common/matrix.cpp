@@ -12,9 +12,6 @@
 #include <math.h>
 #include <memory.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
@@ -1075,7 +1072,7 @@ const float CMatrix::operator [] ( uint index ) const
 {
     if( index >= mMax )
         throw NExcept::CCriticalException("Index out of range",
-            boost::str( boost::format("Index exceeds allowable range (%d,%d).\n\n%s\nLine: %s") % index % mMax % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Index exceeds allowable range (%d,%d).\n\n%s\nLine: %d", index, mMax, __FUNCTION__, __LINE__));
 
     return matrix[index];
 
@@ -1085,7 +1082,7 @@ float & CMatrix::operator [] ( uint index )
 {
     if( index >= mMax )
         throw NExcept::CCriticalException("Index out of range",
-            boost::str( boost::format("Index exceeds allowable range (%d,%d).\n\n%s\nLine: %s") % index % mMax % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Index exceeds allowable range (%d,%d).\n\n%s\nLine: %d", index, mMax, __FUNCTION__, __LINE__));
 
     return matrix[index];
 

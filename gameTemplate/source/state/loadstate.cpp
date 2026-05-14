@@ -15,9 +15,6 @@
 #include <string>
 #include <vector>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <system/device.h>
 #include <objectdata/objectdatamanager2d.h>
@@ -82,7 +79,7 @@ int CLoadState::Animate()
         for( int i = 0; i < frameCount; ++i )
         {
             // Create a bitmap surface
-            SDL_Surface * pBitmapSurface = SDL_LoadBMP( boost::str( boost::format( file ) % i ).c_str() );
+            SDL_Surface * pBitmapSurface = SDL_LoadBMP( NGenFunc::FormatString(file.c_str(), i).c_str() );
             if( pBitmapSurface == NULL )
                 NGenFunc::PostDebugMsg( "Surface Creation error! - " + std::string(SDL_GetError()) );
 

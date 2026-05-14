@@ -11,10 +11,6 @@
 // Standard lib dependencies
 #include <cstring>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-#include <boost/scoped_array.hpp>
-
 // AngelScript lib dependencies
 #include <angelscript.h>
 
@@ -34,7 +30,7 @@ CScriptManager::CScriptManager()
     if( scpEngine.isNull() )
     {
         throw NExcept::CCriticalException("Error Creating AngelScript Engine!",
-            boost::str( boost::format("AngelScript engine could not be created.\n\n%s\nLine: %s") % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("AngelScript engine could not be created.\n\n%s\nLine: %d", __FUNCTION__, __LINE__));
     }
 
     // We don't use call backs for every line execution so set this property to not build with line cues
@@ -43,7 +39,7 @@ CScriptManager::CScriptManager()
     // Set the message callback to print the messages that the engine gives in case of errors
     if( scpEngine->SetMessageCallback(asMETHOD(CScriptManager, MessageCallback), this, asCALL_THISCALL) < 0 )
     throw NExcept::CCriticalException("Error Creating AngelScript Engine!",
-        boost::str( boost::format("AngelScript message callback could not be created.\n\n%s\nLine: %s") % __FUNCTION__ % __LINE__ ));
+        NGenFunc::FormatString("AngelScript message callback could not be created.\n\n%s\nLine: %d", __FUNCTION__, __LINE__));
 
 }   // constructor
 
@@ -71,16 +67,14 @@ void CScriptManager::LoadGroup( const std::string & group )
     auto listTableIter = m_listTableMap.find( group );
     if( listTableIter == m_listTableMap.end() )
         throw NExcept::CCriticalException("Script List Load Group Data Error!",
-            boost::str( boost::format("Script list group name can't be found (%s).\n\n%s\nLine: %s") 
-                % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Script list group name can't be found (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
 
     // Create the module if it doesn't already exist
     asIScriptModule * pScriptModule = scpEngine->GetModule(group.c_str(), asGM_CREATE_IF_NOT_EXISTS);
     if( pScriptModule == nullptr )
     {
         throw NExcept::CCriticalException("Script List load Error!",
-            boost::str( boost::format("Error creating script group module (%s).\n\n%s\nLine: %s")
-                % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Error creating script group module (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
     }
 
     // Add the scripts to the module
@@ -99,14 +93,13 @@ void CScriptManager::LoadGroup( const std::string & group )
 void CScriptManager::AddScript( asIScriptModule * pScriptModule, const std::string & filePath )
 {
     // Load the script file into a charater array
-    boost::shared_array<char> spChar = NGenFunc::FileToBuf( filePath );
+    auto spChar = NGenFunc::FileToBuf( filePath );
 
     // Load script into module section - the file path is it's ID
     if( pScriptModule->AddScriptSection(filePath.c_str(), spChar.get() ) < 0 ) // std::strlen( spChar.get() )
     {
         throw NExcept::CCriticalException("Script List load Error!",
-            boost::str( boost::format("Error loading script (%s).\n\n%s\nLine: %s")
-                % filePath % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Error loading script (%s).\n\n%s\nLine: %d", filePath, __FUNCTION__, __LINE__));
     }
 
 }   // AddScript
@@ -122,8 +115,7 @@ void CScriptManager::BuildScript( asIScriptModule * pScriptModule, const std::st
     if( error < 0 )
     {
         throw NExcept::CCriticalException("Script List build Error!",
-            boost::str( boost::format("Error building script group with error code %d. (%s).\n\n%s\nLine: %s")
-                % error % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Error building script group with error code %d. (%s).\n\n%s\nLine: %d", error, group, __FUNCTION__, __LINE__));
     }
 
 }   // BuildScript
@@ -183,7 +175,7 @@ asIScriptFunction * CScriptManager::GetPtrToFunc( const std::string & group, con
         if( pScriptModule == nullptr )
         {
             throw NExcept::CCriticalException("Error Getting Pointer to Function!",
-                boost::str( boost::format("AngelScript module does not exist (%s, %s).\n\n%s\nLine: %s") % group % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("AngelScript module does not exist (%s, %s).\n\n%s\nLine: %d", group, name, __FUNCTION__, __LINE__));
         }
 
         // Try to get the pointer to the function
@@ -191,7 +183,7 @@ asIScriptFunction * CScriptManager::GetPtrToFunc( const std::string & group, con
         if( pScriptFunc == nullptr )
         {
             throw NExcept::CCriticalException("Error Getting Pointer to Function!",
-                boost::str( boost::format("AngelScript function does not exist (%s, %s).\n\n%s\nLine: %s") % group % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("AngelScript function does not exist (%s, %s).\n\n%s\nLine: %d", group, name, __FUNCTION__, __LINE__));
         }
 
         // Insert the function pointer into the map
@@ -215,7 +207,7 @@ void CScriptManager::MessageCallback(const asSMessageInfo & msg)
     else if( msg.type == asMSGTYPE_INFORMATION ) 
         type = "INFO";
 
-    std::string msgStr = boost::str( boost::format( "%s (%d, %d) : %s : %s" ) % msg.section % msg.row % msg.col % type % msg.message );
+    std::string msgStr = NGenFunc::FormatString( "%s (%d, %d) : %s : %s", msg.section, msg.row, msg.col, type, msg.message );
 
     NGenFunc::PostDebugMsg( msgStr );
 
@@ -241,7 +233,7 @@ void CScriptManager::FreeGroup( const std::string & group )
     auto listTableIter = m_listTableMap.find( group );
     if( listTableIter == m_listTableMap.end() )
         throw NExcept::CCriticalException("Script List Group Error!",
-            boost::str( boost::format("Script group can't be found (%s).\n\n%s\nLine: %s") % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Script group can't be found (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
 
     // Discard the module and free its memory.
     scpEngine->DiscardModule( group.c_str() );

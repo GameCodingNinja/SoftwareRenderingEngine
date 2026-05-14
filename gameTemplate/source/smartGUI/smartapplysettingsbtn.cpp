@@ -11,9 +11,6 @@
 // SDL lib dependencies
 #include <SDL_opengl.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <system/device.h>
 #include <gui/menumanager.h>

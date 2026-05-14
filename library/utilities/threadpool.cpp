@@ -12,9 +12,6 @@
 #include <utilities/settings.h>
 #include <utilities/genfunc.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 /************************************************************************
 *    DESC:  Constructor
 ************************************************************************/
@@ -79,18 +76,18 @@ void CThreadPool::init( const int minThreads, const int maxThreads )
     }
 
     NGenFunc::PostDebugMsg( 
-        boost::str( boost::format(
+        NGenFunc::FormatString(
             "Thread Info...\n"
             "  Thread count type: %s\n"
             "  Max cores: %u\n"
             "  Min threads: %u\n"
             "  Max threads: %u\n"
-            "  Threads in pool: %u\n" )
-            % threadCountType
-            % maxCores
-            % minThreads
-            % maxThreads
-            % threads ));
+            "  Threads in pool: %u\n",
+            threadCountType,
+            maxCores,
+            minThreads,
+            maxThreads,
+            threads ));
 
     m_threadVec.reserve( threads );
 

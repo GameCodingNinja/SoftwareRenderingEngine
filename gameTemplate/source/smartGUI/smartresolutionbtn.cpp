@@ -11,9 +11,6 @@
 // Standard lib dependencies
 #include <string>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <system/device.h>
 #include <gui/uibuttonlist.h>
@@ -67,7 +64,7 @@ void CSmartResolutionBtn::Create()
     int counter(0);
     for( size_t i = 0; i < resVec.size(); i++ )
     {
-        m_pUIControl->SetStringToList( boost::str( boost::format("%d x %d") % resVec[i].w % resVec[i].h ) );
+        m_pUIControl->SetStringToList( std::to_string(static_cast<int>(resVec[i].w)) + " x " + std::to_string(static_cast<int>(resVec[i].h)) );
 
         m_resVec.push_back( resVec[i] );
 

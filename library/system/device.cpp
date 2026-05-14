@@ -14,9 +14,6 @@
 // SDL lib dependencies
 #include <SDL_opengl.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
 #include <utilities/settings.h>
@@ -173,7 +170,7 @@ void CDevice::SetFullScreen( bool fullscreen )
         flag = SDL_WINDOW_FULLSCREEN;
 
     if( SDL_SetWindowFullscreen( m_pWindow, flag ) < 0 )
-        NGenFunc::PostDebugMsg( boost::str( boost::format("Warning: Unable to set full screen! SDL GL Error: %s") % SDL_GetError() ) );
+        NGenFunc::PostDebugMsg( NGenFunc::FormatString("Warning: Unable to set full screen! SDL GL Error: %s", SDL_GetError()) );
 
 }   // SetFullScreen
 
@@ -205,7 +202,7 @@ void CDevice::InitStartupGamepads()
 {
     #ifndef _WINDOWS
     int newMappings = SDL_GameControllerAddMappingsFromFile("data/settings/gamecontrollerdb.txt");
-    NGenFunc::PostDebugMsg( boost::str( boost::format("New controller mappings found: %d") % newMappings ) );
+    NGenFunc::PostDebugMsg( NGenFunc::FormatString("New controller mappings found: %d", newMappings) );
     #endif
     
     for( int i = 0; i < SDL_NumJoysticks(); ++i )

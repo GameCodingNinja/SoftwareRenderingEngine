@@ -11,11 +11,9 @@
 // Physical component dependency
 #include <common/shaderdata.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 
 
 /************************************************************************
@@ -96,7 +94,7 @@ void CShaderData::SetAttributeLocation( const std::string & name, GLint location
     if( iter != m_attributeMap.end() )
     {
         throw NExcept::CCriticalException("Set Attribute Error!",
-                boost::str( boost::format("Shader attribute allready exists (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Shader attribute allready exists (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
     }
 
     m_attributeMap.insert( std::make_pair(name, location) );
@@ -109,7 +107,7 @@ GLint CShaderData::GetAttributeLocation( const std::string & name ) const
     if( iter == m_attributeMap.end() )
     {
         throw NExcept::CCriticalException("Get Attribute Error!",
-                boost::str( boost::format("Shader attribute does not exist (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Shader attribute does not exist (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
     }
 
     return iter->second;
@@ -126,7 +124,7 @@ void CShaderData::SetUniformLocation( const std::string & name, GLint location )
     if( iter != m_uniformMap.end() )
     {
         throw NExcept::CCriticalException("Set Attribute Error!",
-                boost::str( boost::format("Shader attribute allready exists (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Shader attribute allready exists (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
     }
 
     m_uniformMap.insert( std::make_pair(name, location) );
@@ -139,7 +137,7 @@ GLint CShaderData::GetUniformLocation( const std::string & name ) const
     if( iter == m_uniformMap.end() )
     {
         throw NExcept::CCriticalException("Get Uniform Error!",
-                boost::str( boost::format("Shader uniform does not exists (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Shader uniform does not exists (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
     }
 
     return iter->second;

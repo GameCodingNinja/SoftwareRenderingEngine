@@ -13,8 +13,7 @@
 
 // Standard lib dependencies
 #include <string>
-
-// Boost lib dependencies
+#include <vector>
 
 // Game lib dependencies
 #include <common/matrix.h>

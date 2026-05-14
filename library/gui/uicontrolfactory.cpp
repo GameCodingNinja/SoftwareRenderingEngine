@@ -10,11 +10,9 @@
 // Standard lib dependencies
 #include <string>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <utilities/xmlParser.h>
 #include <managers/signalmanager.h>
 #include <gui/uilabel.h>
@@ -76,7 +74,7 @@ namespace NUIControlFactory
 
         else
             throw NExcept::CCriticalException("UI Factory Control Load Error!",
-                boost::str( boost::format("UI Control not defined (%s).\n\n%s\nLine: %s") % ctrlType % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("UI Control not defined (%s).\n\n%s\nLine: %d", ctrlType, __FUNCTION__, __LINE__));
 
         // Have the control load it's share
         pControl->LoadFromNode( node );

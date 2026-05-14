@@ -13,9 +13,7 @@
 
 // Standard lib dependencies
 #include <vector>
-
-// Boost lib dependencies
-#include <boost/scoped_ptr.hpp>
+#include <memory>
 
 // Game lib dependencies
 #include <common/point.h>
@@ -117,7 +115,7 @@ private:
     float m_maxMoveAmount;
 
     // stencil mask sprite
-    boost::scoped_ptr<CSprite2D> m_stencilMaskSprite;
+    std::unique_ptr<CSprite2D> m_stencilMaskSprite;
     
     // Active scroll control index in this control
     int m_activeScrollCtrl;

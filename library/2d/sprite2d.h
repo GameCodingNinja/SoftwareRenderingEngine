@@ -11,9 +11,6 @@
 // Physical component dependency
 #include <common/object.h>
 
-// Standard lib dependencies
-#include <boost/noncopyable.hpp>
-
 // Game lib dependencies
 #include <2d/visualcomponent2d.h>
 #include <2d/physicscomponent2d.h>
@@ -22,7 +19,7 @@
 // Forward declaration(s)
 class CObjectData2D;
 
-class CSprite2D : public CObject, boost::noncopyable
+class CSprite2D : public CObject
 {
 public:
 
@@ -31,6 +28,9 @@ public:
 
     // Destructor
     virtual ~CSprite2D();
+
+    CSprite2D(const CSprite2D&) = delete;
+    CSprite2D& operator=(const CSprite2D&) = delete;
 
     // Get the object data
     const CObjectData2D & GetObjectData() const;

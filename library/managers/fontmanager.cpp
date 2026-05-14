@@ -8,11 +8,9 @@
 // Physical component dependency
 #include <managers/fontmanager.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <utilities/xmlParser.h>
 
 /************************************************************************
@@ -62,7 +60,7 @@ void CFontMgr::LoadFromXML( const std::string & filePath )
         if( !iter.second )
         {
             throw NExcept::CCriticalException("Font Manager Error!",
-                    boost::str( boost::format("Font name has already been loaded (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+                    NGenFunc::FormatString("Font name has already been loaded (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
         }
 
         // Load the character info from file
@@ -82,7 +80,7 @@ const CFont & CFontMgr::GetFont( const std::string & name ) const
 
     if( iter == m_fontMap.end() )
         throw NExcept::CCriticalException("Font Manager Error!",
-            boost::str( boost::format("Font name can't be found (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Font name can't be found (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
 
     return iter->second;
 

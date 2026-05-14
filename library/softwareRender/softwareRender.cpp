@@ -12,14 +12,12 @@
 #include <SDL.h>
 
 // Standard lib dependencies
-
-// Boost lib dependencies
-#include <boost/format.hpp>
+#include <cstring>
 
 // Game lib dependencies
 #include <common/matrix.h>
 #include <utilities/threadpool.h>
-#include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <utilities/exceptionhandling.h>
 #include <utilities/deletefuncs.h>
 #include <softwareRender/srtexture.h>
@@ -219,7 +217,7 @@ CSRTexture * CSoftwareRender::GetTexture( uint Id )
     else
     {
         throw NExcept::CCriticalException("Texture Find Error!",
-            boost::str( boost::format("Unable to find texture Id (%d).\n\n%s\nLine: %s") % Id % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Unable to find texture Id (%d).\n\n%s\nLine: %d", Id, __FUNCTION__, __LINE__));
     }
 
     return nullptr;
@@ -241,7 +239,7 @@ float * CSoftwareRender::GetVBO( uint Id )
     else
     {
         throw NExcept::CCriticalException("VBO Find Error!",
-            boost::str( boost::format("Unable to find VBO Id (%d).\n\n%s\nLine: %s") % Id % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Unable to find VBO Id (%d).\n\n%s\nLine: %d", Id, __FUNCTION__, __LINE__));
     }
 
     return nullptr;
@@ -263,7 +261,7 @@ uint * CSoftwareRender::GetIBO( uint Id )
     else
     {
         throw NExcept::CCriticalException("IBO Find Error!",
-            boost::str( boost::format("Unable to find IBO Id (%d).\n\n%s\nLine: %s") % Id % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Unable to find IBO Id (%d).\n\n%s\nLine: %d", Id, __FUNCTION__, __LINE__));
     }
 
     return nullptr;

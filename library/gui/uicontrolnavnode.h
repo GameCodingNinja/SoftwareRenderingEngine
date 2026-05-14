@@ -8,15 +8,15 @@
 #ifndef __uicontrol_nav_node_h__
 #define __uicontrol_nav_node_h__
 
-// Boost lib dependencies
-#include <boost/noncopyable.hpp>
-
 // Forward declaration(s)
 class CUIControl;
 
-class CUIControlNavNode : public boost::noncopyable
+class CUIControlNavNode
 {
 public:
+
+    CUIControlNavNode(const CUIControlNavNode&) = delete;
+    CUIControlNavNode& operator=(const CUIControlNavNode&) = delete;
 
     enum ENavNode
     {

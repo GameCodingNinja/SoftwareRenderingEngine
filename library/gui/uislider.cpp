@@ -8,9 +8,6 @@
 // Physical component dependency
 #include <gui/uislider.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <gui/menudefs.h>
 #include <gui/uicontroldefs.h>
@@ -323,9 +320,9 @@ void CUISlider::UpdateSlider()
         std::string valueStr;
 
         if( m_displayValueAsInt )
-            valueStr = boost::str( boost::format(formatStr) % (int)m_curValue );
+            valueStr = NGenFunc::FormatString(formatStr.c_str(), (int)m_curValue);
         else
-            valueStr = boost::str( boost::format(formatStr) % m_curValue );
+            valueStr = NGenFunc::FormatString(formatStr.c_str(), m_curValue);
 
         CreateFontString( valueStr );
     }

@@ -8,9 +8,6 @@
 // Physical component dependency
 #include <gui/menu.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/xmlParser.h>
 #include <utilities/exceptionhandling.h>
@@ -251,7 +248,7 @@ void CMenu::LoadControlFromNode( XMLNode & node, NavHelperMap & pNavNodeMap )
         if( !iter.second )
         {
             throw NExcept::CCriticalException("Control Load Error!",
-                boost::str( boost::format("Duplicate control name (%s).\n\n%s\nLine: %s") % controlName % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Duplicate control name (%s).\n\n%s\nLine: %d", controlName, __FUNCTION__, __LINE__));
         }
 
         // Add a node to the vector with it's control
@@ -335,7 +332,7 @@ void CMenu::SetNodes(
         else
         {
             throw NExcept::CCriticalException("Control Node Find Error!",
-                boost::str( boost::format("Control node doesn't exist (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Control node doesn't exist (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
         }
     }
 
@@ -772,7 +769,7 @@ CUIControl * CMenu::GetPtrToControl( const std::string & nameStr )
     // Check that we have not over run the queue
     if(iter == m_pControlMap.end() )
         throw NExcept::CCriticalException("Menu Control Error!",
-                    boost::str( boost::format("Control being asked for is missing!(%s)\n\n%s\nLine: %s") % nameStr.c_str() % __FUNCTION__ % __LINE__ ));
+                    NGenFunc::FormatString("Control being asked for is missing!(%s)\n\n%s\nLine: %d", nameStr, __FUNCTION__, __LINE__));
 
     // Pass back the pointer if found
     return iter->second;

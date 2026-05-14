@@ -11,8 +11,8 @@
 // SDL lib dependencies
 #include <SDL.h>
 
-// Boost lib dependencies
-#include <boost/lexical_cast.hpp>
+// Standard lib dependencies
+#include <string>
 
 // Game lib dependencies
 #include <common/defs.h>
@@ -419,10 +419,10 @@ void CSettings::SaveSettings()
             XMLNode resolutionNode = displayListNode.getChildNode("resolution");
 
             {
-                std::string tmpStr = boost::lexical_cast<std::string>( m_size.w );
+                std::string tmpStr = std::to_string(static_cast<int>(m_size.w));
                 resolutionNode.updateAttribute(tmpStr.c_str(), "width", "width");
 
-                tmpStr = boost::lexical_cast<std::string>( m_size.h );
+                tmpStr = std::to_string(static_cast<int>(m_size.h));
                 resolutionNode.updateAttribute(tmpStr.c_str(), "height", "height");
             }
 
@@ -465,7 +465,7 @@ void CSettings::SaveSettings()
             // Get the attribute from the "joypad" node
             XMLNode joypadNode = deviceNode.getChildNode("joypad");
 
-            std::string tmpStr = boost::lexical_cast<std::string>( m_gamepadStickDeadZone );
+            std::string tmpStr = std::to_string(m_gamepadStickDeadZone);
 
             joypadNode.updateAttribute(tmpStr.c_str(), "stickDeadZone", "stickDeadZone");
         }

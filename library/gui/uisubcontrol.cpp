@@ -8,9 +8,6 @@
 // Physical component dependency
 #include <gui/uisubcontrol.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/deletefuncs.h>
 #include <utilities/xmlParser.h>
@@ -165,7 +162,7 @@ void CUISubControl::SetNodes(
         else
         {
             throw NExcept::CCriticalException("Control Node Find Error!",
-                boost::str( boost::format("Control node doesn't exist (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Control node doesn't exist (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
         }
     }
 
@@ -515,7 +512,7 @@ CUIControl * CUISubControl::GetSubControl( uint index )
 {
     if( index >= m_pSubControlVec.size() )
         throw NExcept::CCriticalException("Index out of range",
-            boost::str( boost::format("Index out of range of vector size (%d,%d).\n\n%s\nLine: %s") % index % m_pSubControlVec.size() % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Index out of range of vector size (%d,%zu).\n\n%s\nLine: %d", index, m_pSubControlVec.size(), __FUNCTION__, __LINE__));
 
     return m_pSubControlVec[index];
 

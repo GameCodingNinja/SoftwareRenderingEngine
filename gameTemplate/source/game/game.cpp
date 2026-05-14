@@ -8,13 +8,10 @@
 // Physical component dependency
 #include "game.h"
 
-// Boost lib dependencies
-#include <boost/bind.hpp>
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <system/device.h>
 #include <managers/signalmanager.h>
+#include <utilities/genfunc.h>
 #include <gui/menumanager.h>
 #include <gui/uicontrol.h>
 #include <utilities/exceptionhandling.h>
@@ -37,7 +34,7 @@
 ************************************************************************/
 CGame::CGame()
 {
-    CSignalManager::Instance().Connect( boost::bind(&CGame::SmartGuiControlCreate, this, _1) );
+    CSignalManager::Instance().Connect( [this](CUIControl* p) { SmartGuiControlCreate(p); } );
 
 }   // constructor
 
@@ -122,7 +119,7 @@ void CGame::DoStateChange()
 
         else
             throw NExcept::CCriticalException("Error Invalid game state",
-                boost::str( boost::format("Next state not valid (cur %d, next %d).\n\n%s\nLine: %s") % curState % nextState % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Next state not valid (cur %d, next %d).\n\n%s\nLine: %d", curState, nextState, __FUNCTION__, __LINE__));
     }
 
 }   // DoStateChange */

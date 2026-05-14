@@ -13,9 +13,6 @@
 
 // Standard lib dependencies
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/xmlParser.h>
 #include <utilities/exceptionhandling.h>
@@ -86,8 +83,7 @@ void CSoundMgr::LoadGroup( const std::string & group )
     auto listTableIter = m_listTableMap.find( group );
     if( listTableIter == m_listTableMap.end() )
         throw NExcept::CCriticalException("Script List Load Group Data Error!",
-            boost::str( boost::format("Script list group name can't be found (%s).\n\n%s\nLine: %s") 
-                % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Script list group name can't be found (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
 
     // Load the group data if it doesn't already exist
     if( m_soundMapMap.find( group ) == m_soundMapMap.end() )
@@ -98,8 +94,7 @@ void CSoundMgr::LoadGroup( const std::string & group )
     else
     {
         throw NExcept::CCriticalException("Sound Data List 2D load Error!",
-            boost::str( boost::format("Sound data list group has alread been loaded (%s).\n\n%s\nLine: %s")
-                % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Sound data list group has alread been loaded (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
     }
 
 }   // LoadGroup
@@ -144,7 +139,7 @@ void CSoundMgr::LoadFromXML( const std::string & group, const std::string & file
             if( !iter.second )
             {
                 throw NExcept::CCriticalException("Sound Data Load Group Error!",
-                    boost::str( boost::format("Duplicate sound ID (%s - %s).\n\n%s\nLine: %s") % id % group % __FUNCTION__ % __LINE__ ));
+                    NGenFunc::FormatString("Duplicate sound ID (%s - %s).\n\n%s\nLine: %d", id, group, __FUNCTION__, __LINE__));
             }
 
             // Now try to load the sound
@@ -182,7 +177,7 @@ void CSoundMgr::LoadFromXML( const std::string & group, const std::string & file
         if( !iter.second )
         {
             throw NExcept::CCriticalException("Playlist Data Group Load Error!",
-                boost::str( boost::format("Duplicate playlist name! (%s - %s).\n\n%s\nLine: %s") % id % group % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Duplicate playlist name! (%s - %s).\n\n%s\nLine: %d", id, group, __FUNCTION__, __LINE__));
         }
 
         for( int j = 0; j < playListNode.nChildNode(); ++j )
@@ -203,7 +198,7 @@ void CSoundMgr::LoadFromXML( const std::string & group, const std::string & file
             else
             {
                 throw NExcept::CCriticalException("Playlist Data Group Load Error!",
-                    boost::str( boost::format("Playlist sound Id does not exist! (%s - %s).\n\n%s\nLine: %s") % id % group % __FUNCTION__ % __LINE__ ));
+                    NGenFunc::FormatString("Playlist sound Id does not exist! (%s - %s).\n\n%s\nLine: %d", id, group, __FUNCTION__, __LINE__));
             }
         }
     }
@@ -251,11 +246,11 @@ CSound & CSoundMgr::GetSound( const std::string & group, const std::string & sou
 
     auto soundMapIter = m_soundMapMap.find( group );
     if( soundMapIter == m_soundMapMap.end() )
-        NGenFunc::PostDebugMsg( boost::str( boost::format("Sound group can't be found (%s).") % group ) );
+        NGenFunc::PostDebugMsg( NGenFunc::FormatString("Sound group can't be found (%s).", group) );
 
     auto iter = soundMapIter->second.find( soundID );
     if( iter == soundMapIter->second.end() )
-        NGenFunc::PostDebugMsg( boost::str( boost::format("Sound ID can't be found (%s - %s).") % group % soundID ) );
+        NGenFunc::PostDebugMsg( NGenFunc::FormatString("Sound ID can't be found (%s - %s).", group, soundID) );
 
     return iter->second;
 

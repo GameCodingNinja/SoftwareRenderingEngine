@@ -8,14 +8,12 @@
 // Physical component dependency
 #include <managers/texturemanager.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // SDL lib dependencies
 #include <SDL.h>
 
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <softwareRender/softwareRender.h>
 #include <soil/SOIL.h>
 #include <soil/image_helper.h>
@@ -60,7 +58,7 @@ const CTexture & CTextureMgr::LoadFor2D( const std::string & group, const std::s
         uchar * pData = SOIL_load_image( filePath.c_str(), &texture.m_size.w, &texture.m_size.h, &channels, 4 );
         if( (pData == NULL) || (texture.m_size.w == 0) || (texture.m_size.h == 0) )
             throw NExcept::CCriticalException("Texture Load Error!",
-                    boost::str( boost::format("Unable to load texture (%s).\n\n%s\nLine: %s") % filePath % __FUNCTION__ % __LINE__ ));
+                    NGenFunc::FormatString("Unable to load texture (%s).\n\n%s\nLine: %d", filePath, __FUNCTION__, __LINE__));
 
         // Swap the red and blue
         SwapRedandBlue( pData, texture.m_size.w, texture.m_size.h, 4 );
@@ -74,7 +72,7 @@ const CTexture & CTextureMgr::LoadFor2D( const std::string & group, const std::s
         if( texture.GetID() == 0 )
         {
             throw NExcept::CCriticalException("Load Texture Error!", 
-                    boost::str( boost::format("Error loading texture (%s).\n\n%s\nLine: %s") % filePath % __FUNCTION__ % __LINE__ ));
+                    NGenFunc::FormatString("Error loading texture (%s).\n\n%s\nLine: %d", filePath, __FUNCTION__, __LINE__));
         }
 
         // Insert the new texture info
@@ -161,7 +159,7 @@ void CTextureMgr::UnbindTexture()
         if( pImage == nullptr )
         {
             throw NExcept::CCriticalException("Load Texture Error!", 
-                boost::str( boost::format("Error loading texture (%s).\n\n%s\nLine: %s") % filePath % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Error loading texture (%s).\n\n%s\nLine: %d", filePath, __FUNCTION__, __LINE__));
         }
 
         GLuint textureID(0);
@@ -224,7 +222,7 @@ void CTextureMgr::UnbindTexture()
         if( pSurface == nullptr )
         {
             throw NExcept::CCriticalException("Load Texture Error!", 
-                boost::str( boost::format("Error loading texture (%s). %s\n\n%s\nLine: %s") % filePath % SDL_GetError() % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Error loading texture (%s). %s\n\n%s\nLine: %d", filePath, SDL_GetError(), __FUNCTION__, __LINE__));
         }
 
         GLuint textureID = 0;

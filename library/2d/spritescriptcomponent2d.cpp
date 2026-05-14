@@ -14,15 +14,13 @@
 // AngelScript lib dependencies
 #include <angelscript.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <2d/sprite2d.h>
 #include <2d/visualcomponent2d.h>
 #include <objectdata/objectdata2d.h>
 #include <script/scriptmanager.h>
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <common/color.h>
 
 /************************************************************************
@@ -56,7 +54,7 @@ void CSpriteScriptComponent2d::Prepare( const std::string & name )
     if( GetContext()->SetArgObject(0, this) < 0 )
     {
         throw NExcept::CCriticalException("Error Preparing Script!",
-                boost::str( boost::format("There was an error setting the argument the script (%s).\n\n%s\nLine: %s") % name % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("There was an error setting the argument the script (%s).\n\n%s\nLine: %d", name, __FUNCTION__, __LINE__));
     }
 
 }   // Prepare

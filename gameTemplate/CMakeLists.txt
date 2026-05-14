@@ -25,13 +25,6 @@ set(gametemplate_VERSION_MINOR 0)
 # Prefer GLVND OpenGL libraries
 cmake_policy(SET CMP0072 NEW)
 
-set(Boost_USE_STATIC_LIBS       OFF)
-set(Boost_USE_MULTITHREADED      ON)
-set(Boost_USE_STATIC_RUNTIME    OFF)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Need to do this to find SDL2 libraries
 find_package(PkgConfig REQUIRED)
 pkg_search_module(SDL2 REQUIRED sdl2)
@@ -40,7 +33,6 @@ pkg_search_module(SDL2MIXER REQUIRED SDL2_mixer)
 # Use the normal means to find the other packages
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(Boost 1.59 COMPONENTS filesystem thread REQUIRED)
 
 # List all the include directories
 include_directories(
@@ -48,7 +40,6 @@ include_directories(
     ${GLEW_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
     ${SDL2MIXER_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
     ../
     ../library
     ../angelscript/include

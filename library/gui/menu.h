@@ -19,9 +19,6 @@
 #include <vector>
 #include <map>
 
-// Boost lib dependencies
-#include <boost/noncopyable.hpp>
-
 // Game lib dependencies
 #include <gui/menudefs.h>
 #include <gui/uicontrolnavnode.h>
@@ -34,7 +31,7 @@ struct XMLNode;
 class CMenuSprite;
 class CUIControl;
 
-class CMenu : public CObject, boost::noncopyable
+class CMenu : public CObject
 {
 public:
 
@@ -43,6 +40,9 @@ public:
 
     CMenu( const std::string & name );
     virtual ~CMenu();
+
+    CMenu(const CMenu&) = delete;
+    CMenu& operator=(const CMenu&) = delete;
 
     // Load the menu info from XML file
     void LoadFromXML( const std::string & filePath );

@@ -8,11 +8,9 @@
 // Physical component dependency
 #include <objectdata/objectdatamanager2d.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <utilities/xmlParser.h>
 #include <utilities/deletefuncs.h>
 #include <objectdata/objectdata2d.h>
@@ -54,8 +52,7 @@ void CObjectDataMgr2D::LoadGroup( const std::string & group )
     auto listTableIter = m_listTableMap.find( group );
     if( listTableIter == m_listTableMap.end() )
         throw NExcept::CCriticalException("Obj Data List 2D Load Group Data Error!",
-            boost::str( boost::format("Object data list group name can't be found (%s).\n\n%s\nLine: %s") 
-                % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Object data list group name can't be found (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
 
     // Load the group data if it doesn't already exist
     if( m_pObjectDataMapMap.find( group ) == m_pObjectDataMapMap.end() )
@@ -69,8 +66,7 @@ void CObjectDataMgr2D::LoadGroup( const std::string & group )
     else
     {
         throw NExcept::CCriticalException("Obj Data List 2D load Error!",
-            boost::str( boost::format("Object data list group has alread been loaded (%s).\n\n%s\nLine: %s")
-                % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Object data list group has alread been loaded (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
     }
 
 }   // LoadGroup
@@ -125,7 +121,7 @@ void CObjectDataMgr2D::LoadFromXML( const std::string & group, const std::string
         if( !iter.second )
         {
             throw NExcept::CCriticalException("Object Data Load Group Error!",
-                boost::str( boost::format("Duplicate object name (%s - %s).\n\n%s\nLine: %s") % name % group % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Duplicate object name (%s - %s).\n\n%s\nLine: %d", name, group, __FUNCTION__, __LINE__));
         }
 
         // Load in the object data
@@ -149,7 +145,7 @@ void CObjectDataMgr2D::FreeGroup( const std::string & group )
     auto listTableIter = m_listTableMap.find( group );
     if( listTableIter == m_listTableMap.end() )
         throw NExcept::CCriticalException("Obj Data List 2D Load Group Data Error!",
-            boost::str( boost::format("Object data list group name can't be found (%s).\n\n%s\nLine: %s") % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Object data list group name can't be found (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
 
     // See if this group is still loaded
     auto groupMapIter = m_pObjectDataMapMap.find( group );
@@ -179,12 +175,12 @@ const CObjectData2D & CObjectDataMgr2D::GetData( const std::string & group, cons
     auto groupMapIter = m_pObjectDataMapMap.find( group );
     if( groupMapIter == m_pObjectDataMapMap.end() )
         throw NExcept::CCriticalException("Obj Data List 2D Get Data Error!",
-            boost::str( boost::format("Object data list group can't be found (%s).\n\n%s\nLine: %s") % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Object data list group can't be found (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
 
     auto dataMapIter = groupMapIter->second.find( name );
     if( dataMapIter == groupMapIter->second.end() )
         throw NExcept::CCriticalException("Obj Data List 2D Get Data Error!",
-            boost::str( boost::format("Object data list name can't be found (%s).\n\n%s\nLine: (%s - %s)") % group % name % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Object data list name can't be found (%s).\n\n%s\nLine: (%s - %d)", group, name, __FUNCTION__, __LINE__));
 
     return *dataMapIter->second;
 

@@ -8,12 +8,12 @@
 #ifndef __timer_h__
 #define __timer_h__
 
-// Boost lib dependencies
-#include <boost/noncopyable.hpp>
-
-class CTimer : public boost::noncopyable
+class CTimer
 {
 public:
+
+    CTimer(const CTimer&) = delete;
+    CTimer& operator=(const CTimer&) = delete;
 
     enum
     { START_EXPIRED = 1,

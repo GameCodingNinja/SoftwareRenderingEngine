@@ -8,9 +8,6 @@
 // Physical component dependency
 #include <objectdata/objectphysicsdata2d.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <common/color.h>
 #include <utilities/xmlparsehelper.h>

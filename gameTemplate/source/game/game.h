@@ -12,13 +12,7 @@
 #include <system/basegame.h>
 
 // Standard lib dependencies
-
-// Boost lib dependencies
-#include <boost/scoped_ptr.hpp>
-
-// Game lib dependencies
-
-// Game dependencies
+#include <memory>
 
 // Forward declaration(s)
 class CSprite2D;
@@ -69,7 +63,7 @@ private:
 protected:
 
     // scoped pointer Game State
-    boost::scoped_ptr<iGameState> spGameState;
+    std::unique_ptr<iGameState> spGameState;
 
 };
 

@@ -12,9 +12,8 @@
 #include <vector>
 #include <string>
 
-// Boost lib dependencies
-#include <boost/noncopyable.hpp>
-#include <boost/tuple/tuple.hpp>
+// Standard lib dependencies
+#include <tuple>
 
 // Forward declaration(s)
 union SDL_Event;
@@ -42,7 +41,7 @@ public:
     std::vector<std::string> m_createActor;
     std::vector<std::string> m_createActorVec;
 
-    std::vector< boost::tuple<std::string, int> > m_createMegaTexture;
+    std::vector< std::tuple<std::string, int> > m_createMegaTexture;
 
     std::vector<std::string> m_createInstanceMesh;
 
@@ -76,9 +75,12 @@ public:
 };
 
 
-class iGameState : public boost::noncopyable
+class iGameState
 {
 public:
+
+    iGameState(const iGameState&) = delete;
+    iGameState& operator=(const iGameState&) = delete;
 
     // Constructor
     iGameState() : m_gameState(EGS_NULL), m_nextState(EGS_NULL){};

@@ -8,11 +8,9 @@
 // Physical component dependency
 #include <physics/physicsworldmanager.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <utilities/xmlParser.h>
 #include <utilities/deletefuncs.h>
 #include <physics/physicsworld.h>
@@ -44,8 +42,7 @@ void CPhysicsWorldManager::LoadWorld( const std::string & group )
     auto listTableIter = m_listTableMap.find( group );
     if( listTableIter == m_listTableMap.end() )
         throw NExcept::CCriticalException("Obj Data List 2D Load Group Data Error!",
-            boost::str( boost::format("Object data list group name can't be found (%s).\n\n%s\nLine: %s") 
-                % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Object data list group name can't be found (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
 
     // Load the group data if it doesn't already exist
     if( m_pWorldMap.find( group ) == m_pWorldMap.end() )
@@ -55,8 +52,7 @@ void CPhysicsWorldManager::LoadWorld( const std::string & group )
     else
     {
         throw NExcept::CCriticalException("Physics world load Error!",
-            boost::str( boost::format("Physics world group has alread been loaded (%s).\n\n%s\nLine: %s")
-                % group % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Physics world group has alread been loaded (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
     }
 
 }   // LoadWorld
@@ -96,8 +92,7 @@ CPhysicsWorld * CPhysicsWorldManager::GetWorld( const std::string & group )
 
     else
         throw NExcept::CCriticalException("Physics World Manager Error!",
-                boost::str( boost::format("Physics world doesn't exist (%s).\n\n%s\nLine: %s") 
-                            % group.c_str() % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("Physics world doesn't exist (%s).\n\n%s\nLine: %d", group.c_str(), __FUNCTION__, __LINE__));
 
     return NULL;
 

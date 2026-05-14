@@ -14,9 +14,6 @@
 // Standard lib dependencies
 #include <vector>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 //#include <managers/hudmanager.h>
 #include <managers/texturemanager.h>

@@ -26,7 +26,6 @@ target_link_libraries(
     ${OPENGL_LIBRARIES}
     GLEW::GLEW
     ${SDL2_LIBRARIES}
-    ${SDL2MIXER_LIBRARIES}
-    ${Boost_LIBRARIES} )
+    ${SDL2MIXER_LIBRARIES} )
 
 install(TARGETS gametemplate DESTINATION ${CMAKE_BINARY_DIR})

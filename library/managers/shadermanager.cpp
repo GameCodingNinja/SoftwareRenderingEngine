@@ -11,9 +11,8 @@
 // Physical component dependency
 #include <managers/shadermanager.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-#include <boost/scoped_array.hpp>
+// Standard lib dependencies
+#include <memory>
 
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
@@ -54,7 +53,7 @@ void CShaderMgr::LoadFromXML( const std::string & filePath )
     if( mainNode.isEmpty() )
     {
         throw NExcept::CCriticalException("Shader Load Error!",
-            boost::str( boost::format("Shader XML empty (%s).\n\n%s\nLine: %s") % filePath % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Shader XML empty (%s).\n\n%s\nLine: %d", filePath, __FUNCTION__, __LINE__));
     }
 
     for( int i = 0; i < mainNode.nChildNode(); ++i )
@@ -78,7 +77,7 @@ void CShaderMgr::CreateShader( const XMLNode & node )
     if( iter != m_shaderMap.end() )
     {
         throw NExcept::CCriticalException("Shader Load Error!",
-            boost::str( boost::format("Shader of this name already exists (%s).\n\n%s\nLine: %s") % shaderStrId % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Shader of this name already exists (%s).\n\n%s\nLine: %d", shaderStrId, __FUNCTION__, __LINE__));
     }
 
     // Insert the new shader
@@ -117,7 +116,7 @@ void CShaderMgr::CreateShader( GLenum shaderType, const std::string & filePath )
     if( shaderID == 0 )
     {
         throw NExcept::CCriticalException("Create Shader Error!", 
-            boost::str( boost::format("Error creating shader (%s).\n\n%s\nLine: %s") % filePath % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Error creating shader (%s).\n\n%s\nLine: %d", filePath, __FUNCTION__, __LINE__));
     }
 
     if( shaderType == GL_VERTEX_SHADER )
@@ -126,7 +125,7 @@ void CShaderMgr::CreateShader( GLenum shaderType, const std::string & filePath )
         m_Iter->second.SetFragmentID( shaderID );
 
     // Load the shader from file
-    boost::shared_array<char> spChar = NGenFunc::FileToBuf( filePath );
+    auto spChar = NGenFunc::FileToBuf( filePath );
     const char * pChar = spChar.get();
     glShaderSource( shaderID, 1, &pChar, nullptr );
 
@@ -141,11 +140,11 @@ void CShaderMgr::CreateShader( GLenum shaderType, const std::string & filePath )
         GLint maxLength = 0;
         glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &maxLength);
 
-        boost::scoped_array<char> scpError( new char[maxLength] );
+        auto scpError = std::make_unique<char[]>(maxLength);
         glGetShaderInfoLog(shaderID, maxLength, &maxLength, scpError.get());
 
         throw NExcept::CCriticalException("Create Vertex Shader Error!", 
-            boost::str( boost::format("Error compiling vertex shader (%s).\n\n%s.\n\n%s\nLine: %s") % filePath % scpError.get() % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Error compiling vertex shader (%s).\n\n%s.\n\n%s\nLine: %d", filePath, scpError.get(), __FUNCTION__, __LINE__));
     }
 
 }   // CreateShader
@@ -161,7 +160,7 @@ void CShaderMgr::CreateProgram()
     if( m_Iter->second.GetProgramID() == 0 )
     {
         throw NExcept::CCriticalException("Create Shader Error!", 
-            boost::str( boost::format("Error creating shader (%s).\n\n%s\nLine: %s") % m_Iter->first % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Error creating shader (%s).\n\n%s\nLine: %d", m_Iter->first, __FUNCTION__, __LINE__));
     }
 
     // Attach shaders to the program
@@ -211,7 +210,7 @@ void CShaderMgr::LinkProgram()
     if( success != GL_TRUE )
     {
         throw NExcept::CCriticalException("Link Shader Error!", 
-            boost::str( boost::format("Error linking shader (%s).\n\n%s\nLine: %s") % m_Iter->first % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Error linking shader (%s).\n\n%s\nLine: %d", m_Iter->first, __FUNCTION__, __LINE__));
     }
 
 }   // LinkProgram
@@ -253,7 +252,7 @@ void CShaderMgr::GetUniformLocation( const XMLNode & node )
     if( location < 0 )
     {
         throw NExcept::CCriticalException("Shader Uniform Location Error!", 
-            boost::str( boost::format("Error Uniform Location (%s) not found (%s).\n\n%s\nLine: %s") % name % m_Iter->first % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Error Uniform Location (%s) not found (%s).\n\n%s\nLine: %d", name, m_Iter->first, __FUNCTION__, __LINE__));
     }
 
 }   // GetUniformLocation
@@ -269,7 +268,7 @@ const CShaderData & CShaderMgr::GetShaderData( const std::string & shaderID )
     if( m_Iter == m_shaderMap.end() )
     {
         throw NExcept::CCriticalException("Shader Data Error!",
-            boost::str( boost::format("Shader of this name doesn't exists (%s).\n\n%s\nLine: %s") % shaderID % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Shader of this name doesn't exists (%s).\n\n%s\nLine: %d", shaderID, __FUNCTION__, __LINE__));
     }
 
     return m_Iter->second;

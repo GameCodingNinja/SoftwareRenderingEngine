@@ -13,9 +13,6 @@
 
 // Standard lib dependencies
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
@@ -66,9 +63,9 @@ void CSignalManager::DispatchCuedEvents()
 /************************************************************************
 *    desc:  Connect to the smart gui control signal
 ************************************************************************/
-void CSignalManager::Connect( const SmartGuiControlSignal::slot_type & slot )
+void CSignalManager::Connect( const SmartGuiControlSignal & slot )
 {
-    m_smartGuiControlSignal.connect(slot);
+    m_smartGuiControlSignalVec.push_back(slot);
 
 }	// Connect
 
@@ -78,7 +75,8 @@ void CSignalManager::Connect( const SmartGuiControlSignal::slot_type & slot )
 ************************************************************************/
 void CSignalManager::Broadcast( CUIControl * pControl )
 {
-    m_smartGuiControlSignal(pControl);
+    for( auto & slot : m_smartGuiControlSignalVec )
+        slot(pControl);
 
 }	// Broadcast
 

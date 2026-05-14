@@ -13,8 +13,8 @@
 #include <vector>
 #include <map>
 
-// Boost lib dependencies
-#include <boost/signals2.hpp>
+// Standard lib dependencies
+#include <functional>
 
 // Forward declaration(s)
 class CUIControl;
@@ -23,8 +23,8 @@ class CSignalManager
 {
 public:
 
-    // Define the boost signal
-    typedef boost::signals2::signal<void (CUIControl *)> SmartGuiControlSignal;
+    // Define the signal type
+    using SmartGuiControlSignal = std::function<void(CUIControl*)>;
 
     // Get the instance of the singleton class
     static CSignalManager & Instance()
@@ -40,7 +40,7 @@ public:
     void DispatchCuedEvents();
 
     // Connect to the smart gui signal
-    void Connect( const SmartGuiControlSignal::slot_type & slot );
+    void Connect( const SmartGuiControlSignal & slot );
 
     // Broadcast smart gui control signal
     void Broadcast( CUIControl * pControl );
@@ -68,8 +68,8 @@ private:
     // User even cue
     std::vector<CEvent> m_eventCue;
 
-    // Boost signals
-    SmartGuiControlSignal m_smartGuiControlSignal;
+    // Signal callbacks
+    std::vector<SmartGuiControlSignal> m_smartGuiControlSignalVec;
 
 };
 

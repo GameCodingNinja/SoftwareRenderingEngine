@@ -11,10 +11,8 @@
 // SDL lib dependencies
 #include <SDL.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
+#include <utilities/genfunc.h>
 #include <utilities/highresolutiontimer.h>
 
 /************************************************************************
@@ -86,11 +84,11 @@ void CStatCounter::ResetCounters()
 ************************************************************************/
 const std::string & CStatCounter::GetStatString()
 {
-    m_statStr = boost::str( boost::format("fps: %d - scx: %d of %d - vis: %d")// - xObjs: %2% - cObjs: %3% - Shadows: %4% - PlayerPos: %5%x %6%y - Vid Mem Used: %7% megs") 
-                % ((int)(m_elapsedFPSCounter / (double)m_cycleCounter))
-                % (m_activeContexCounter / m_cycleCounter)
-                % m_scriptContexCounter
-                % (m_vObjCounter / m_cycleCounter)
+    m_statStr = NGenFunc::FormatString("fps: %d - scx: %d of %d - vis: %d",// - xObjs: %2% - cObjs: %3% - Shadows: %4% - PlayerPos: %5%x %6%y - Vid Mem Used: %7% megs
+                (int)(m_elapsedFPSCounter / (double)m_cycleCounter),
+                (m_activeContexCounter / m_cycleCounter),
+                m_scriptContexCounter,
+                (m_vObjCounter / m_cycleCounter)
                 //% (cObjCounter / m_cycleCounter)
                 //% (shadowCounter / m_cycleCounter)
                 //% (playerPos.x)

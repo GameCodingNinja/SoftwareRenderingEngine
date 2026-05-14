@@ -18,10 +18,7 @@
 #include <string>
 #include <vector>
 #include <map>
-
-// Boost lib dependencies
-#include <boost/noncopyable.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <memory>
 
 // Game lib dependencies
 #include <gui/uicontroldefs.h>
@@ -37,7 +34,7 @@ class CMenuSprite;
 class CSmartGuiControl;
 struct XMLNode;
 
-class CUIControl : public CObject, boost::noncopyable
+class CUIControl : public CObject
 {
 public:
 
@@ -46,6 +43,9 @@ public:
 
     // Destructor
     virtual ~CUIControl();
+
+    CUIControl(const CUIControl&) = delete;
+    CUIControl& operator=(const CUIControl&) = delete;
 
     // Load the initial info from XML node
     virtual void LoadFromNode( const XMLNode & node );
@@ -243,7 +243,7 @@ private:
     CPoint<float> m_collisionCenter;
 
     // Base control action class scoped pointer
-    boost::scoped_ptr<CSmartGuiControl> m_scpSmartGui;
+    std::unique_ptr<CSmartGuiControl> m_scpSmartGui;
 
     // Mouse selection type
     NMenu::EActionPress m_mouseSelectType;

@@ -8,15 +8,13 @@
 // Physical component dependency
 #include <script/scriptcolor.h>
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // AngelScript lib dependencies
 #include <angelscript.h>
 
 // Game lib dependencies
 #include <common/color.h>
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 
 namespace NScriptColor
 {
@@ -57,7 +55,7 @@ namespace NScriptColor
     {
         if( value < 0 )
             throw NExcept::CCriticalException("Error Registering CColor type!",
-                boost::str( boost::format("CColor type could not be created.\n\n%s\nLine: %s") % __FUNCTION__ % __LINE__ ));
+                NGenFunc::FormatString("CColor type could not be created.\n\n%s\nLine: %d", __FUNCTION__, __LINE__));
     }
 
 

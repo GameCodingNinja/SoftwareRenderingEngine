@@ -9,9 +9,6 @@
 #ifndef _smart_pointers_h_
 #define _smart_pointers_h_
 
-// Boost lib dependencies
-#include <boost/noncopyable.hpp>
-
 namespace NSmart
 {
     //*****************************************************************************
@@ -22,9 +19,12 @@ namespace NSmart
      *
      *****************************************************************************/
     template <class T>
-    class scoped_filehandle_ptr : boost::noncopyable
+    class scoped_filehandle_ptr
     {
     public:
+
+        scoped_filehandle_ptr(const scoped_filehandle_ptr&) = delete;
+        scoped_filehandle_ptr& operator=(const scoped_filehandle_ptr&) = delete;
 
         explicit scoped_filehandle_ptr(T * p = nullptr) : ptr(p)
         {}
@@ -82,9 +82,12 @@ namespace NSmart
      *
      *****************************************************************************/
     template <class T>
-    class scoped_com_ptr : boost::noncopyable
+    class scoped_com_ptr
     {
     public:
+
+        scoped_com_ptr(const scoped_com_ptr&) = delete;
+        scoped_com_ptr& operator=(const scoped_com_ptr&) = delete;
 
         explicit scoped_com_ptr(T * p = nullptr) : ptr(p)
         {}

@@ -13,9 +13,6 @@
 
 // Standard lib dependencies
 
-// Boost lib dependencies
-#include <boost/format.hpp>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
@@ -67,8 +64,7 @@ void CSound::Load( const std::string & file )
 
     if( m_pVoid == nullptr )
         throw NExcept::CCriticalException("Sound load Error!",
-            boost::str( boost::format("Error loading sound (%s).\n\n%s\nLine: %s")
-                % file % __FUNCTION__ % __LINE__ ));
+            NGenFunc::FormatString("Error loading sound (%s).\n\n%s\nLine: %d", file, __FUNCTION__, __LINE__));
 
 }   // Load
 
