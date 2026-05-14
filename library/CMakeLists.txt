@@ -38,6 +38,7 @@ add_library(
         utilities/timer.cpp
         utilities/xmlParser.cpp
         utilities/mathfunc.cpp
+        utilities/threadpool.cpp
         managers/texturemanager.cpp
         managers/soundmanager.cpp
         managers/managerbase.cpp

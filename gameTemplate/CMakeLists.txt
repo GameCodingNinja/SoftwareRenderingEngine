@@ -14,6 +14,10 @@ cmake_minimum_required(VERSION 3.10)
 
 project(gametemplate)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -no-pie -std=c++17 -Wall -pthread")
+
 # The version number.
 set(gametemplate_VERSION_MAJOR 1)
 set(gametemplate_VERSION_MINOR 0)
@@ -25,7 +29,7 @@ set(Boost_USE_STATIC_LIBS       OFF)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Need to do this to find SDL2 libraries

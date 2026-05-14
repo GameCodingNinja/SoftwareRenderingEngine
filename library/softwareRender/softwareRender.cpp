@@ -15,11 +15,10 @@
 
 // Boost lib dependencies
 #include <boost/format.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/bind.hpp>
 
 // Game lib dependencies
 #include <common/matrix.h>
+#include <utilities/threadpool.h>
 #include <utilities/exceptionhandling.h>
 #include <utilities/exceptionhandling.h>
 #include <utilities/deletefuncs.h>
@@ -37,17 +36,11 @@ CSoftwareRender::CSoftwareRender() :
     m_pSurface(nullptr),
     m_textIdInc(0),
     m_vboIdInc(0),
-    m_iboIdInc(0),
-    m_upThreadGroup( new boost::thread_group )
+    m_iboIdInc(0)
 {
-    // This has to be created before creating the threads otherwise the threads
-    // will fall through and you'll be waiting for threads that don't exist
-    m_upAsioWork.reset( new boost::asio::executor_work_guard<boost::asio::io_context::executor_type>(boost::asio::make_work_guard(m_asioService)) );
-
-    // Create a thread pool that with the same number of threads as cores
-    for( size_t i = 0; i < boost::thread::hardware_concurrency() ; ++i )
-	    m_upThreadGroup->create_thread(
-            boost::bind( &boost::asio::io_context::run, &m_asioService ));
+    // Init the thread pool if not already active
+    if( !CThreadPool::Instance().isActive() )
+        CThreadPool::Instance().init( 2, 0 );
 
 }   // constructor
 
@@ -57,11 +50,6 @@ CSoftwareRender::CSoftwareRender() :
 ************************************************************************/
 CSoftwareRender::~CSoftwareRender()
 {
-    m_asioService.stop();
-    m_upThreadGroup->join_all();
-    m_upAsioWork.reset();
-    m_upThreadGroup.reset();
-
     NDelFunc::DeleteMapPointers(m_pTextureMap);
     NDelFunc::DeleteMapArrayPointers(m_pVBOMap);
     NDelFunc::DeleteMapArrayPointers(m_pIBOMap);
@@ -336,7 +324,8 @@ void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, cons
 
     if( !m_pendingJobs.empty() )
     {
-        boost::wait_for_all(m_pendingJobs.begin(), m_pendingJobs.end());
+        for( auto & fut : m_pendingJobs )
+            fut.get();
         m_pendingJobs.clear();
     }
 
@@ -350,11 +339,8 @@ void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, cons
 ****************************************************************************/
 void CSoftwareRender::PushJob( CRender2d * pRender2d )
 {
-    typedef boost::packaged_task<int> task_t;
-    boost::shared_ptr<task_t> task = boost::make_shared<task_t>(boost::bind(&RenderTri, pRender2d));
-    boost::shared_future<int> fut(task->get_future());
-    m_pendingJobs.push_back(fut);
-    boost::asio::post(m_asioService, boost::bind(&boost::packaged_task<int>::operator(), task));
+    m_pendingJobs.emplace_back(
+        CThreadPool::Instance().post( &RenderTri, pRender2d ) );
 
 }   // PushJob
 

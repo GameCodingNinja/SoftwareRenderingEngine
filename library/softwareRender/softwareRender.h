@@ -14,10 +14,7 @@
 #include <string>
 #include <map>
 #include <vector>
-
-// Boost lib dependencies
-#include <boost/asio.hpp>
-#include <boost/thread.hpp>
+#include <future>
 
 // Game lib dependencies
 #include <common/defs.h>
@@ -121,17 +118,8 @@ private:
     // Half size of view port
     CSize<float> m_halfScreen;
 
-    // Boost ASIO service
-    boost::asio::io_context m_asioService;
-
-    // Boost ASIO service work guard
-    std::unique_ptr<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>> m_upAsioWork;
-
-    // Boost thread group
-    std::unique_ptr<boost::thread_group> m_upThreadGroup;
-
     // Vector of current jobs
-    std::vector<boost::shared_future<int> > m_pendingJobs;
+    std::vector<std::future<int>> m_pendingJobs;
 
 };
 
