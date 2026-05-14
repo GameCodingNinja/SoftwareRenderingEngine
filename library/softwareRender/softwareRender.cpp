@@ -42,12 +42,12 @@ CSoftwareRender::CSoftwareRender() :
 {
     // This has to be created before creating the threads otherwise the threads
     // will fall through and you'll be waiting for threads that don't exist
-    m_upAsioWork.reset( new boost::asio::io_service::work(m_asioService) );
+    m_upAsioWork.reset( new boost::asio::executor_work_guard<boost::asio::io_context::executor_type>(boost::asio::make_work_guard(m_asioService)) );
 
     // Create a thread pool that with the same number of threads as cores
     for( size_t i = 0; i < boost::thread::hardware_concurrency() ; ++i )
 	    m_upThreadGroup->create_thread(
-            boost::bind( &boost::asio::io_service::run, &m_asioService ));
+            boost::bind( &boost::asio::io_context::run, &m_asioService ));
 
 }   // constructor
 
@@ -354,7 +354,7 @@ void CSoftwareRender::PushJob( CRender2d * pRender2d )
     boost::shared_ptr<task_t> task = boost::make_shared<task_t>(boost::bind(&RenderTri, pRender2d));
     boost::shared_future<int> fut(task->get_future());
     m_pendingJobs.push_back(fut);
-    m_asioService.post(boost::bind(&boost::packaged_task<int>::operator(), task));
+    boost::asio::post(m_asioService, boost::bind(&boost::packaged_task<int>::operator(), task));
 
 }   // PushJob
 

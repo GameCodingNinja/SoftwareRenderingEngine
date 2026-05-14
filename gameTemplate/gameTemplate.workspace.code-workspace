@@ -5,6 +5,12 @@
 		},
 		{
 			"path": "../library"
+		},
+		{
+			"path": "../Box2D"
+		},
+		{
+			"path": "../angelscript"
 		}
 	],
 	"settings": {}

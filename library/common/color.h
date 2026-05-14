@@ -9,6 +9,7 @@
 
 // Standard lib dependencies
 #include <string>
+#include <cmath>
 
 // Boost lib dependencies
 #include <boost/format.hpp>

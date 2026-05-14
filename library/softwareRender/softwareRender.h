@@ -122,10 +122,10 @@ private:
     CSize<float> m_halfScreen;
 
     // Boost ASIO service
-    boost::asio::io_service m_asioService;
+    boost::asio::io_context m_asioService;
 
-    // Boost ASIO service work
-    std::unique_ptr<boost::asio::io_service::work> m_upAsioWork;
+    // Boost ASIO service work guard
+    std::unique_ptr<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>> m_upAsioWork;
 
     // Boost thread group
     std::unique_ptr<boost::thread_group> m_upThreadGroup;

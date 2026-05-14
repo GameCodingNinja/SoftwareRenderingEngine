@@ -20,13 +20,13 @@ add_executable(
 # List all the libraries to link against
 target_link_libraries(
     gametemplate
+    library
+    angelscript
+    Box2D
     ${OPENGL_LIBRARIES}
-    ${GLEW_LIBRARY}
+    GLEW::GLEW
     ${SDL2_LIBRARIES}
     ${SDL2MIXER_LIBRARIES}
-    ${Boost_LIBRARIES}
-    ${CMAKE_BINARY_DIR}/angelscript/libangelscript.a
-    ${CMAKE_BINARY_DIR}/Box2D/libBox2D.a
-    ${CMAKE_BINARY_DIR}/library/liblibrary.a )
+    ${Boost_LIBRARIES} )
 
 install(TARGETS gametemplate DESTINATION ${CMAKE_BINARY_DIR})
