@@ -21,6 +21,7 @@ CSettings::CSettings()
     : m_size(1024,768),
       m_default_size(1280,768),
       m_fullScreen(false),
+      m_vSync(true),
       m_viewAngle(45.f),
       m_minZdist(5.f),
       m_maxZdist(1000.f)
@@ -77,6 +78,14 @@ void CSettings::LoadFromXML( const std::string & filePath )
             m_minZdist = std::atof(projectionNode.getAttribute("minZDist"));
             m_maxZdist = std::atof(projectionNode.getAttribute("maxZDist"));
             m_viewAngle = std::atof(projectionNode.getAttribute("view_angle")) * defs_DEG_TO_RAD;
+
+            // Get the VSync setting from the backbuffer node
+            XMLNode backBufferNode = deviceNode.getChildNode("backbuffer");
+            if( !backBufferNode.isEmpty() )
+            {
+                if( backBufferNode.isAttributeSet("VSync") )
+                    m_vSync = (backBufferNode.getAttribute("VSync") == std::string("true"));
+            }
         }
     }
 
@@ -212,6 +221,20 @@ float CSettings::GetDeviceRatio() const
 
 
 /************************************************************************
+*    desc:  Get/Set VSync
+************************************************************************/
+bool CSettings::GetVSync() const
+{
+    return m_vSync;
+}
+
+void CSettings::SetVSync( bool value )
+{
+    m_vSync = value;
+}
+
+
+/************************************************************************
 *    desc:  Get/Set full screen
 ************************************************************************/
 bool CSettings::GetFullScreen() const
@@ -254,6 +277,17 @@ void CSettings::SaveSettings()
                     tmpStr = "true";
 
                 resolutionNode.updateAttribute(tmpStr.c_str(), "fullscreen", "fullscreen");
+            }
+        }
+
+        XMLNode deviceNode = m_mainNode.getChildNode("device");
+        if( !deviceNode.isEmpty() )
+        {
+            XMLNode backBufferNode = deviceNode.getChildNode("backbuffer");
+            if( !backBufferNode.isEmpty() )
+            {
+                std::string tmpStr = m_vSync ? "true" : "false";
+                backBufferNode.updateAttribute(tmpStr.c_str(), "VSync", "VSync");
             }
         }
 

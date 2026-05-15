@@ -3,6 +3,7 @@
 *    FILE NAME:       waylandframebuffer.cpp
 *
 *    DESCRIPTION:     Wayland framebuffer implementation using wl_shm
+*                     with double buffering for tear-free rendering.
 ************************************************************************/
 
 #ifdef __linux__
@@ -25,7 +26,6 @@
 
 /************************************************************************
 *    desc:  Create a temporary file descriptor for shared memory
-*           Uses memfd_create (Linux 3.17+) for anonymous shared memory
 ************************************************************************/
 static int CreateShmFd(int size)
 {
@@ -44,11 +44,11 @@ static int CreateShmFd(int size)
 
 
 /************************************************************************
-*    desc:  Buffer release listener — called when compositor is done
-*           with the buffer. We use a single buffer so this is a no-op.
+*    desc:  Buffer release listener — compositor is done with this buffer
 ************************************************************************/
-static void BufferRelease(void* /*data*/, struct wl_buffer* /*buffer*/)
+static void BufferRelease(void* data, struct wl_buffer* buffer)
 {
+    static_cast<CWaylandFrameBuffer*>(data)->OnBufferRelease(buffer);
 }
 
 static const struct wl_buffer_listener bufferListener = {
@@ -57,52 +57,76 @@ static const struct wl_buffer_listener bufferListener = {
 
 
 /************************************************************************
-*    desc:  Constructor
+*    desc:  Frame callback listener — compositor is ready for next frame
 ************************************************************************/
-CWaylandFrameBuffer::CWaylandFrameBuffer(
-    struct wl_display* pDisplay, struct wl_shm* pShm, struct wl_surface* pSurface, int width, int height) :
-    m_pDisplay(pDisplay),
-    m_pSurface(pSurface),
-    m_pBuffer(nullptr),
-    m_pPixels(nullptr),
-    m_shmFd(-1),
-    m_shmSize(0),
-    m_width(width),
-    m_height(height)
+static void FrameDone(void* data, struct wl_callback* callback, uint32_t /*time*/)
+{
+    wl_callback_destroy(callback);
+    static_cast<CWaylandFrameBuffer*>(data)->OnFrameDone();
+}
+
+static const struct wl_callback_listener frameListener = {
+    FrameDone
+};
+
+
+/************************************************************************
+*    desc:  Create a single shm buffer
+************************************************************************/
+struct wl_buffer* CWaylandFrameBuffer::CreateBuffer(struct wl_shm* pShm, uint32_t*& pPixelsOut)
 {
     int stride = m_width * 4;
-    m_shmSize = stride * m_height;
 
-    // Create shared memory file
-    m_shmFd = CreateShmFd(m_shmSize);
-    if( m_shmFd < 0 )
+    int fd = CreateShmFd(m_shmSize);
+    if( fd < 0 )
         throw NExcept::CCriticalException("Wayland Framebuffer Error!",
             "Failed to create shared memory file.");
 
-    // Map the shared memory
-    void* data = mmap(nullptr, m_shmSize, PROT_READ | PROT_WRITE, MAP_SHARED, m_shmFd, 0);
+    void* data = mmap(nullptr, m_shmSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if( data == MAP_FAILED )
     {
-        close(m_shmFd);
+        close(fd);
         throw NExcept::CCriticalException("Wayland Framebuffer Error!",
             "Failed to mmap shared memory.");
     }
-    m_pPixels = static_cast<uint32_t*>(data);
+    pPixelsOut = static_cast<uint32_t*>(data);
+    std::memset(pPixelsOut, 0, m_shmSize);
 
-    // Clear the buffer
-    std::memset(m_pPixels, 0, m_shmSize);
+    struct wl_shm_pool* pool = wl_shm_create_pool(pShm, fd, m_shmSize);
+    struct wl_buffer* buffer = wl_shm_pool_create_buffer(
+        pool, 0, m_width, m_height, stride, WL_SHM_FORMAT_XRGB8888);
+    wl_buffer_add_listener(buffer, &bufferListener, this);
 
-    // Create wl_shm_pool and wl_buffer
-    struct wl_shm_pool* pool = wl_shm_create_pool(pShm, m_shmFd, m_shmSize);
-    m_pBuffer = wl_shm_pool_create_buffer(pool, 0, m_width, m_height, stride, WL_SHM_FORMAT_XRGB8888);
-    wl_buffer_add_listener(m_pBuffer, &bufferListener, this);
-
-    // Pool can be destroyed immediately — the buffer retains the reference
     wl_shm_pool_destroy(pool);
+    close(fd);
 
-    // Close the fd — the mmap and wayland pool keep the memory alive
-    close(m_shmFd);
-    m_shmFd = -1;
+    return buffer;
+}
+
+
+/************************************************************************
+*    desc:  Constructor — creates two shm buffers for double buffering
+************************************************************************/
+CWaylandFrameBuffer::CWaylandFrameBuffer(
+    struct wl_display* pDisplay, struct wl_shm* pShm, struct wl_surface* pSurface, int width, int height, bool vSync) :
+    m_pDisplay(pDisplay),
+    m_pSurface(pSurface),
+    m_backIndex(0),
+    m_shmSize(width * height * 4),
+    m_width(width),
+    m_height(height),
+    m_pFrameCallback(nullptr),
+    m_frameReady(true),
+    m_vSync(vSync)
+{
+    m_pBuffer[0] = nullptr;
+    m_pBuffer[1] = nullptr;
+    m_pPixels[0] = nullptr;
+    m_pPixels[1] = nullptr;
+
+    // Create both buffers
+    m_pBuffer[0] = CreateBuffer(pShm, m_pPixels[0]);
+    m_pBuffer[1] = CreateBuffer(pShm, m_pPixels[1]);
 
 }   // Constructor
 
@@ -112,33 +136,36 @@ CWaylandFrameBuffer::CWaylandFrameBuffer(
 ************************************************************************/
 CWaylandFrameBuffer::~CWaylandFrameBuffer()
 {
-    if( m_pBuffer != nullptr )
+    if( m_pFrameCallback != nullptr )
     {
-        wl_buffer_destroy(m_pBuffer);
-        m_pBuffer = nullptr;
+        wl_callback_destroy(m_pFrameCallback);
+        m_pFrameCallback = nullptr;
     }
 
-    if( m_pPixels != nullptr )
+    for( int i = 0; i < 2; ++i )
     {
-        munmap(m_pPixels, m_shmSize);
-        m_pPixels = nullptr;
-    }
+        if( m_pBuffer[i] != nullptr )
+        {
+            wl_buffer_destroy(m_pBuffer[i]);
+            m_pBuffer[i] = nullptr;
+        }
 
-    if( m_shmFd >= 0 )
-    {
-        close(m_shmFd);
-        m_shmFd = -1;
+        if( m_pPixels[i] != nullptr )
+        {
+            munmap(m_pPixels[i], m_shmSize);
+            m_pPixels[i] = nullptr;
+        }
     }
 
 }   // Destructor
 
 
 /************************************************************************
-*    desc:  Get the raw pixel buffer
+*    desc:  Get the raw pixel buffer (returns the back buffer)
 ************************************************************************/
 uint32_t* CWaylandFrameBuffer::GetPixels()
 {
-    return m_pPixels;
+    return m_pPixels[m_backIndex];
 
 }   // GetPixels
 
@@ -168,21 +195,69 @@ int CWaylandFrameBuffer::GetHeight() const
 ************************************************************************/
 void CWaylandFrameBuffer::Clear()
 {
-    std::memset(m_pPixels, 0, m_shmSize);
+    std::memset(m_pPixels[m_backIndex], 0, m_shmSize);
 
 }   // Clear
 
 
 /************************************************************************
-*    desc:  Attach and commit the buffer to the Wayland surface
+*    desc:  Swap buffers and commit the back buffer to the compositor.
+*           Uses frame callbacks to throttle to the display refresh rate.
 ************************************************************************/
 void CWaylandFrameBuffer::Flip()
 {
-    wl_surface_attach(m_pSurface, m_pBuffer, 0, 0);
+    // If VSync is enabled, wait for the compositor to signal it's ready
+    if( m_vSync )
+    {
+        while( !m_frameReady.load() )
+        {
+            wl_display_dispatch(m_pDisplay);
+        }
+    }
+
+    // Submit the current back buffer to the compositor
+    wl_surface_attach(m_pSurface, m_pBuffer[m_backIndex], 0, 0);
     wl_surface_damage_buffer(m_pSurface, 0, 0, m_width, m_height);
+
+    // Request a frame callback for vsync throttling
+    if( m_vSync )
+    {
+        m_frameReady.store(false);
+        m_pFrameCallback = wl_surface_frame(m_pSurface);
+        wl_callback_add_listener(m_pFrameCallback, &frameListener, this);
+    }
+
     wl_surface_commit(m_pSurface);
     wl_display_flush(m_pDisplay);
 
+    // Swap — the compositor holds the submitted buffer while we draw
+    // to the other one. By the time we finish drawing and call Flip
+    // again, the compositor has moved on to our new buffer and released
+    // the old one.
+    m_backIndex = 1 - m_backIndex;
+
 }   // Flip
+
+
+/************************************************************************
+*    desc:  Called when the compositor releases a buffer
+************************************************************************/
+void CWaylandFrameBuffer::OnBufferRelease(struct wl_buffer* /*buffer*/)
+{
+    // No-op — double buffering ensures we never write to the buffer
+    // the compositor is currently reading
+
+}   // OnBufferRelease
+
+
+/************************************************************************
+*    desc:  Called when the compositor is ready for the next frame
+************************************************************************/
+void CWaylandFrameBuffer::OnFrameDone()
+{
+    m_pFrameCallback = nullptr;
+    m_frameReady.store(true);
+
+}   // OnFrameDone
 
 #endif  // __linux__

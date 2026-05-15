@@ -26,6 +26,7 @@
 #include <system/eventqueue.h>
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
+#include <utilities/settings.h>
 
 
 // ======================================================================
@@ -363,9 +364,10 @@ void CWaylandWindow::Create(int width, int height, const char* title)
     while( !m_configured )
         wl_display_roundtrip(m_pDisplay);
 
-    // Create the framebuffer
+    // Create the framebuffer with VSync setting
     m_upFrameBuffer = std::make_unique<CWaylandFrameBuffer>(
-        m_pDisplay, m_pShm, m_pSurface, m_width, m_height);
+        m_pDisplay, m_pShm, m_pSurface, m_width, m_height,
+        CSettings::Instance().GetVSync());
 
 }   // Create
 

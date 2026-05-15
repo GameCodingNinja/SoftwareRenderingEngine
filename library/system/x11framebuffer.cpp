@@ -3,6 +3,7 @@
 *    FILE NAME:       x11framebuffer.cpp
 *
 *    DESCRIPTION:     X11 framebuffer implementation using XImage
+*                     with double buffering for tear-free rendering.
 ************************************************************************/
 
 #ifdef __linux__
@@ -16,51 +17,56 @@
 
 // Standard lib dependencies
 #include <cstring>
-#include <cstdlib>
 
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
 
 /************************************************************************
-*    desc:  Constructor
+*    desc:  Constructor — creates two pixel buffers and XImages
 ************************************************************************/
 CX11FrameBuffer::CX11FrameBuffer(Display* pDisplay, Window window, GC gc, int width, int height) :
     m_pDisplay(pDisplay),
     m_window(window),
     m_gc(gc),
-    m_pPixels(nullptr),
-    m_pImage(nullptr),
+    m_backIndex(0),
     m_width(width),
     m_height(height)
 {
-    // Allocate the pixel buffer
-    m_pPixels = new uint32_t[m_width * m_height];
-    std::memset(m_pPixels, 0, m_width * m_height * sizeof(uint32_t));
+    m_pPixels[0] = nullptr;
+    m_pPixels[1] = nullptr;
+    m_pImage[0] = nullptr;
+    m_pImage[1] = nullptr;
 
-    // Get the default visual's depth
     int screen = DefaultScreen(m_pDisplay);
     int depth = DefaultDepth(m_pDisplay, screen);
     Visual* pVisual = DefaultVisual(m_pDisplay, screen);
 
-    // Create an XImage wrapping our pixel buffer
-    m_pImage = XCreateImage(
-        m_pDisplay,
-        pVisual,
-        depth,
-        ZPixmap,
-        0,                              // offset
-        reinterpret_cast<char*>(m_pPixels),
-        m_width,
-        m_height,
-        32,                             // bitmap_pad (bits)
-        0 );                            // bytes_per_line (0 = auto)
+    for( int i = 0; i < 2; ++i )
+    {
+        // Allocate the pixel buffer
+        m_pPixels[i] = new uint32_t[m_width * m_height];
+        std::memset(m_pPixels[i], 0, m_width * m_height * sizeof(uint32_t));
 
-    if( m_pImage == nullptr )
-        throw NExcept::CCriticalException("X11 Framebuffer Error!",
-            "Failed to create XImage.");
+        // Create an XImage wrapping our pixel buffer
+        m_pImage[i] = XCreateImage(
+            m_pDisplay,
+            pVisual,
+            depth,
+            ZPixmap,
+            0,                              // offset
+            reinterpret_cast<char*>(m_pPixels[i]),
+            m_width,
+            m_height,
+            32,                             // bitmap_pad (bits)
+            0 );                            // bytes_per_line (0 = auto)
 
-    // Set byte order to match the host
-    m_pImage->byte_order = LSBFirst;
+        if( m_pImage[i] == nullptr )
+            throw NExcept::CCriticalException("X11 Framebuffer Error!",
+                "Failed to create XImage.");
+
+        // Set byte order to match the host
+        m_pImage[i]->byte_order = LSBFirst;
+    }
 
 }   // Constructor
 
@@ -70,30 +76,33 @@ CX11FrameBuffer::CX11FrameBuffer(Display* pDisplay, Window window, GC gc, int wi
 ************************************************************************/
 CX11FrameBuffer::~CX11FrameBuffer()
 {
-    if( m_pImage != nullptr )
+    for( int i = 0; i < 2; ++i )
     {
-        // XDestroyImage frees the data pointer too, so null it
-        // to prevent double-free since we allocated with new[]
-        m_pImage->data = nullptr;
-        XDestroyImage(m_pImage);
-        m_pImage = nullptr;
-    }
+        if( m_pImage[i] != nullptr )
+        {
+            // XDestroyImage frees the data pointer too, so null it
+            // to prevent double-free since we allocated with new[]
+            m_pImage[i]->data = nullptr;
+            XDestroyImage(m_pImage[i]);
+            m_pImage[i] = nullptr;
+        }
 
-    if( m_pPixels != nullptr )
-    {
-        delete[] m_pPixels;
-        m_pPixels = nullptr;
+        if( m_pPixels[i] != nullptr )
+        {
+            delete[] m_pPixels[i];
+            m_pPixels[i] = nullptr;
+        }
     }
 
 }   // Destructor
 
 
 /************************************************************************
-*    desc:  Get the raw pixel buffer
+*    desc:  Get the raw pixel buffer (returns the back buffer)
 ************************************************************************/
 uint32_t* CX11FrameBuffer::GetPixels()
 {
-    return m_pPixels;
+    return m_pPixels[m_backIndex];
 
 }   // GetPixels
 
@@ -123,13 +132,13 @@ int CX11FrameBuffer::GetHeight() const
 ************************************************************************/
 void CX11FrameBuffer::Clear()
 {
-    std::memset(m_pPixels, 0, m_width * m_height * sizeof(uint32_t));
+    std::memset(m_pPixels[m_backIndex], 0, m_width * m_height * sizeof(uint32_t));
 
 }   // Clear
 
 
 /************************************************************************
-*    desc:  Display the pixel buffer contents in the window via XPutImage
+*    desc:  Blit the back buffer to the window and swap
 ************************************************************************/
 void CX11FrameBuffer::Flip()
 {
@@ -137,13 +146,16 @@ void CX11FrameBuffer::Flip()
         m_pDisplay,
         m_window,
         m_gc,
-        m_pImage,
+        m_pImage[m_backIndex],
         0, 0,           // src x, y
         0, 0,           // dest x, y
         m_width,
         m_height );
 
     XFlush(m_pDisplay);
+
+    // Swap to the other buffer
+    m_backIndex = 1 - m_backIndex;
 
 }   // Flip
 

@@ -3,6 +3,7 @@
 *    FILE NAME:       x11framebuffer.h
 *
 *    DESCRIPTION:     X11 framebuffer implementation using XImage
+*                     with double buffering for tear-free rendering.
 ************************************************************************/
 
 #ifndef __x11framebuffer_h__
@@ -30,7 +31,7 @@ public:
     // Destructor
     ~CX11FrameBuffer();
 
-    // Get the raw pixel buffer
+    // Get the raw pixel buffer (returns the back buffer)
     uint32_t* GetPixels() override;
 
     // Get framebuffer dimensions
@@ -40,7 +41,7 @@ public:
     // Clear the pixel buffer to zero (black)
     void Clear() override;
 
-    // Display the pixel buffer contents in the window
+    // Swap buffers and display the back buffer contents
     void Flip() override;
 
 private:
@@ -50,11 +51,12 @@ private:
     Window m_window;
     GC m_gc;
 
-    // Pixel buffer
-    uint32_t* m_pPixels;
+    // Double buffer: two pixel buffers and XImages
+    uint32_t* m_pPixels[2];
+    XImage* m_pImage[2];
 
-    // XImage wrapping the pixel buffer
-    XImage* m_pImage;
+    // Which buffer the engine is drawing to (0 or 1)
+    int m_backIndex;
 
     // Dimensions
     int m_width;

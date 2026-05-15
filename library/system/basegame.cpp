@@ -21,6 +21,7 @@
 #include <system/iwindow.h>
 #include <system/iframebuffer.h>
 #include <system/eventqueue.h>
+#include <softwareRender/softwareRender.h>
 
 /************************************************************************
 *    desc:  Constructer
@@ -144,6 +145,9 @@ bool CBaseGame::GameLoop()
 ****************************************************************************/
 void CBaseGame::Render()
 {
+    // Update the software renderer's pixel pointer for the current back buffer
+    CSoftwareRender::Instance().SetSurface( m_pFrameBuffer );
+
     m_pFrameBuffer->Clear();
 
     // Do the pre render

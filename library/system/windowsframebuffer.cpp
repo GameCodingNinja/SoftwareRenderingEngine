@@ -3,6 +3,7 @@
 *    FILE NAME:       windowsframebuffer.cpp
 *
 *    DESCRIPTION:     Windows framebuffer implementation using DIB section
+*                     with double buffering for tear-free rendering.
 ************************************************************************/
 
 #ifdef _WIN32
@@ -17,23 +18,22 @@
 #include <utilities/exceptionhandling.h>
 
 /************************************************************************
-*    desc:  Constructor — creates a DIB section for the pixel buffer
+*    desc:  Constructor — creates two DIB sections for double buffering
 ************************************************************************/
 CWindowsFrameBuffer::CWindowsFrameBuffer(HWND hWnd, HDC hDC, int width, int height) :
     m_hWnd(hWnd),
     m_hDC(hDC),
-    m_hMemDC(nullptr),
-    m_hBitmap(nullptr),
-    m_hOldBitmap(nullptr),
-    m_pPixels(nullptr),
+    m_backIndex(0),
     m_width(width),
     m_height(height)
 {
-    // Create a memory DC compatible with the window DC
-    m_hMemDC = CreateCompatibleDC(m_hDC);
-    if( m_hMemDC == nullptr )
-        throw NExcept::CCriticalException("Windows Framebuffer Error!",
-            "Failed to create compatible DC.");
+    for( int i = 0; i < 2; ++i )
+    {
+        m_hMemDC[i] = nullptr;
+        m_hBitmap[i] = nullptr;
+        m_hOldBitmap[i] = nullptr;
+        m_pPixels[i] = nullptr;
+    }
 
     // Setup the bitmap info for a 32-bit top-down DIB
     BITMAPINFO bmi;
@@ -45,21 +45,30 @@ CWindowsFrameBuffer::CWindowsFrameBuffer(HWND hWnd, HDC hDC, int width, int heig
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
 
-    // Create the DIB section — m_pPixels will point to the pixel data
-    m_hBitmap = CreateDIBSection(
-        m_hDC, &bmi, DIB_RGB_COLORS,
-        reinterpret_cast<void**>(&m_pPixels),
-        nullptr, 0 );
+    for( int i = 0; i < 2; ++i )
+    {
+        // Create a memory DC compatible with the window DC
+        m_hMemDC[i] = CreateCompatibleDC(m_hDC);
+        if( m_hMemDC[i] == nullptr )
+            throw NExcept::CCriticalException("Windows Framebuffer Error!",
+                "Failed to create compatible DC.");
 
-    if( m_hBitmap == nullptr || m_pPixels == nullptr )
-        throw NExcept::CCriticalException("Windows Framebuffer Error!",
-            "Failed to create DIB section.");
+        // Create the DIB section — m_pPixels will point to the pixel data
+        m_hBitmap[i] = CreateDIBSection(
+            m_hDC, &bmi, DIB_RGB_COLORS,
+            reinterpret_cast<void**>(&m_pPixels[i]),
+            nullptr, 0 );
 
-    // Select the bitmap into the memory DC
-    m_hOldBitmap = static_cast<HBITMAP>(SelectObject(m_hMemDC, m_hBitmap));
+        if( m_hBitmap[i] == nullptr || m_pPixels[i] == nullptr )
+            throw NExcept::CCriticalException("Windows Framebuffer Error!",
+                "Failed to create DIB section.");
 
-    // Clear to black
-    std::memset(m_pPixels, 0, m_width * m_height * sizeof(uint32_t));
+        // Select the bitmap into the memory DC
+        m_hOldBitmap[i] = static_cast<HBITMAP>(SelectObject(m_hMemDC[i], m_hBitmap[i]));
+
+        // Clear to black
+        std::memset(m_pPixels[i], 0, m_width * m_height * sizeof(uint32_t));
+    }
 
 }   // Constructor
 
@@ -69,32 +78,35 @@ CWindowsFrameBuffer::CWindowsFrameBuffer(HWND hWnd, HDC hDC, int width, int heig
 ************************************************************************/
 CWindowsFrameBuffer::~CWindowsFrameBuffer()
 {
-    if( m_hMemDC != nullptr )
+    for( int i = 0; i < 2; ++i )
     {
-        if( m_hOldBitmap != nullptr )
-            SelectObject(m_hMemDC, m_hOldBitmap);
+        if( m_hMemDC[i] != nullptr )
+        {
+            if( m_hOldBitmap[i] != nullptr )
+                SelectObject(m_hMemDC[i], m_hOldBitmap[i]);
 
-        DeleteDC(m_hMemDC);
-        m_hMemDC = nullptr;
+            DeleteDC(m_hMemDC[i]);
+            m_hMemDC[i] = nullptr;
+        }
+
+        if( m_hBitmap[i] != nullptr )
+        {
+            DeleteObject(m_hBitmap[i]);
+            m_hBitmap[i] = nullptr;
+        }
+
+        m_pPixels[i] = nullptr;
     }
-
-    if( m_hBitmap != nullptr )
-    {
-        DeleteObject(m_hBitmap);
-        m_hBitmap = nullptr;
-    }
-
-    m_pPixels = nullptr;
 
 }   // Destructor
 
 
 /************************************************************************
-*    desc:  Get the raw pixel buffer
+*    desc:  Get the raw pixel buffer (returns the back buffer)
 ************************************************************************/
 uint32_t* CWindowsFrameBuffer::GetPixels()
 {
-    return m_pPixels;
+    return m_pPixels[m_backIndex];
 
 }   // GetPixels
 
@@ -124,17 +136,20 @@ int CWindowsFrameBuffer::GetHeight() const
 ************************************************************************/
 void CWindowsFrameBuffer::Clear()
 {
-    std::memset(m_pPixels, 0, m_width * m_height * sizeof(uint32_t));
+    std::memset(m_pPixels[m_backIndex], 0, m_width * m_height * sizeof(uint32_t));
 
 }   // Clear
 
 
 /************************************************************************
-*    desc:  Blit the DIB to the window
+*    desc:  Blit the back buffer to the window and swap
 ************************************************************************/
 void CWindowsFrameBuffer::Flip()
 {
-    BitBlt(m_hDC, 0, 0, m_width, m_height, m_hMemDC, 0, 0, SRCCOPY);
+    BitBlt(m_hDC, 0, 0, m_width, m_height, m_hMemDC[m_backIndex], 0, 0, SRCCOPY);
+
+    // Swap to the other buffer
+    m_backIndex = 1 - m_backIndex;
 
 }   // Flip
 

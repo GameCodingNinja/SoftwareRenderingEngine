@@ -3,6 +3,7 @@
 *    FILE NAME:       windowsframebuffer.h
 *
 *    DESCRIPTION:     Windows framebuffer implementation using DIB section
+*                     with double buffering for tear-free rendering.
 ************************************************************************/
 
 #ifndef __windowsframebuffer_h__
@@ -26,7 +27,7 @@ public:
     // Destructor
     ~CWindowsFrameBuffer();
 
-    // Get the raw pixel buffer
+    // Get the raw pixel buffer (returns the back buffer)
     uint32_t* GetPixels() override;
 
     // Get framebuffer dimensions
@@ -36,7 +37,7 @@ public:
     // Clear the pixel buffer to zero (black)
     void Clear() override;
 
-    // Display the pixel buffer contents in the window
+    // Swap buffers and display the back buffer contents
     void Flip() override;
 
 private:
@@ -45,13 +46,14 @@ private:
     HWND m_hWnd;
     HDC m_hDC;
 
-    // Memory DC and DIB section
-    HDC m_hMemDC;
-    HBITMAP m_hBitmap;
-    HBITMAP m_hOldBitmap;
+    // Double buffer: two memory DCs and DIB sections
+    HDC m_hMemDC[2];
+    HBITMAP m_hBitmap[2];
+    HBITMAP m_hOldBitmap[2];
+    uint32_t* m_pPixels[2];
 
-    // Pixel buffer (points into the DIB section)
-    uint32_t* m_pPixels;
+    // Which buffer the engine is drawing to (0 or 1)
+    int m_backIndex;
 
     // Dimensions
     int m_width;

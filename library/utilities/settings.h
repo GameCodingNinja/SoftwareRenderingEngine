@@ -54,6 +54,10 @@ public:
     // Get ratios
     float GetDeviceRatio() const;
 
+    // Get/Set VSync
+    bool GetVSync() const;
+    void SetVSync( bool value );
+
     // Get/Set full screen
     bool GetFullScreen() const;
     void SetFullScreen( bool value );
@@ -92,6 +96,9 @@ private:
 
     // Full screen flag loaded from file
     bool m_fullScreen;
+
+    // VSync flag
+    bool m_vSync;
 
     // view angle
     float m_viewAngle;
