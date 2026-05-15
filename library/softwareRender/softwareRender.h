@@ -92,9 +92,6 @@ private:
     // Render the triangle
     //void RenderTri( CRender2d * pRender );
 
-    // Push the job onto the worker threads
-    void PushJob( CRender2d * pRender2d );
-
 private:
 
     // The windows surface for 2d software rendering (Do Not FREE))
@@ -117,9 +114,6 @@ private:
 
     // Half size of view port
     CSize<float> m_halfScreen;
-
-    // Vector of current jobs
-    std::vector<std::future<int>> m_pendingJobs;
 
 };
 

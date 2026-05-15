@@ -24,8 +24,11 @@
 #include <softwareRender/triangleslope.h>
 #include <softwareRender/renderdefs.h>
 
-// Render the triangle
-int RenderTri( CRender2d * pRender );
+// Render a single triangle within a screen strip
+void RenderTriStrip( const CRender2d & render, int yMin, int yMax );
+
+// Render all triangles within a screen strip
+void RenderStrip( const std::vector<CRender2d> * pTriList, int yMin, int yMax );
 
 /************************************************************************
 *    desc:  Constructor
@@ -297,34 +300,53 @@ void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, cons
         pTrans[i].uv.v = pVert[i].uv.v * pText->m_size.h;
     }
 
-    // Get the number of triangles used
+    // Collect surviving triangles for strip-based rendering
+    std::vector<CRender2d> triList;
     int triCount = indexCount / TRI;
     int vIndex(0);
 
     for( int i = 0; i < triCount; ++i )
     {
-        // Allocate the render data be used
-        CRender2d * pRender2d = new CRender2d( pText, m_pSurface );
+        CRender2d render2d( pText, m_pSurface );
 
         // Copy over the verts for this triangle
         for( int j = 0; j < TRI; ++j )
-            pRender2d->m_vec[j] = pTrans[ pIBO[vIndex++] ];
+            render2d.m_vec[j] = pTrans[ pIBO[vIndex++] ];
 
-        // Should this be culled?
-        if( pRender2d->Cull( m_pSurface->w, m_pSurface->h ) )
-            // Can't see this triangle so delete it
-            NDelFunc::Delete( pRender2d );
-        else
-            // Add this triangle to the thread job pool
-            PushJob( pRender2d );
-            //RenderTri( pRender2d );
+        // Only keep visible triangles
+        if( !render2d.Cull( m_pSurface->w, m_pSurface->h ) )
+            triList.push_back( render2d );
     }
 
-    if( !m_pendingJobs.empty() )
+    // Dispatch strip-rendering jobs: each thread owns a horizontal
+    // strip of the screen so there are no write conflicts
+    if( !triList.empty() )
     {
-        for( auto & fut : m_pendingJobs )
-            fut.get();
-        m_pendingJobs.clear();
+        int screenH = m_pSurface->h;
+        size_t threads = CThreadPool::Instance().threadCount();
+
+        if( threads > 0 )
+        {
+            int stripH = screenH / threads;
+            std::vector<std::future<void>> futures;
+
+            for( size_t t = 0; t < threads; ++t )
+            {
+                int yMin = t * stripH;
+                int yMax = (t == threads - 1) ? screenH : (t + 1) * stripH;
+
+                futures.emplace_back(
+                    CThreadPool::Instance().post( RenderStrip, &triList, yMin, yMax ) );
+            }
+
+            for( auto & fut : futures )
+                fut.get();
+        }
+        else
+        {
+            // Fallback: single-threaded
+            RenderStrip( &triList, 0, screenH );
+        }
     }
 
     NDelFunc::DeleteArray( pTrans );
@@ -333,21 +355,32 @@ void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, cons
 
 
 /***************************************************************************
-*   desc:  Push the job onto the worker threads
+*   desc:  Render all triangles within a horizontal screen strip
 ****************************************************************************/
-void CSoftwareRender::PushJob( CRender2d * pRender2d )
+void RenderStrip( const std::vector<CRender2d> * pTriList, int yMin, int yMax )
 {
-    m_pendingJobs.emplace_back(
-        CThreadPool::Instance().post( &RenderTri, pRender2d ) );
+    for( const auto & tri : *pTriList )
+        RenderTriStrip( tri, yMin, yMax );
 
-}   // PushJob
+}   // RenderStrip
 
 
 /***************************************************************************
-*   desc:  Render the triangle
+*   desc:  Render a single triangle, only writing scanlines in [yMin, yMax)
 ****************************************************************************/
-int RenderTri( CRender2d * pRender )
+void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
 {
+    // Early out if triangle doesn't overlap this strip
+    float triYMin = render.m_vec[0].vert.y;
+    float triYMax = render.m_vec[0].vert.y;
+    for( int i = 1; i < TRI; ++i )
+    {
+        if( render.m_vec[i].vert.y < triYMin ) triYMin = render.m_vec[i].vert.y;
+        if( render.m_vec[i].vert.y > triYMax ) triYMax = render.m_vec[i].vert.y;
+    }
+    if( triYMax < yMin || triYMin >= yMax )
+        return;
+
     // Define all the variables up here for speed reasons.
     int xStart, xEnd, width, height, slopeCount(TRI);
     uint fixStepU, fixStepV, fixU, fixV;
@@ -358,33 +391,32 @@ int RenderTri( CRender2d * pRender )
     const uint UV_SHIFT(20);
 
     // Setup local variables for faster access to data
-    uint screenW( pRender->m_pSurface->w );
-    uint screenH( pRender->m_pSurface->h );
-    uint textureW( pRender->m_pText->m_size.w );
-    uint textureH( pRender->m_pText->m_size.h );
-    uint * pPixels = (uint *)pRender->m_pSurface->pixels;
-    uint * pText = (uint *)pRender->m_pText->m_pData;
+    uint screenW( render.m_pSurface->w );
+    uint textureW( render.m_pText->m_size.w );
+    uint textureH( render.m_pText->m_size.h );
+    uint * pPixels = (uint *)render.m_pSurface->pixels;
+    uint * pText = (uint *)render.m_pText->m_pData;
 
     // Calculate if we need uv plotting correction. .5 is needed for odd sizes
     float uOffset( (textureW % 2) ? 0.5f : 0.f );
     float vOffset( (textureH % 2) ? 0.5f : 0.f );
 
     // Create the range check variables
-    uint uvOffsetMax = pRender->m_pText->m_size.w * pRender->m_pText->m_size.h;
+    uint uvOffsetMax = render.m_pText->m_size.w * render.m_pText->m_size.h;
     uint uvOffset;
 
-    uint scrnOffsetMax = pRender->m_pSurface->w * pRender->m_pSurface->h;
+    uint scrnOffsetMax = render.m_pSurface->w * render.m_pSurface->h;
     uint scrnOffset;
 
     // Loop to find the top vert of the triangle to extablish vertex order
     int vTop(0);
     for( int i = 1; i < TRI; ++i )
-        if( pRender->m_vec[i].vert.y < pRender->m_vec[vTop].vert.y )
+        if( render.m_vec[i].vert.y < render.m_vec[vTop].vert.y )
             vTop = i;
 
     // Init the slope class for managing the scan lines
-    CTriangleSlope leftSlope( pRender->m_vec, vTop, CTriangleSlope::EST_LEFT );
-    CTriangleSlope rightSlope( pRender->m_vec, vTop, CTriangleSlope::EST_RIGHT );
+    CTriangleSlope leftSlope( render.m_vec, vTop, CTriangleSlope::EST_LEFT );
+    CTriangleSlope rightSlope( render.m_vec, vTop, CTriangleSlope::EST_RIGHT );
     
     while( slopeCount > 0 )
     {
@@ -403,17 +435,10 @@ int RenderTri( CRender2d * pRender )
             // Number of scan lines to fill
             height = leftSlope.m_length;
 
-            // Make sure the height and the segment offset
-            // don't go off the bottom of the screen
-            if( (leftSlope.y + height) >= (int)screenH )
+            // Clip to the bottom of this strip
+            if( (leftSlope.y + height) >= yMax )
             {
-                // Reset the height because it will exceed
-                // the height of the buffer
-                height = screenH - leftSlope.y;
-
-                // Even if there are more edges, we can't see
-                // them so set the edge count to zero because 
-                // this is that last render height we can do
+                height = yMax - leftSlope.y;
                 slopeCount = 0;
             }
         }
@@ -422,17 +447,10 @@ int RenderTri( CRender2d * pRender )
             // Number of scan lines to fill
             height = rightSlope.m_length;
 
-            // Make sure the height and the segment offset
-            // don't go off the bottom of the screen
-            if( (rightSlope.y + height) >= (int)screenH )
+            // Clip to the bottom of this strip
+            if( (rightSlope.y + height) >= yMax )
             {
-                // Reset the height because it will exceed
-                // the height of the buffer
-                height = screenH - rightSlope.y;
-
-                // Even if there are more edges, we can't see
-                // them so set the edge count to zero because 
-                // this is that last render height we can do
+                height = yMax - rightSlope.y;
                 slopeCount = 0;
             }
         }
@@ -445,68 +463,66 @@ int RenderTri( CRender2d * pRender )
         // Loop for the height of the slope
         while( height-- > 0 )
         {
-            // Calculate initial values
-            xStart = leftSlope.m_slope.vert.x;
-            xEnd = rightSlope.m_slope.vert.x;
-            width = xEnd - xStart;
-
-            // Make sure we are within the bounds of the screen
-            if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < (int)screenH) )
+            // Only render scanlines within this strip's range
+            if( leftSlope.y >= yMin )
             {
-                u = leftSlope.m_slope.uv.u;
-                v = leftSlope.m_slope.uv.v;
+                // Calculate initial values
+                xStart = leftSlope.m_slope.vert.x;
+                xEnd = rightSlope.m_slope.vert.x;
+                width = xEnd - xStart;
 
-                // Create the step amounts for the scan line
-                stepU = (rightSlope.m_slope.uv.u - u) / width;
-                stepV = (rightSlope.m_slope.uv.v - v) / width;
-
-                // Clip the scan-line
-                if( xStart < 0 )
+                // Make sure we are within the bounds of the screen
+                if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < yMax) )
                 {
-                    step = -xStart;
+                    u = leftSlope.m_slope.uv.u;
+                    v = leftSlope.m_slope.uv.v;
 
-                    u += (stepU * step);
-                    v += (stepV * step);
+                    // Create the step amounts for the scan line
+                    stepU = (rightSlope.m_slope.uv.u - u) / width;
+                    stepV = (rightSlope.m_slope.uv.v - v) / width;
 
-                    xStart = 0;
-                    width = xEnd;
-                }
+                    // Clip the scan-line
+                    if( xStart < 0 )
+                    {
+                        step = -xStart;
 
-                if( xEnd > (int)screenW )
-                {
-                    xEnd = screenW;
-                    width = xEnd - xStart;
-                }
+                        u += (stepU * step);
+                        v += (stepV * step);
 
-                // Index into the starting point of the display buffers scan line
-                scrnOffset = (leftSlope.y * screenW) + xStart;
-                pDBuffer = pPixels + scrnOffset;
+                        xStart = 0;
+                        width = xEnd;
+                    }
 
-                // Init the fix point varaibles for speedy rendering
-                fixStepU = stepU * float( 1 << UV_SHIFT );
-                fixStepV = stepV * float( 1 << UV_SHIFT );
-                fixU = (u + uOffset) * float( 1 << UV_SHIFT );
-                fixV = (v + vOffset) * float( 1 << UV_SHIFT );
-                
-                //u += uOffset;
-                //v += vOffset;
+                    if( xEnd > (int)screenW )
+                    {
+                        xEnd = screenW;
+                        width = xEnd - xStart;
+                    }
 
-                while( width-- > 0 )
-                {
-                    //uvOffset = (int(v)  * textureW) + int(u);
-                    uvOffset = ((fixV >> UV_SHIFT) * textureW) + (fixU >> UV_SHIFT);
+                    // Index into the starting point of the display buffers scan line
+                    scrnOffset = (leftSlope.y * screenW) + xStart;
+                    pDBuffer = pPixels + scrnOffset;
 
-                    // Rotation can cause reading and writing outside of the range of our buffers
-                    // Do this check to insure we are within range
-                    if( (uvOffset < uvOffsetMax) && (scrnOffset < scrnOffsetMax) )
-                        *pDBuffer = *(pText + uvOffset);
+                    // Init the fix point varaibles for speedy rendering
+                    fixStepU = stepU * float( 1 << UV_SHIFT );
+                    fixStepV = stepV * float( 1 << UV_SHIFT );
+                    fixU = (u + uOffset) * float( 1 << UV_SHIFT );
+                    fixV = (v + vOffset) * float( 1 << UV_SHIFT );
 
-                    ++pDBuffer;
-                    ++scrnOffset;
-                    //u += stepU;
-                    //v += stepV;
-                    fixU += fixStepU;
-                    fixV += fixStepV;
+                    while( width-- > 0 )
+                    {
+                        uvOffset = ((fixV >> UV_SHIFT) * textureW) + (fixU >> UV_SHIFT);
+
+                        // Rotation can cause reading and writing outside of the range of our buffers
+                        // Do this check to insure we are within range
+                        if( (uvOffset < uvOffsetMax) && (scrnOffset < scrnOffsetMax) )
+                            *pDBuffer = *(pText + uvOffset);
+
+                        ++pDBuffer;
+                        ++scrnOffset;
+                        fixU += fixStepU;
+                        fixV += fixStepV;
+                    }
                 }
             }
 
@@ -515,11 +531,4 @@ int RenderTri( CRender2d * pRender )
         }
     }
 
-    // Clean up
-    NDelFunc::Delete( pRender );
-
-    // A return value is needed for rendering in a thread
-    // even though this case doesn't need one.
-    return 2;
-
-}   // Render
+}   // RenderTriStrip

@@ -8,12 +8,6 @@
 // Physical component dependency
 #include <system/device.h>
 
-// Glew dependencies
-#include <GL/glew.h>
-
-// SDL lib dependencies
-#include <SDL_opengl.h>
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
 #include <utilities/settings.h>
@@ -62,7 +56,7 @@ void CDevice::Create()
     const CSize<int> size( CSettings::Instance().GetSize() );
 
     // Create window
-    m_pWindow = SDL_CreateWindow( "", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.GetW(), size.GetH(), SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN );
+    m_pWindow = SDL_CreateWindow( "", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.GetW(), size.GetH(), SDL_WINDOW_HIDDEN );
     if( m_pWindow == nullptr )
         throw NExcept::CCriticalException("Game window could not be created!", SDL_GetError() );
 

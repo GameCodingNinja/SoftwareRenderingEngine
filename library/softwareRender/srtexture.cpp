@@ -9,7 +9,7 @@
 #include <softwareRender/srtexture.h>
 
 // Game lib dependencies
-#include <soil/SOIL.h>
+#include <soil/stb_image_aug.h>
 
 /************************************************************************
 *    desc:  Constructer
@@ -32,7 +32,7 @@ CSRTexture::CSRTexture( uint w, uint h, uchar * pData ) :
 CSRTexture::~CSRTexture()
 {
     if( m_pData != nullptr )
-        SOIL_free_image_data( m_pData );
+        stbi_image_free( m_pData );
 
 }	// destructer
 

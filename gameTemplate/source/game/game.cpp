@@ -10,32 +10,19 @@
 
 // Game lib dependencies
 #include <system/device.h>
-#include <managers/signalmanager.h>
 #include <utilities/genfunc.h>
-#include <gui/menumanager.h>
-#include <gui/uicontrol.h>
 #include <utilities/exceptionhandling.h>
 #include <utilities/settings.h>
 
 // Game dependencies
 #include "../state/startupstate.h"
 #include "../state/titlescreenstate.h"
-#include "../state/loadstate.h"
-#include "../state/runstate.h"
-#include "../smartGUI/smartconfirmbtn.h"
-#include "../smartGUI/smartresolutionbtn.h"
-#include "../smartGUI/smartapplysettingsbtn.h"
-#include "../smartGUI/smartfullscreencheckbox.h"
-#include "../smartGUI/smartvsynccheckbox.h"
-#include "../smartGUI/smartdeadzoneslider.h"
 
 /************************************************************************
 *    desc:  Constructer
 ************************************************************************/
 CGame::CGame()
 {
-    CSignalManager::Instance().Connect( [this](CUIControl* p) { SmartGuiControlCreate(p); } );
-
 }   // constructor
 
 
@@ -66,32 +53,6 @@ void CGame::Init()
 }	// Init
 
 
-/************************************************************************
-*    desc:  Callback for when a smart gui control is created
-************************************************************************/
-void CGame::SmartGuiControlCreate( CUIControl * pUIControl )
-{
-    if( pUIControl->GetExecutionAction() == "confirmation_menu" )
-        pUIControl->SetSmartGui( new CSmartConfirmBtn( pUIControl ) );
-
-    else if( pUIControl->GetName() == "resolution_btn_lst" )
-        pUIControl->SetSmartGui( new CSmartResolutionBtn( pUIControl ) );
-
-    else if( pUIControl->GetName() == "settings_apply_btn" )
-        pUIControl->SetSmartGui( new CSmartApplySettingsBtn( pUIControl ) );
-
-    else if( pUIControl->GetName() == "full_screen_check_box" )
-        pUIControl->SetSmartGui( new CSmartScrnCheckBox( pUIControl ) );
-
-    else if( pUIControl->GetName() == "v-sync_check_box" )
-            pUIControl->SetSmartGui( new CSmartVSyncCheckBox( pUIControl ) );
-
-    else if( pUIControl->GetName() == "settings_dead_zone_slider" )
-            pUIControl->SetSmartGui( new CSmartDeadZoneSlider( pUIControl ) );
-
-}   // SmartGuiControlCreate
-
-
 /***************************************************************************
 *    decs:  Handle the state change
 ****************************************************************************/
@@ -105,17 +66,8 @@ void CGame::DoStateChange()
         // Get the game state we are moving to
         const EGameState nextState = spGameState->GetNextState();
 
-        // Get the message to the next state
-        const CStateMessage stateMessage = spGameState->GetStateMessage();
-        
         if( nextState == EGS_TITLE_SCREEN )
             spGameState.reset( new CTitleScreenState );
-
-        else if( nextState == EGS_GAME_LOAD )
-            spGameState.reset( new CLoadState( stateMessage ) );
-
-        else if( nextState == EGS_RUN )
-            spGameState.reset( new CRunState );
 
         else
             throw NExcept::CCriticalException("Error Invalid game state",

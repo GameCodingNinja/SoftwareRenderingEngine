@@ -17,7 +17,6 @@
 // Boost lib dependencies
 
 // Game lib dependencies
-#include <common/defs.h>
 
 // Game dependencies
 
@@ -95,9 +94,6 @@ protected:
 
     // flag to indicate the game is running
     bool m_gameRunning;
-
-    // Clear buffer mask
-    uint m_clearBufferMask;
 
 };
 

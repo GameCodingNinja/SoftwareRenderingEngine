@@ -8,11 +8,8 @@
 // Physical component dependency
 #include <system/basegame.h>
 
-// Glew dependencies
-#include <GL/glew.h>
-
 // SDL lib dependencies
-#include <SDL_opengl.h>
+#include <SDL.h>
 
 // Standard lib dependencies
 #include <stdio.h>
@@ -23,9 +20,6 @@
 #include <utilities/highresolutiontimer.h>
 #include <utilities/statcounter.h>
 #include <system/device.h>
-#include <managers/shadermanager.h>
-#include <managers/texturemanager.h>
-#include <managers/vertexbuffermanager.h>
 #include <softwareRender/softwareRender.h>
 
 /************************************************************************
@@ -34,8 +28,7 @@
 CBaseGame::CBaseGame()
     : m_pWindow(nullptr),
       //m_context(nullptr),
-      m_gameRunning(false),
-      m_clearBufferMask(0)
+      m_gameRunning(false)
 {
 }   // constructor
 
@@ -82,36 +75,12 @@ void CBaseGame::Create()
 ************************************************************************/
 void CBaseGame::Init()
 {
-    // Init the clear color
-    /*glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    // Cull the back face
-    glFrontFace(GL_CCW);
-    glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
-
-    // Enable alpha blending
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Make the zero texture the active texture
-    glActiveTexture(GL_TEXTURE0);*/
-
     // Show the window
     CDevice::Instance().ShowWindow( true );
-
-    // Init the clear buffer mask
-    if( CSettings::Instance().GetClearTargetBuffer() )
-        m_clearBufferMask |= GL_COLOR_BUFFER_BIT;
-
-    if( CSettings::Instance().GetClearStencilBuffer() )
-        m_clearBufferMask |= GL_STENCIL_BUFFER_BIT;
 
     // Display a black screen
     CSoftwareRender::Instance().Clear();
     CSoftwareRender::Instance().Flip( m_pWindow );
-    //glClear( GL_COLOR_BUFFER_BIT );
-    //SDL_GL_SwapWindow( m_pWindow );
 
 }   // Init
 

@@ -25,8 +25,8 @@ namespace NExcept
 
     protected:
 
-        std::string errorMsg;
         std::string errorTitle;
+        std::string errorMsg;
     };
 
     // Critical exception class. Used for non-recoverable exceptions

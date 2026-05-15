@@ -14,7 +14,7 @@
 // Game lib dependencies
 #include <objectdata/objectdatamanager2d.h>
 #include <system/device.h>
-#include <gui/menumanager.h>
+
 
 /************************************************************************
 *    desc:  Constructer                                                             

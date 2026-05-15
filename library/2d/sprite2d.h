@@ -13,8 +13,6 @@
 
 // Game lib dependencies
 #include <2d/visualcomponent2d.h>
-#include <2d/physicscomponent2d.h>
-#include <2d/spritescriptcomponent2d.h>
 
 // Forward declaration(s)
 class CObjectData2D;
@@ -38,12 +36,6 @@ public:
     // Get the visual component
     CVisualComponent2d & GetVisualComponent();
 
-    // Get the physics component
-    CPhysicsComponent2d & GetPhysicsComponent();
-
-    // Get the scripting component
-    CSpriteScriptComponent2d & GetScriptComponent();
-
     // Update the sprite 
     void Update();
 
@@ -58,17 +50,9 @@ private:
     // The visual part of the 2d sprite
     CVisualComponent2d m_visualComponent;
 
-    // The physics part of the 2d sprite
-    CPhysicsComponent2d m_physicsComponent;
-
-    // The script part of the 2d sprite
-    CSpriteScriptComponent2d m_scriptComponent;
-
     // The projection matrix
     const CMatrix m_projectionMatrix;
 
 };
 
 #endif  // __sprite_2d_h__
-
-

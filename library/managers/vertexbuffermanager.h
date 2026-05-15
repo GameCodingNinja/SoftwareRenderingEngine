@@ -42,10 +42,10 @@ public:
     uint CreateIBO( const std::string & group, const std::string & name, uint indexData[], int sizeInBytes );
 
     // Creates and manages the dynamic font indicies IBO
-    uint CreateDynamicFontIBO( const std::string & group, const std::string & name, GLushort * pIndexData, int maxIndicies );
+    uint CreateDynamicFontIBO( const std::string & group, const std::string & name, unsigned short * pIndexData, int maxIndicies );
 
     // Create a scaled frame
-    GLuint CreateScaledFrame( const std::string & group,
+    uint CreateScaledFrame( const std::string & group,
                               const std::string & name,
                               const CScaledFrame & scaledFrame,
                               const CSize<int> & textSize,
@@ -60,7 +60,7 @@ public:
                      CQuad2D & quadBuf );
 
     // Function call used to manage what buffer is currently bound.
-    void BindBuffers( GLuint vboID, GLuint iboID );
+    void BindBuffers( uint vboID, uint iboID );
 
     // Unbind the buffers and reset the flag
     void UnbindBuffers();
@@ -85,10 +85,10 @@ private:
     std::map< const std::string, std::map< const std::string, uint > > m_indexBuf2DMapMap;
 
     // Current vbo ID
-    GLuint m_currentVBOID;
+    uint m_currentVBOID;
 
     // Current IBO ID
-    GLuint m_currentIBOID;
+    uint m_currentIBOID;
 
     // Current dynamic font IBO indices size
     int currentMaxFontIndices;

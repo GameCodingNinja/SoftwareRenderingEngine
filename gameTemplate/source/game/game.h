@@ -15,8 +15,6 @@
 #include <memory>
 
 // Forward declaration(s)
-class CSprite2D;
-class CUIControl;
 class iGameState;
 
 class CGame : public CBaseGame
@@ -55,11 +53,6 @@ protected:
     // 2D/3D Render of post game content
     virtual void PostRender();
 
-private:
-
-    // Callback for when a smart gui control is created
-    void SmartGuiControlCreate( CUIControl * pUIControl );
-
 protected:
 
     // scoped pointer Game State
@@ -70,5 +63,3 @@ protected:
 static int SDLCALL FilterEvents( void * userdata, SDL_Event * pEvent );
 
 #endif  // __game_h__
-
-

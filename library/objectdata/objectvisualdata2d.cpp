@@ -5,9 +5,6 @@
 *    DESCRIPTION:     Class containing the 3D object's visual data
 ************************************************************************/
 
-// Glew dependencies
-#include <GL/glew.h>
-
 // Physical component dependency
 #include <objectdata/objectvisualdata2d.h>
 

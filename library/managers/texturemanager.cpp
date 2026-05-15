@@ -15,8 +15,7 @@
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
 #include <softwareRender/softwareRender.h>
-#include <soil/SOIL.h>
-#include <soil/image_helper.h>
+#include <soil/stb_image_aug.h>
 
 /************************************************************************
 *    desc:  Constructer
@@ -55,13 +54,20 @@ const CTexture & CTextureMgr::LoadFor2D( const std::string & group, const std::s
         int channels(0);
 
         // Use soil to laad the texture
-        uchar * pData = SOIL_load_image( filePath.c_str(), &texture.m_size.w, &texture.m_size.h, &channels, 4 );
+        uchar * pData = stbi_load( filePath.c_str(), &texture.m_size.w, &texture.m_size.h, &channels, 4 );
         if( (pData == NULL) || (texture.m_size.w == 0) || (texture.m_size.h == 0) )
             throw NExcept::CCriticalException("Texture Load Error!",
                     NGenFunc::FormatString("Unable to load texture (%s).\n\n%s\nLine: %d", filePath, __FUNCTION__, __LINE__));
 
-        // Swap the red and blue
-        SwapRedandBlue( pData, texture.m_size.w, texture.m_size.h, 4 );
+        // Swap RGBA to BGRA for SDL surface format
+        int pixelCount = texture.m_size.w * texture.m_size.h;
+        for( int i = 0; i < pixelCount; ++i )
+        {
+            int idx = i * 4;
+            uchar tmp = pData[idx];
+            pData[idx] = pData[idx + 2];
+            pData[idx + 2] = tmp;
+        }
 
         // Pass the texture data to the software render. It now owns the pointer
         texture.m_id = CSoftwareRender::Instance().CreateTexture(

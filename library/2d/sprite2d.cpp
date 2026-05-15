@@ -10,23 +10,13 @@
 
 // Game lib dependencies
 #include <objectdata/objectdata2d.h>
-#include <objectdata/objectphysicsdata2d.h>
-
-// disable warning about 'this' used in base member initializer list
-// It's "ok" as long as it's not being used in the member constructor
-// because the class isn't finished being initialzed yet
-#ifdef _MSC_VER
-#pragma warning(disable : 4355)
-#endif
 
 /************************************************************************
 *    desc:  Constructer
 ************************************************************************/
 CSprite2D::CSprite2D( const CObjectData2D & objectData )
     : m_objectData( objectData ),
-      m_visualComponent( objectData ),
-      m_physicsComponent(*this, objectData),
-      m_scriptComponent(*this, objectData)
+      m_visualComponent( objectData )
 {
 }   // constructor
 
@@ -44,10 +34,6 @@ CSprite2D::~CSprite2D()
 ************************************************************************/
 void CSprite2D::Update()
 {
-    m_physicsComponent.Update();
-
-    m_scriptComponent.Update();
-
 }   // Update
 
 
@@ -70,26 +56,6 @@ CVisualComponent2d & CSprite2D::GetVisualComponent()
     return m_visualComponent;
 
 }   // GetVisualComponent
-
-
-/************************************************************************
-*    desc:  Get the physics component                                                            
-************************************************************************/
-CPhysicsComponent2d & CSprite2D::GetPhysicsComponent()
-{
-    return m_physicsComponent;
-
-}   // GetPhysicsComponent
-
-
-/************************************************************************
-*    desc:  Get the scripting component                                                            
-************************************************************************/
-CSpriteScriptComponent2d & CSprite2D::GetScriptComponent()
-{
-    return m_scriptComponent;
-
-}   // GetScriptingComponent
 
 
 /************************************************************************

@@ -12,7 +12,6 @@
 #include <SDL.h>
 
 // Game lib dependencies
-#include <gui/menumanager.h>
 #include <system/device.h>
 
 /************************************************************************
