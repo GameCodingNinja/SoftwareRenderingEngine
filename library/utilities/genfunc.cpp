@@ -13,14 +13,16 @@
 // Physical component dependency
 #include <utilities/genfunc.h>
 
-// SDL lib dependencies
-#include <SDL.h>
+// Game lib dependencies
+#include <system/eventqueue.h>
+#include <system/event.h>
 
 // Standard lib dependencies
 #include <stdlib.h>  
 #include <stdio.h>
 #include <iostream>
 #include <algorithm>
+#include <cstring>
 
 // Game lib dependencies
 #include <utilities/smartpointers.h>
@@ -104,13 +106,14 @@ namespace NGenFunc
     ************************************************************************/
     int DispatchEvent( int type, int code, void * pData1, void * pData2 )
     {
-        SDL_Event _event;
-        _event.type = type;
-        _event.user.code = code;
-        _event.user.data1 = pData1;
-        _event.user.data2 = pData2;
-
-        return SDL_PushEvent(&_event);
+        CEvent event;
+        std::memset(&event, 0, sizeof(event));
+        event.user.type = static_cast<EEventType>(type);
+        event.user.code = code;
+        event.user.data1 = pData1;
+        event.user.data2 = pData2;
+        CEventQueue::Instance().PushEvent(event);
+        return 0;
 
     }   // DispatchEvent
 

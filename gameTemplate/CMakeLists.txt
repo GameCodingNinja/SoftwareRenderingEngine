@@ -22,13 +22,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -no-pie -std=c++17 -Wall -pthread")
 set(gametemplate_VERSION_MAJOR 1)
 set(gametemplate_VERSION_MINOR 0)
 
-# Need to do this to find SDL2 libraries
+# Find packages
 find_package(PkgConfig REQUIRED)
-pkg_search_module(SDL2 REQUIRED sdl2)
+find_package(X11 REQUIRED)
+pkg_search_module(WAYLAND_CLIENT REQUIRED wayland-client)
 
 # List all the include directories
 include_directories(
-    ${SDL2_INCLUDE_DIRS}
+    ${X11_INCLUDE_DIR}
+    ${WAYLAND_CLIENT_INCLUDE_DIRS}
     ../
     ../library )
 

@@ -77,9 +77,9 @@ void CGame::DoStateChange()
 /************************************************************************
 *    desc:  Handle events
 ************************************************************************/
-bool CGame::HandleEvent( const SDL_Event & rEvent )
+bool CGame::HandleEvent( const CEvent & rEvent )
 {
-    if( rEvent.type == SDL_QUIT )
+    if( rEvent.type == EVENT_QUIT )
         return true;
 
     // Handle events

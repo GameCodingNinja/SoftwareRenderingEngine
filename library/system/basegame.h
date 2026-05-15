@@ -8,16 +8,15 @@
 #ifndef __base_game_h__
 #define __base_game_h__
 
-// SDL lib dependencies
-#include <SDL.h>
+// Game lib dependencies
+#include <system/event.h>
 
 // Standard lib dependencies
 #include <string>
 
-// Game lib dependencies
-#include <common/defs.h>
-
 // Forward declaration(s)
+class IWindow;
+class IFrameBuffer;
 
 class CBaseGame
 {
@@ -47,7 +46,7 @@ protected:
     virtual void Init();
 
     // Handle events
-    virtual bool HandleEvent( const SDL_Event & event ) = 0;
+    virtual bool HandleEvent( const CEvent & event ) = 0;
 
     // Handle the state change
     virtual void DoStateChange() = 0;
@@ -84,7 +83,10 @@ private:
 protected:
 
     // The window we'll be rendering to
-    SDL_Window * m_pWindow;
+    IWindow * m_pWindow;
+
+    // The frame buffer
+    IFrameBuffer * m_pFrameBuffer;
 
     // flag to indicate the game is running
     bool m_gameRunning;
@@ -92,5 +94,4 @@ protected:
 };
 
 #endif  // __base_game_h__
-
 

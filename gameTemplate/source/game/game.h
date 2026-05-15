@@ -33,7 +33,7 @@ protected:
     virtual void Init();
 
     // Handle events
-    bool HandleEvent( const SDL_Event & rEvent );
+    bool HandleEvent( const CEvent & rEvent );
 
     // Handle the state change
     virtual void DoStateChange();

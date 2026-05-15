@@ -14,12 +14,14 @@
 #include <utilities/genfunc.h>
 #include <common/size.h>
 #include <softwareRender/softwareRender.h>
+#include <system/windowfactory.h>
+#include <system/iwindow.h>
+#include <system/iframebuffer.h>
 
 /************************************************************************
 *    desc:  Constructer
 ************************************************************************/
 CDevice::CDevice()
-    : m_pWindow(nullptr)
 {
 }   // constructor
 
@@ -37,20 +39,15 @@ CDevice::~CDevice()
  ****************************************************************************/
 void CDevice::Create()
 {
-    // Initialize SDL
-    if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_TIMER ) < 0 )
-        throw NExcept::CCriticalException("SDL could not initialize!", SDL_GetError() );
-
     // Get the window size
     const CSize<int> size( CSettings::Instance().GetSize() );
 
-    // Create window
-    m_pWindow = SDL_CreateWindow( "", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.GetW(), size.GetH(), SDL_WINDOW_HIDDEN );
-    if( m_pWindow == nullptr )
-        throw NExcept::CCriticalException("Game window could not be created!", SDL_GetError() );
+    // Create the native window
+    m_upWindow = CreateNativeWindow();
+    m_upWindow->Create( size.GetW(), size.GetH() );
 
-    // Create the surface from the window
-    CSoftwareRender::Instance().CreateSurface( m_pWindow );
+    // Set the software render surface to the window's framebuffer
+    CSoftwareRender::Instance().SetSurface( m_upWindow->GetFrameBuffer() );
 
     // Set the full screen
     if( CSettings::Instance().GetFullScreen() )
@@ -104,10 +101,7 @@ const CMatrix & CDevice::GetProjectionMatrix( NDefs::EProjectionType type ) cons
  ****************************************************************************/
 void CDevice::ShowWindow( bool visible )
 {
-    if( visible )
-        SDL_ShowWindow( m_pWindow );
-    else
-        SDL_HideWindow( m_pWindow );
+    m_upWindow->Show( visible );
 
 }   // hide
 
@@ -117,22 +111,28 @@ void CDevice::ShowWindow( bool visible )
  ****************************************************************************/
 void CDevice::SetFullScreen( bool fullscreen )
 {
-    int flag(0);
+    m_upWindow->SetFullScreen( fullscreen );
 
-    if( fullscreen )
-        flag = SDL_WINDOW_FULLSCREEN;
-
-    if( SDL_SetWindowFullscreen( m_pWindow, flag ) < 0 )
-        NGenFunc::PostDebugMsg( NGenFunc::FormatString("Warning: Unable to set full screen! SDL Error: %s", SDL_GetError()) );
+    NGenFunc::PostDebugMsg( "SetFullScreen called" );
 
 }   // SetFullScreen
 
 
 /***************************************************************************
-*   desc:  Get the SDL window
+*   desc:  Get the native window
  ****************************************************************************/
-SDL_Window * CDevice::GetWindow()
+IWindow * CDevice::GetNativeWindow()
 {
-    return m_pWindow;
+    return m_upWindow.get();
 
-}   // GetWindow
+}   // GetNativeWindow
+
+
+/***************************************************************************
+*   desc:  Get the frame buffer
+ ****************************************************************************/
+IFrameBuffer * CDevice::GetFrameBuffer()
+{
+    return m_upWindow->GetFrameBuffer();
+
+}   // GetFrameBuffer

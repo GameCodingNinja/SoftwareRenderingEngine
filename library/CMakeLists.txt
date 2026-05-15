@@ -12,6 +12,16 @@ add_library(
         system/worldcamera.cpp
         system/basegame.cpp
         system/device.cpp
+        system/eventqueue.cpp
+        system/x11framebuffer.cpp
+        system/x11window.cpp
+        system/waylandframebuffer.cpp
+        system/waylandwindow.cpp
+        system/xdg-shell-protocol.c
+        system/xdg-decoration-protocol.c
+        system/windowsframebuffer.cpp
+        system/windowswindow.cpp
+        system/windowfactory.cpp
         utilities/xmlparsehelper.cpp
         utilities/statcounter.cpp
         utilities/genfunc.cpp

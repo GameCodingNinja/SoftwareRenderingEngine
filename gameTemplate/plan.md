@@ -1,63 +1,78 @@
-# Native Linux Window & Framebuffer — Implementation Plan
+# Native Window & Framebuffer — Implementation Plan
 
 ## Overview
 
-Replace SDL window/surface rendering with native Linux display server code.
-Wayland is tried first; X11 is the fallback. Window management and framebuffer
-(pixel buffer) are separated into their own class hierarchies so each concern
-is independently extensible.
+Replace SDL window/surface rendering with native platform code. On Linux,
+Wayland is tried first with X11 as the fallback. On Windows, the Win32 API
+is used directly. Window management and framebuffer (pixel buffer) are
+separated into their own class hierarchies so each concern is independently
+extensible.
 
-SDL remains for: audio, gamepad, timer, and the event queue. The native window
-classes translate their keyboard/mouse/window events into `SDL_Event` via
-`SDL_PushEvent()` so existing game code is unaffected.
+SDL is being fully removed from the project. The native window classes
+use a custom event system to replace SDL events.
 
 ---
 
 ## Architecture
 
 ```
-    ╭──────────────╮           ╭───────────────╮
-    │   IWindow    │           │  IFrameBuffer │
-    │──────────────│           │───────────────│
-    │ Create()     │           │ GetPixels()   │
-    │ Destroy()    │           │ GetWidth()    │
-    │ Show()       │           │ GetHeight()   │
-    │ SetTitle()   │           │ Clear()       │
-    │ SetFullScreen│           │ Flip()        │
-    │ PollEvents() │           ╰───────┬───────╯
-    │ GetFrameBuf()│                   │
-    ╰──────┬───────╯       ┌───────────┴───────────┐
-           │               │                       │
-   ┌───────┴───────┐   ╭──────────────╮   ╭──────────────╮
-   │               │   │CWaylandFrame │   │ CX11Frame    │
-╭──────────╮ ╭─────────╮│   Buffer     │   │   Buffer     │
-│CWayland  │ │ CX11    ││ (wl_shm)    │   │ (XImage)     │
-│ Window   │ │ Window  │╰──────────────╯   ╰──────────────╯
-│(creates &│ │(creates&│
-│ owns its │ │ owns its│
-│ framebuf)│ │ framebuf)│
-╰──────────╯ ╰─────────╯
+    ╭──────────────╮   ╭───────────────╮   ╭───────────────╮
+    │   IWindow    │   │  IFrameBuffer │   │  CEventQueue  │
+    │──────────────│   │───────────────│   │───────────────│
+    │ Create()     │   │ GetPixels()   │   │ PollEvent()   │
+    │ Destroy()    │   │ GetWidth()    │   │ PushEvent()   │
+    │ Show()       │   │ GetHeight()   │   │ Clear()       │
+    │ SetTitle()   │   │ Clear()       │   ╰───────────────╯
+    │ SetFullScreen│   │ Flip()        │        ▲
+    │ PollEvents() │   ╰───────┬───────╯        │
+    │ GetFrameBuf()│           │           ╭─────────╮
+    ╰──────┬───────╯   ┌───────┼───────┐   │ CEvent  │
+           │           │       │       │   │─────────│
+   ┌───────┼───────┐   │       │       │   │ type    │
+   │       │       │   │       │       │   │ code    │
+╭──────╮╭──────╮╭──────╮│       │       │   │ x, y    │
+│CWayl-││CX11 ││CWin- ││       │       │   ╰─────────╯
+│and   ││Window││dows  ││       │       │
+│Window││      ││Window││       │       │
+╰──────╯╰──────╯╰──────╯│       │       │
+                   ╭───────────╮╭────────╮╭──────────╮
+                   │CWayland   ││CX11    ││CWindows  │
+                   │FrameBuffer││FrameBuf││FrameBuf  │
+                   │(wl_shm)   ││(XImage)││(DIB/GDI) │
+                   ╰───────────╯╰────────╯╰──────────╯
 
-    Factory: CreateNativeWindow() → tries Wayland, falls back to X11
-             Returns unique_ptr<IWindow>
+    IWindow::PollEvents() translates native events → CEvent
+    and pushes them into CEventQueue.
+
+    Factory: CreateNativeWindow()
+      Linux:   tries Wayland → falls back to X11
+      Windows: creates CWindowsWindow
+      Returns unique_ptr<IWindow>
 ```
 
 ### New Files
 
-| File | Description |
-|------|-------------|
-| `library/system/iwindow.h` | Pure virtual window interface |
-| `library/system/iframebuffer.h` | Pure virtual framebuffer interface |
-| `library/system/x11window.h` | X11 window header |
-| `library/system/x11window.cpp` | X11 window implementation |
-| `library/system/x11framebuffer.h` | X11 framebuffer header |
-| `library/system/x11framebuffer.cpp` | X11 framebuffer implementation |
-| `library/system/waylandwindow.h` | Wayland window header |
-| `library/system/waylandwindow.cpp` | Wayland window implementation |
-| `library/system/waylandframebuffer.h` | Wayland framebuffer header |
-| `library/system/waylandframebuffer.cpp` | Wayland framebuffer implementation |
-| `library/system/windowfactory.h` | Factory function header |
-| `library/system/windowfactory.cpp` | Factory: try Wayland → X11 |
+| File | Platform | Description |
+|------|----------|-------------|
+| `library/system/iwindow.h` | All | Pure virtual window interface |
+| `library/system/iframebuffer.h` | All | Pure virtual framebuffer interface |
+| `library/system/event.h` | All | `CEvent` struct and `EEventType` enum |
+| `library/system/eventqueue.h` | All | `CEventQueue` singleton — thread-safe event queue |
+| `library/system/eventqueue.cpp` | All | `CEventQueue` implementation |
+| `library/system/x11window.h` | Linux | X11 window header |
+| `library/system/x11window.cpp` | Linux | X11 window implementation |
+| `library/system/x11framebuffer.h` | Linux | X11 framebuffer header |
+| `library/system/x11framebuffer.cpp` | Linux | X11 framebuffer implementation |
+| `library/system/waylandwindow.h` | Linux | Wayland window header |
+| `library/system/waylandwindow.cpp` | Linux | Wayland window implementation |
+| `library/system/waylandframebuffer.h` | Linux | Wayland framebuffer header |
+| `library/system/waylandframebuffer.cpp` | Linux | Wayland framebuffer implementation |
+| `library/system/windowswindow.h` | Windows | Win32 window header |
+| `library/system/windowswindow.cpp` | Windows | Win32 window implementation |
+| `library/system/windowsframebuffer.h` | Windows | Win32 framebuffer header |
+| `library/system/windowsframebuffer.cpp` | Windows | Win32 framebuffer implementation |
+| `library/system/windowfactory.h` | All | Factory function header |
+| `library/system/windowfactory.cpp` | All | Factory: platform detection → backend |
 
 ### Modified Files
 
@@ -65,15 +80,20 @@ classes translate their keyboard/mouse/window events into `SDL_Event` via
 |------|--------|
 | `library/softwareRender/renderdefs.h` | Replace `SDL_Surface*` with `CSurfaceData*` struct |
 | `library/softwareRender/softwareRender.h` | Replace `SDL_Surface*` with `CSurfaceData` member |
-| `library/softwareRender/softwareRender.cpp` | Use `CSurfaceData` for pixels/dimensions |
-| `library/system/device.h` | Replace `SDL_Window*` with `std::unique_ptr<IWindow>` |
-| `library/system/device.cpp` | Create IWindow via factory, delegate Show/FullScreen/etc. |
-| `library/system/basegame.h` | Replace `SDL_Window*` with `IWindow*`/`IFrameBuffer*` |
-| `library/system/basegame.cpp` | Use IWindow/IFrameBuffer for flip/clear/events, init SDL without video |
+| `library/softwareRender/softwareRender.cpp` | Use `CSurfaceData` for pixels/dimensions, remove `#include <SDL.h>` |
+| `library/system/device.h` | Replace `SDL_Window*` with `std::unique_ptr<IWindow>`, remove `#include <SDL.h>` |
+| `library/system/device.cpp` | Create IWindow via factory, delegate Show/FullScreen/etc., remove SDL |
+| `library/system/basegame.h` | Replace `SDL_Window*`/`SDL_Event` with `IWindow*`/`IFrameBuffer*`/`CEvent`, remove `#include <SDL.h>` |
+| `library/system/basegame.cpp` | Use IWindow/IFrameBuffer/CEventQueue for flip/clear/events, remove SDL |
 | `library/utilities/statcounter.h` | Replace `SDL_Window*` param with `IWindow*` |
-| `library/utilities/statcounter.cpp` | Use `IWindow::SetTitle()` |
-| `library/CMakeLists.txt` | Add new source files, link X11/Wayland libs |
-| `gameTemplate/CMakeLists.txt` | Add X11 and Wayland find_package |
+| `library/utilities/statcounter.cpp` | Use `IWindow::SetTitle()`, remove `#include <SDL.h>` |
+| `library/utilities/genfunc.h/cpp` | Replace `DispatchEvent` SDL impl with `CEventQueue::PushEvent` |
+| `gameTemplate/source/game/game.h/cpp` | Replace `SDL_Event` with `CEvent`, `SDL_QUIT` with `EEventType::QUIT` |
+| `gameTemplate/source/state/igamestate.h` | Replace `SDL_Event` with `CEvent` in `HandleEvent` |
+| `gameTemplate/source/state/commonstate.h/cpp` | Replace `SDL_Event` with `CEvent`, remove `#include <SDL.h>` |
+| `gameTemplate/source/state/titlescreenstate.h/cpp` | Replace `SDL_Event` with `CEvent`, remove `#include <SDL.h>` |
+| `library/CMakeLists.txt` | Add new source files, conditional platform libs |
+| `gameTemplate/CMakeLists.txt` | Remove SDL, platform-conditional find_package and linking |
 
 ---
 
@@ -87,43 +107,47 @@ classes translate their keyboard/mouse/window events into `SDL_Event` via
    unset, or running in a pure X11 session), the engine falls back to X11
    and renders identically.
 
-3. **Separation of concerns**: Window management (create, show, title, events)
+3. **Windows path works**: On Windows, the engine creates a Win32 window with
+   a DIB section pixel buffer and renders correctly using `StretchDIBits`
+   or `BitBlt`.
+
+4. **Separation of concerns**: Window management (create, show, title, events)
    is handled by `IWindow` implementations. Pixel buffer management (pixels,
    clear, flip) is handled by `IFrameBuffer` implementations. Each window
    class creates and owns its corresponding framebuffer.
 
-4. **Event translation**: Keyboard (key down/up), mouse (button, motion),
-   and window close events from the native window are translated to
-   `SDL_Event` and dispatched via `SDL_PushEvent()`. Existing game menu
-   navigation, quit handling, and input all work unchanged.
+5. **Event translation**: Keyboard (key down/up), mouse (button, motion),
+   and window close events from the native window are translated to the
+   engine's event system. Window close produces a quit event that the
+   game loop handles to exit cleanly.
 
-5. **Framebuffer operations**: `Clear()` zeros the pixel buffer. `Flip()`
+6. **Framebuffer operations**: `Clear()` zeros the pixel buffer. `Flip()`
    displays the current buffer contents in the window.
 
-6. **Window operations**: `Show()`/`SetTitle()`/`SetFullScreen()` work on
-   both backends.
+7. **Window operations**: `Show()`/`SetTitle()`/`SetFullScreen()` work on
+   all backends.
 
-7. **No SDL video dependency**: `SDL_Init()` no longer includes
-   `SDL_INIT_VIDEO`. SDL is only used for audio, gamepad, timer, and the
-   event queue.
+8. **No SDL dependency**: SDL is fully removed from the project. No SDL
+   includes, no SDL linking, no SDL initialization.
 
-8. **No rendering regressions**: The software-rendered output (textured
-   triangles, menus, sprites) looks identical to before the change.
+9. **No rendering regressions**: The software-rendered output (textured
+   triangles, sprites) looks identical to before the change.
 
-9. **Clean build**: Zero errors, zero new warnings.
+10. **Clean build**: Zero errors, zero new warnings on both Linux and Windows.
 
-10. **Existing game code unchanged**: No modifications to game state files,
-    smart GUI files, or menu handling code. The interface change is confined
-    to the library layer.
+11. **Existing game code unchanged**: No modifications to game state files
+    or game state code. The interface change is confined to the library
+    layer.
 
 ---
 
 ## Phases
 
-### Phase 1: Interfaces & Surface Data Struct
+### Phase 1: Interfaces, Event System & Surface Data Struct
 
-**Goal**: Define the `IWindow` and `IFrameBuffer` interfaces and the
-`CSurfaceData` struct that replaces `SDL_Surface*` in the render pipeline.
+**Goal**: Define the `IWindow` and `IFrameBuffer` interfaces, the custom
+event system that replaces `SDL_Event`, and the `CSurfaceData` struct that
+replaces `SDL_Surface*` in the render pipeline.
 
 **Tasks**:
 - Create `library/system/iwindow.h` with pure virtual interface:
@@ -148,7 +172,7 @@ classes translate their keyboard/mouse/window events into `SDL_Event` via
       // Set full screen mode
       virtual void SetFullScreen(bool fullscreen) = 0;
 
-      // Poll and translate native events to SDL events
+      // Poll native events and push them to the event queue
       virtual void PollEvents() = 0;
 
       // Get the framebuffer owned by this window
@@ -162,7 +186,7 @@ classes translate their keyboard/mouse/window events into `SDL_Event` via
   public:
       virtual ~IFrameBuffer() = default;
 
-      // Get the raw pixel buffer (ARGB/XRGB 32-bit)
+      // Get the raw pixel buffer (XRGB 32-bit)
       virtual uint32_t* GetPixels() = 0;
 
       // Get framebuffer dimensions
@@ -174,6 +198,106 @@ classes translate their keyboard/mouse/window events into `SDL_Event` via
 
       // Display the pixel buffer contents in the window
       virtual void Flip() = 0;
+  };
+  ```
+- Create `library/system/event.h` — custom event types and structures,
+  modeled after SDL's union-based design but simplified to only what the
+  engine needs:
+  ```cpp
+  // Event type enum (inspired by SDL_EventType, using hex ranges for grouping)
+  enum EEventType : uint32_t
+  {
+      EVENT_NONE          = 0,
+
+      // Application events (0x100 range)
+      EVENT_QUIT          = 0x100,
+
+      // Keyboard events (0x300 range)
+      EVENT_KEY_DOWN      = 0x300,
+      EVENT_KEY_UP        = 0x301,
+
+      // Mouse events (0x400 range)
+      EVENT_MOUSE_MOTION      = 0x400,
+      EVENT_MOUSE_BUTTON_DOWN = 0x401,
+      EVENT_MOUSE_BUTTON_UP   = 0x402,
+
+      // User events (0x8000 range)
+      EVENT_USER          = 0x8000,
+  };
+
+  // Key event data (modeled after SDL_KeyboardEvent)
+  struct CKeyEvent
+  {
+      EEventType type;        // EVENT_KEY_DOWN or EVENT_KEY_UP
+      int keyCode;            // Platform-independent key code
+      bool repeat;            // true if this is a key repeat
+  };
+
+  // Mouse motion event data (modeled after SDL_MouseMotionEvent)
+  struct CMouseMotionEvent
+  {
+      EEventType type;        // EVENT_MOUSE_MOTION
+      int x;                  // X coordinate, relative to window
+      int y;                  // Y coordinate, relative to window
+      int xrel;               // Relative motion in X
+      int yrel;               // Relative motion in Y
+  };
+
+  // Mouse button event data (modeled after SDL_MouseButtonEvent)
+  struct CMouseButtonEvent
+  {
+      EEventType type;        // EVENT_MOUSE_BUTTON_DOWN or EVENT_MOUSE_BUTTON_UP
+      uint8_t button;         // Button index (1=left, 2=middle, 3=right)
+      int x;                  // X coordinate, relative to window
+      int y;                  // Y coordinate, relative to window
+  };
+
+  // User-defined event data (modeled after SDL_UserEvent)
+  struct CUserEvent
+  {
+      EEventType type;        // EVENT_USER or higher
+      int code;               // User-defined event code
+      void* data1;            // User-defined data pointer
+      void* data2;            // User-defined data pointer
+  };
+
+  // Union of all event types (modeled after SDL_Event union)
+  union CEvent
+  {
+      EEventType type;                // Event type, shared with all events
+      CKeyEvent key;                  // Keyboard event data
+      CMouseMotionEvent motion;       // Mouse motion event data
+      CMouseButtonEvent button;       // Mouse button event data
+      CUserEvent user;                // User-defined event data
+  };
+  ```
+- Create `library/system/eventqueue.h` and `eventqueue.cpp` — thread-safe
+  event queue singleton (modeled after SDL's internal event queue):
+  ```cpp
+  class CEventQueue
+  {
+  public:
+      static CEventQueue& Instance()
+      {
+          static CEventQueue eventQueue;
+          return eventQueue;
+      }
+
+      // Push an event onto the queue (thread-safe)
+      void PushEvent(const CEvent& event);
+
+      // Pop the next event from the queue
+      // Returns true if an event was available, false if queue is empty
+      bool PollEvent(CEvent& event);
+
+      // Clear all pending events
+      void Clear();
+
+  private:
+      CEventQueue() = default;
+
+      std::queue<CEvent> m_eventQueue;
+      std::mutex m_mutex;
   };
   ```
 - Create `CSurfaceData` struct in `library/softwareRender/renderdefs.h`:
@@ -188,10 +312,10 @@ classes translate their keyboard/mouse/window events into `SDL_Event` via
 - Update `CRender2d` in `renderdefs.h` to use `CSurfaceData*` instead of
   `SDL_Surface*`
 
-**Deliverable**: Header files compile. No functional changes yet.
+**Deliverable**: Header files and event queue compile. No functional changes yet.
 
-**Review checkpoint**: User reviews the interface and struct design before
-proceeding.
+**Review checkpoint**: User reviews the interface, event, and struct design
+before proceeding.
 
 ---
 
@@ -224,11 +348,12 @@ proceeding.
 - `Show()`: `XMapWindow` / `XUnmapWindow`
 - `SetTitle()`: `XStoreName`
 - `SetFullScreen()`: send `_NET_WM_STATE_FULLSCREEN` via `XSendEvent`
-- `PollEvents()`: while `XPending` > 0, `XNextEvent`, translate to SDL:
-  - `KeyPress`/`KeyRelease` → `SDL_KEYDOWN`/`SDL_KEYUP` (use `XLookupKeysym`)
-  - `ButtonPress`/`ButtonRelease` → `SDL_MOUSEBUTTONDOWN`/`SDL_MOUSEBUTTONUP`
-  - `MotionNotify` → `SDL_MOUSEMOTION`
-  - `ClientMessage(WM_DELETE_WINDOW)` → `SDL_QUIT`
+- `PollEvents()`: while `XPending` > 0, `XNextEvent`, translate to engine
+  events:
+  - `KeyPress`/`KeyRelease` → key down/up event
+  - `ButtonPress`/`ButtonRelease` → mouse button event
+  - `MotionNotify` → mouse motion event
+  - `ClientMessage(WM_DELETE_WINDOW)` → quit event
 - `GetFrameBuffer()`: returns pointer to owned `CX11FrameBuffer`
 
 **Deliverable**: X11 backend compiles and can be instantiated standalone.
@@ -266,7 +391,7 @@ proceeding.
   - Create `wl_surface` via `wl_compositor_create_surface`
   - Create `xdg_surface` + `xdg_toplevel` for window decoration
   - Set `xdg_toplevel` title
-  - Handle `xdg_toplevel::close` → `SDL_QUIT`
+  - Handle `xdg_toplevel::close` → quit event
   - Handle `xdg_surface::configure` → ack configure
   - Bind `wl_keyboard` and `wl_pointer` from `wl_seat` for input
   - Instantiate `CWaylandFrameBuffer` with wl_surface/dimensions
@@ -277,10 +402,10 @@ proceeding.
 - `SetTitle()`: `xdg_toplevel_set_title`
 - `SetFullScreen()`: `xdg_toplevel_set_fullscreen` / `xdg_toplevel_unset_fullscreen`
 - `PollEvents()`: `wl_display_dispatch_pending()`, translate events:
-  - `wl_keyboard::key` → `SDL_KEYDOWN`/`SDL_KEYUP`
-  - `wl_pointer::button` → `SDL_MOUSEBUTTONDOWN`/`SDL_MOUSEBUTTONUP`
-  - `wl_pointer::motion` → `SDL_MOUSEMOTION`
-  - `xdg_toplevel::close` → `SDL_QUIT`
+  - `wl_keyboard::key` → key down/up event
+  - `wl_pointer::button` → mouse button event
+  - `wl_pointer::motion` → mouse motion event
+  - `xdg_toplevel::close` → quit event
 - `GetFrameBuffer()`: returns pointer to owned `CWaylandFrameBuffer`
 
 **Deliverable**: Wayland backend compiles and can be instantiated standalone.
@@ -289,49 +414,122 @@ proceeding.
 
 ---
 
-### Phase 4: Factory & Integration
+### Phase 4: Windows Backend
 
-**Goal**: Wire the backends into the engine, replacing SDL window/surface code.
+**Goal**: Implement the Win32 window and framebuffer classes.
+
+**Tasks — CWindowsFrameBuffer**:
+- Create `library/system/windowsframebuffer.h` and `windowsframebuffer.cpp`
+- Guarded with `#ifdef _WIN32`
+- Constructor takes `HWND`, `HDC`, width, height
+- Creates a DIB section:
+  - `CreateDIBSection` with `BITMAPINFOHEADER` (32-bit, BI_RGB,
+    top-down by using negative height)
+  - Pixel pointer comes from the DIB section output parameter
+- `GetPixels()`: returns the DIB pixel pointer (cast to `uint32_t*`)
+- `GetWidth()`/`GetHeight()`: return dimensions
+- `Clear()`: `memset(pixels, 0, w * h * 4)`
+- `Flip()`: `BitBlt` or `StretchDIBits` from the DIB to the window DC
+- Destructor: `DeleteObject` the DIB section
+
+**Tasks — CWindowsWindow**:
+- Create `library/system/windowswindow.h` and `windowswindow.cpp`
+- Guarded with `#ifdef _WIN32`
+- `Create()`:
+  - `RegisterClassEx` with a `WndProc` callback
+  - `CreateWindowEx` with `WS_OVERLAPPEDWINDOW` style, centered position
+  - `GetDC` to obtain the device context
+  - Instantiate `CWindowsFrameBuffer` with HWND/HDC/dimensions
+- `Destroy()`: destroy framebuffer, `ReleaseDC`, `DestroyWindow`,
+  `UnregisterClass`
+- `Show()`: `ShowWindow(SW_SHOW)` / `ShowWindow(SW_HIDE)`
+- `SetTitle()`: `SetWindowText`
+- `SetFullScreen()`: `ChangeDisplaySettings` + `SetWindowLongPtr` to
+  toggle between windowed and fullscreen styles
+- `PollEvents()`: `PeekMessage` loop, translate via `WndProc`:
+  - `WM_KEYDOWN`/`WM_KEYUP` → key down/up event
+  - `WM_LBUTTONDOWN`/`WM_RBUTTONDOWN`/`WM_LBUTTONUP`/`WM_RBUTTONUP`
+    → mouse button event
+  - `WM_MOUSEMOVE` → mouse motion event
+  - `WM_CLOSE` / `WM_DESTROY` → quit event
+- `GetFrameBuffer()`: returns pointer to owned `CWindowsFrameBuffer`
+
+**Deliverable**: Windows backend compiles and can be instantiated standalone.
+
+**Review checkpoint**: User reviews Windows implementation before proceeding.
+
+---
+
+### Phase 5: Factory, Event Wiring & Integration
+
+**Goal**: Wire all backends into the engine, replacing SDL entirely.
+
+**Tasks — Event system wiring**:
+- Update `basegame.h`:
+  - Replace `#include <SDL.h>` with `#include <system/event.h>`
+  - `HandleEvent(const SDL_Event&)` → `HandleEvent(const CEvent&)`
+  - Remove `SDL_Window* m_pWindow`
+- Update `basegame.cpp`:
+  - Remove `SDL_Init()`, `SDL_Quit()`, `SDL_DestroyWindow()`
+  - `PollEvents()`: call `IWindow::PollEvents()` then
+    `while(CEventQueue::Instance().PollEvent(event))` loop
+- Update `game.h/cpp`:
+  - `HandleEvent(const SDL_Event&)` → `HandleEvent(const CEvent&)`
+  - `SDL_QUIT` → `EVENT_QUIT`
+- Update `igamestate.h`:
+  - Remove `union SDL_Event;` forward declaration
+  - `HandleEvent(const SDL_Event&)` → `HandleEvent(const CEvent&)`
+  - Add `#include <system/event.h>`
+- Update `commonstate.h/cpp`:
+  - Replace `SDL_Event` with `CEvent`, remove `#include <SDL.h>`
+- Update `titlescreenstate.h/cpp`:
+  - Replace `SDL_Event` with `CEvent`, remove `#include <SDL.h>`
+- Update `genfunc.h/cpp`:
+  - `DispatchEvent()`: build a `CEvent` with `type = EVENT_USER`,
+    push via `CEventQueue::Instance().PushEvent()`
+  - Remove `#include <SDL.h>` from genfunc.cpp
 
 **Tasks — Factory**:
 - Create `library/system/windowfactory.h` and `windowfactory.cpp`:
   ```cpp
   std::unique_ptr<IWindow> CreateNativeWindow();
   ```
-  - Try `wl_display_connect(NULL)`:
-    - If succeeds → disconnect, return `std::make_unique<CWaylandWindow>()`
-    - If fails → try `XOpenDisplay(NULL)`:
-      - If succeeds → close, return `std::make_unique<CX11Window>()`
-      - If fails → throw exception
+  - On Linux (`#ifndef _WIN32`):
+    - Try `wl_display_connect(NULL)`:
+      - If succeeds → disconnect,
+        `NGenFunc::PostDebugMsg("Windowing system: Wayland")`,
+        return `std::make_unique<CWaylandWindow>()`
+      - If fails → try `XOpenDisplay(NULL)`:
+        - If succeeds → close,
+          `NGenFunc::PostDebugMsg("Windowing system: X11")`,
+          return `std::make_unique<CX11Window>()`
+        - If fails → throw exception
+  - On Windows (`#ifdef _WIN32`):
+    - `NGenFunc::PostDebugMsg("Windowing system: Windows")`
+    - Return `std::make_unique<CWindowsWindow>()`
 
 **Tasks — CDevice updates**:
 - Replace `SDL_Window* m_pWindow` with `std::unique_ptr<IWindow> m_upWindow`
 - `Create()`:
   - Call `CreateNativeWindow()` to get `IWindow`
   - Call `m_upWindow->Create(w, h, title)`
-  - Remove `SDL_CreateWindow` and `SDL_GetWindowSurface` calls
-  - Remove `CSoftwareRender::Instance().CreateSurface(m_pWindow)` — instead,
-    call `CSoftwareRender::Instance().SetSurface(m_upWindow->GetFrameBuffer())`
+  - Remove all SDL calls
+  - Call `CSoftwareRender::Instance().SetSurface(m_upWindow->GetFrameBuffer())`
 - `ShowWindow()` → `m_upWindow->Show(visible)`
 - `SetFullScreen()` → `m_upWindow->SetFullScreen(fullscreen)`
-- Remove `GetWindow()` and `GetContext()`
+- Remove `GetWindow()`
 - Add `IWindow* GetNativeWindow()` accessor
 - Add `IFrameBuffer* GetFrameBuffer()` convenience accessor
+- Remove `#include <SDL.h>`
 
 **Tasks — CBaseGame updates**:
-- Replace `SDL_Window* m_pWindow` with `IWindow*` and `IFrameBuffer*` cached
-  from device
-- `Init()`:
-  - Change `SDL_Init()` to exclude `SDL_INIT_VIDEO`
-  - Use `IFrameBuffer::Clear()` and `IFrameBuffer::Flip()`
-- `Render()`:
-  - `IFrameBuffer::Clear()` instead of `CSoftwareRender::Instance().Clear()`
-  - `IFrameBuffer::Flip()` instead of `CSoftwareRender::Instance().Flip(m_pWindow)`
-- `PollEvents()`:
-  - Call `IWindow::PollEvents()` before `SDL_PollEvent()` to translate
-    native events into SDL events
-- `DisplayErrorMsg()`: use `fprintf(stderr, ...)` instead of
-  `SDL_ShowSimpleMessageBox` (since SDL_INIT_VIDEO is removed)
+- Replace `SDL_Window* m_pWindow` with `IWindow*` and `IFrameBuffer*`
+  cached from device
+- Remove `SDL_Init()`, `SDL_Quit()`, `SDL_DestroyWindow()`
+- `PollEvents()`: call `IWindow::PollEvents()` then process engine
+  event queue
+- Use `IFrameBuffer::Clear()` and `IFrameBuffer::Flip()`
+- Remove `#include <SDL.h>`
 
 **Tasks — CSoftwareRender updates**:
 - Remove `SDL_Surface* m_pSurface` member
@@ -346,44 +544,48 @@ proceeding.
       m_halfScreen.h = m_surfaceData.h / 2;
   }
   ```
-- Remove `GetSurface()`, `Flip()`, `Clear()` (now on IFrameBuffer/IWindow)
-- `Render()`: use `m_surfaceData.w/h` for screen dimensions, pass
-  `&m_surfaceData` to `CRender2d`
+- Remove `GetSurface()`, `Flip()`, `Clear()` (now on IFrameBuffer)
+- `Render()`: use `m_surfaceData.w/h`, pass `&m_surfaceData` to `CRender2d`
+- Remove `#include <SDL.h>`
 
 **Tasks — CRender2d / RenderTri updates**:
 - `CRender2d` constructor takes `CSRTexture*, CSurfaceData*` instead of
   `CSRTexture*, SDL_Surface*`
 - `RenderTri()`: access `pRender->m_pSurface->w`, `->h`, `->pixels`
-  (now CSurfaceData fields instead of SDL_Surface fields — same names, same
-  types, so most of the rasterizer code is unchanged)
+  (now CSurfaceData fields — same names, same types, rasterizer unchanged)
 
 **Tasks — CStatCounter updates**:
 - Replace `SDL_Window*` parameter with `IWindow*`
 - Use `pWindow->SetTitle(statStr)` instead of `SDL_SetWindowTitle`
+- Remove `#include <SDL.h>`
 
 **Tasks — Build system updates**:
-- `library/CMakeLists.txt`: add new .cpp files to `add_library`
+- `library/CMakeLists.txt`: add new .cpp files to `add_library`,
+  conditionally compile platform-specific files
 - `gameTemplate/CMakeLists.txt`:
-  - `find_package(X11 REQUIRED)`
-  - `pkg_search_module(WAYLAND_CLIENT REQUIRED wayland-client)`
-  - Link `${X11_LIBRARIES}`, `${WAYLAND_CLIENT_LIBRARIES}`
-  - Add wayland-protocols for xdg-shell header generation
+  - Remove SDL find_package and linking
+  - On Linux: `find_package(X11 REQUIRED)`,
+    `pkg_search_module(WAYLAND_CLIENT REQUIRED wayland-client)`,
+    link `${X11_LIBRARIES}`, `${WAYLAND_CLIENT_LIBRARIES}`
+  - On Windows: link `user32`, `gdi32`
+  - Add wayland-protocols for xdg-shell header generation (Linux only)
 
-**Deliverable**: Full build succeeds, game runs with native window.
+**Deliverable**: Full build succeeds on Linux, game runs with native window.
+No SDL references remain (except xmlParser.cpp which is untouched).
 
 **Review checkpoint**: User reviews integration before testing phase.
 
 ---
 
-### Phase 5: Testing & Polish
+### Phase 6: Testing & Polish
 
-**Goal**: Verify everything works correctly on both backends.
+**Goal**: Verify everything works correctly on all backends.
 
 **Tasks**:
 - Run automated tests (see test plan below)
 - Run manual tests (see test plan below)
 - Fix any issues found
-- Remove any leftover SDL video references (dead includes, commented code)
+- Remove any leftover SDL references (dead includes, commented code)
 - Clean up includes
 - Verify no new warnings
 
@@ -399,38 +601,40 @@ proceeding.
 
 | # | Test | Method | Expected Result |
 |---|------|--------|-----------------|
-| A1 | Factory selects Wayland on Wayland session | Run with `WAYLAND_DISPLAY` set, log backend type | `CWaylandWindow` created |
-| A2 | Factory falls back to X11 | Run with `WAYLAND_DISPLAY` unset, `DISPLAY` set | `CX11Window` created |
-| A3 | Factory fails gracefully | Run with both env vars unset | Throws exception, doesn't crash |
-| A4 | IFrameBuffer pixel write | Create FB, write known pattern, verify buffer | Pixels match expected pattern |
-| A5 | Clear zeroes buffer | Create FB, write pixels, Clear(), verify all zero | All pixels are 0 |
-| A6 | IWindow/IFrameBuffer separation | Verify GetFrameBuffer() returns valid IFrameBuffer* | Non-null, correct dimensions |
-| A7 | Build clean | `cmake --build . 2>&1 \| grep error` | Zero errors |
-| A8 | No new warnings | `cmake --build . 2>&1 \| grep warning` | No new warnings vs. baseline |
-| A9 | No SDL video init | Grep SDL_Init call, confirm no SDL_INIT_VIDEO | Confirmed |
+| A1 | Factory selects Wayland on Wayland session | Run on Wayland, log backend type | `CWaylandWindow` created |
+| A2 | Factory falls back to X11 on X11 session | Run with `WAYLAND_DISPLAY` unset, `DISPLAY` set | `CX11Window` created |
+| A3 | Factory creates Windows window on Windows | Run on Windows, log backend type | `CWindowsWindow` created |
+| A4 | Factory fails gracefully (Linux) | Run with both env vars unset | Throws exception, doesn't crash |
+| A5 | IFrameBuffer pixel write | Create FB, write known pattern, verify buffer | Pixels match expected pattern |
+| A6 | Clear zeroes buffer | Create FB, write pixels, Clear(), verify all zero | All pixels are 0 |
+| A7 | IWindow/IFrameBuffer separation | Verify GetFrameBuffer() returns valid IFrameBuffer* | Non-null, correct dimensions |
+| A8 | Build clean (Linux) | `cmake --build . 2>&1 \| grep error` | Zero errors |
+| A9 | Build clean (Windows) | Build with MSVC/MinGW | Zero errors |
+| A10 | No new warnings | `cmake --build . 2>&1 \| grep warning` | No new warnings vs. baseline |
+| A11 | No SDL references | Grep for SDL_ in source (excluding xmlParser) | Zero matches |
 
 ### Manual Tests
 
-| # | Test | Steps | Expected Result |
-|---|------|-------|-----------------|
-| M1 | Window appears | Launch game | Window appears with correct size from settings |
-| M2 | Window title | Launch game, wait for FPS counter | Title bar shows FPS stats |
-| M3 | Rendering correct | Navigate to title screen | Sprites/text render identically to SDL version |
-| M4 | Keyboard input | Press arrow keys, Enter, Escape in menus | Menu navigation works |
-| M5 | Mouse input | Click menu buttons, move mouse | Buttons highlight and activate |
-| M6 | Window close | Click the X button | Game exits cleanly |
-| M7 | Full screen | Enable full screen in settings | Window goes full screen |
-| M8 | Gamepad | Connect gamepad, navigate menus | Gamepad input works (SDL handles this) |
-| M9 | X11 fallback | `unset WAYLAND_DISPLAY && ./gametemplate` | Game runs via X11/XWayland |
-| M10 | Performance | Run game, check FPS counter | FPS comparable to SDL version |
-| M11 | Clean exit | Exit game, check console for errors | No segfaults, no protocol errors |
+| # | Test | Platform | Steps | Expected Result |
+|---|------|----------|-------|-----------------|
+| M1 | Window appears | All | Launch game | Window appears with correct size |
+| M2 | Window title | All | Launch game, wait for FPS counter | Title bar shows FPS stats |
+| M3 | Rendering correct | All | Navigate to title screen | Sprites/text render correctly |
+| M4 | Keyboard input | All | Press keys while game is running | Key events are received by game state |
+| M5 | Mouse input | All | Move mouse, click in window | Mouse events are received by game state |
+| M6 | Window close | All | Click the X button | Game exits cleanly |
+| M7 | Full screen | All | Enable full screen in settings | Window goes full screen |
+| M8 | X11 fallback | Linux | `unset WAYLAND_DISPLAY && ./gametemplate` | Game runs via X11/XWayland |
+| M9 | Performance | All | Run game, check FPS counter | FPS comparable to SDL version |
+| M10 | Clean exit | All | Exit game, check console for errors | No segfaults, no errors |
+| M11 | Quit event | All | Close window via X button or trigger quit | Game loop terminates, resources freed |
 
 ---
 
 ## Open Questions
 
 1. **Keysym mapping depth**: For event translation, how complete should the
-   X11/Wayland → SDL keysym mapping be? Full keyboard coverage (all keys
+   native → engine keysym mapping be? Full keyboard coverage (all keys
    including function keys, numpad, media keys)? Or just the keys the game
    currently uses (arrows, Enter, Escape, alphanumerics)?
 
@@ -457,13 +661,17 @@ proceeding.
    cursor. Should the native window implementations manage cursor
    visibility, or leave it as the system default?
 
-7. **Error message dialogs**: `CBaseGame::DisplayErrorMsg()` currently uses
-   `SDL_ShowSimpleMessageBox()`. With `SDL_INIT_VIDEO` removed, this won't
-   work. Should we replace it with `fprintf(stderr, ...)`, or keep
-   `SDL_INIT_VIDEO` just for this edge case?
+7. **Key code values**: The `CEvent` union is defined in Phase 1 with
+   `CKeyEvent::keyCode`. Should we define our own key code enum (like
+   SDL_Keycode), or reuse platform values (X11 keysyms on Linux,
+   virtual key codes on Windows) and just document the mapping?
 
-8. **SDL_INIT_VIDEO removal scope**: Some SDL functions used in the
-   codebase (like `SDL_GetNumVideoDisplays`, `SDL_GetDisplayMode` in
-   `smartresolutionbtn.cpp`) require `SDL_INIT_VIDEO`. Should we keep
-   `SDL_INIT_VIDEO` initialized but just not use SDL for the window/
-   surface? Or replace those SDL display-query calls with native ones too?
+8. **Audio replacement**: SDL_mixer is still used for audio. Should audio
+   replacement be a separate future phase, or should it be addressed as
+   part of this plan? Options: ALSA, PulseAudio, PipeWire on Linux;
+   WASAPI or XAudio2 on Windows.
+
+9. **xmlParser.cpp**: This third-party file still includes `<SDL.h>` but
+   we are leaving it untouched. After SDL is fully removed, this file
+   will fail to compile. Should we remove just the SDL include from it
+   (minimal change), or treat it as truly untouchable?

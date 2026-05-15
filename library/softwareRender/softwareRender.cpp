@@ -8,9 +8,6 @@
 // Physical component dependency
 #include <softwareRender/softwareRender.h>
 
-// SDL lib dependencies
-#include <SDL.h>
-
 // Standard lib dependencies
 #include <cstring>
 
@@ -22,7 +19,7 @@
 #include <utilities/deletefuncs.h>
 #include <softwareRender/srtexture.h>
 #include <softwareRender/triangleslope.h>
-#include <softwareRender/renderdefs.h>
+#include <system/iframebuffer.h>
 
 // Render a single triangle within a screen strip
 void RenderTriStrip( const CRender2d & render, int yMin, int yMax );
@@ -34,7 +31,6 @@ void RenderStrip( const std::vector<CRender2d> * pTriList, int yMin, int yMax );
 *    desc:  Constructor
 ************************************************************************/
 CSoftwareRender::CSoftwareRender() :
-    m_pSurface(nullptr),
     m_textIdInc(0),
     m_vboIdInc(0),
     m_iboIdInc(0)
@@ -59,55 +55,21 @@ CSoftwareRender::~CSoftwareRender()
 
 
 /***************************************************************************
-*   desc:  Create the SDL window surface
+*   desc:  Set the surface data from a framebuffer
 ****************************************************************************/
-void CSoftwareRender::CreateSurface( SDL_Window * pWindow )
+void CSoftwareRender::SetSurface( IFrameBuffer * pFrameBuffer )
 {
-    // Create the window surface. We don't own the surface so DON'T FREE it
-    if( m_pSurface == nullptr )
-    {
-        if( pWindow == nullptr )
-            throw NExcept::CCriticalException("Game window has not be created!", SDL_GetError() );
-        
-        m_pSurface = SDL_GetWindowSurface( pWindow );
-        if( m_pSurface == nullptr )
-            throw NExcept::CCriticalException("Surface Creation error!", SDL_GetError());
+    if( pFrameBuffer == nullptr )
+        throw NExcept::CCriticalException("SetSurface Error!",
+            "Framebuffer pointer is null.");
 
-        m_halfScreen.w = m_pSurface->w / 2;
-        m_halfScreen.h = m_pSurface->h / 2;
-    }
+    m_surfaceData.pixels = pFrameBuffer->GetPixels();
+    m_surfaceData.w = pFrameBuffer->GetWidth();
+    m_surfaceData.h = pFrameBuffer->GetHeight();
+    m_halfScreen.w = m_surfaceData.w / 2;
+    m_halfScreen.h = m_surfaceData.h / 2;
 
-}   // CreateSurface
-
-
-/***************************************************************************
-*   desc:  Get the SDL window surface
-****************************************************************************/
-SDL_Surface * CSoftwareRender::GetSurface()
-{
-    return m_pSurface;
-
-}   // GetSurface
-
-
-/***************************************************************************
-*   desc:  Display the rendered changes
-****************************************************************************/
-void CSoftwareRender::Flip( SDL_Window * pWindow )
-{
-    SDL_UpdateWindowSurface( pWindow );
-
-}   // Flip
-
-
-/***************************************************************************
-*   desc:  Clear the buffers
-****************************************************************************/
-void CSoftwareRender::Clear()
-{
-    SDL_FillRect( m_pSurface, NULL, 0 );
-
-}   // Clear
+}   // SetSurface
 
 
 /***************************************************************************
@@ -307,14 +269,14 @@ void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, cons
 
     for( int i = 0; i < triCount; ++i )
     {
-        CRender2d render2d( pText, m_pSurface );
+        CRender2d render2d( pText, &m_surfaceData );
 
         // Copy over the verts for this triangle
         for( int j = 0; j < TRI; ++j )
             render2d.m_vec[j] = pTrans[ pIBO[vIndex++] ];
 
         // Only keep visible triangles
-        if( !render2d.Cull( m_pSurface->w, m_pSurface->h ) )
+        if( !render2d.Cull( m_surfaceData.w, m_surfaceData.h ) )
             triList.push_back( render2d );
     }
 
@@ -322,7 +284,7 @@ void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, cons
     // strip of the screen so there are no write conflicts
     if( !triList.empty() )
     {
-        int screenH = m_pSurface->h;
+        int screenH = m_surfaceData.h;
         size_t threads = CThreadPool::Instance().threadCount();
 
         if( threads > 0 )

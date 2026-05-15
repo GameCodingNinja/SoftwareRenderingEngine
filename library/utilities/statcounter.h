@@ -14,7 +14,7 @@
 #include <utilities/timer.h>
 
 // Forward declaration(s)
-struct SDL_Window;
+class IWindow;
 
 class CStatCounter
 {
@@ -28,7 +28,7 @@ public:
     }
 
     // Have we run through one cycle.
-    void IncCycle( SDL_Window * m_pWindow );
+    void IncCycle( IWindow * pWindow );
 
     // Inc the display counter
     void IncDisplayCounter( size_t i = 1 );

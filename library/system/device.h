@@ -8,15 +8,17 @@
 #ifndef __device_h__
 #define __device_h__
 
-// SDL lib dependencies
-#include <SDL.h>
-
 // Standard lib dependencies
 #include <string>
+#include <memory>
 
 // Game lib dependencies
 #include <common/matrix.h>
 #include <common/defs.h>
+
+// Forward declaration(s)
+class IWindow;
+class IFrameBuffer;
 
 class CDevice
 {
@@ -38,8 +40,11 @@ public:
     // Get the projection matrix
     const CMatrix & GetProjectionMatrix( NDefs::EProjectionType type ) const;
 
-    // Get the SDL window
-    SDL_Window * GetWindow();
+    // Get the native window
+    IWindow* GetNativeWindow();
+
+    // Get the frame buffer
+    IFrameBuffer* GetFrameBuffer();
 
     // Set full screen or windowed mode
     void SetFullScreen( bool fullscreen );
@@ -58,7 +63,7 @@ private:
 private:
 
     // The window we'll be rendering to
-    SDL_Window * m_pWindow;
+    std::unique_ptr<IWindow> m_upWindow;
 
     // Projection matrices
     CMatrix m_perspectiveMatrix;

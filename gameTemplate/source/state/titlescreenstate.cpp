@@ -8,9 +8,6 @@
 // Physical component dependency
 #include "titlescreenstate.h"
 
-// SDL lib dependencies
-#include <SDL.h>
-
 // Game lib dependencies
 #include <objectdata/objectdatamanager2d.h>
 #include <system/device.h>
@@ -48,7 +45,7 @@ CTitleScreenState::CTitleScreenState()
 /************************************************************************
 *    desc:  Handle events
 ************************************************************************/
-void CTitleScreenState::HandleEvent( const SDL_Event & rEvent )
+void CTitleScreenState::HandleEvent( const CEvent & rEvent )
 {
     CCommonState::HandleEvent( rEvent );
 

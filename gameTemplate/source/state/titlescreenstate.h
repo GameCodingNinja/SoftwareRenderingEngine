@@ -37,7 +37,7 @@ public:
     bool DoStateChange();
 
     // Handle events
-    virtual void HandleEvent( const SDL_Event & rEvent );
+    virtual void HandleEvent( const CEvent & rEvent );
 
 private:
 

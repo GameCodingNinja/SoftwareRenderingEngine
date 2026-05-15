@@ -1,0 +1,376 @@
+
+/************************************************************************
+*    FILE NAME:       windowswindow.cpp
+*
+*    DESCRIPTION:     Windows window implementation using Win32 API
+************************************************************************/
+
+#ifdef _WIN32
+
+// Physical component dependency
+#include <system/windowswindow.h>
+#include <system/windowsframebuffer.h>
+
+// Standard lib dependencies
+#include <cstring>
+
+// Game lib dependencies
+#include <system/event.h>
+#include <system/eventqueue.h>
+#include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
+
+
+/************************************************************************
+*    desc:  Static WndProc — routes messages to the instance
+************************************************************************/
+static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    CWindowsWindow* pWindow = nullptr;
+
+    if( msg == WM_NCCREATE )
+    {
+        // Store the instance pointer passed via CreateWindowEx
+        CREATESTRUCT* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
+        pWindow = static_cast<CWindowsWindow*>(pCreate->lpCreateParams);
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pWindow));
+    }
+    else
+    {
+        pWindow = reinterpret_cast<CWindowsWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    }
+
+    if( pWindow != nullptr )
+        return pWindow->HandleMessage(msg, wParam, lParam);
+
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+
+/************************************************************************
+*    desc:  Translate Win32 virtual key code to engine key code
+*           For now, pass through the VK code directly.
+************************************************************************/
+static int TranslateVirtualKey(WPARAM vk)
+{
+    return static_cast<int>(vk);
+
+}   // TranslateVirtualKey
+
+
+/************************************************************************
+*    desc:  Map Win32 mouse button message to button index
+*           1=left, 2=middle, 3=right
+************************************************************************/
+static uint8_t MapMouseButton(UINT msg)
+{
+    switch( msg )
+    {
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:   return 1;
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:   return 2;
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:   return 3;
+        default:              return 0;
+    }
+
+}   // MapMouseButton
+
+
+/************************************************************************
+*    desc:  Constructor
+************************************************************************/
+CWindowsWindow::CWindowsWindow() :
+    m_hWnd(nullptr),
+    m_hDC(nullptr),
+    m_className("SoftwareRenderWindow"),
+    m_fullscreen(false),
+    m_savedStyle(0)
+{
+    std::memset(&m_savedPlacement, 0, sizeof(m_savedPlacement));
+    m_savedPlacement.length = sizeof(WINDOWPLACEMENT);
+
+}   // Constructor
+
+
+/************************************************************************
+*    desc:  Destructor
+************************************************************************/
+CWindowsWindow::~CWindowsWindow()
+{
+    Destroy();
+
+}   // Destructor
+
+
+/************************************************************************
+*    desc:  Create the window
+************************************************************************/
+void CWindowsWindow::Create(int width, int height, const char* title)
+{
+    HINSTANCE hInstance = GetModuleHandle(nullptr);
+
+    // Register window class
+    WNDCLASSEX wc;
+    std::memset(&wc, 0, sizeof(wc));
+    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.lpfnWndProc = WndProc;
+    wc.hInstance = hInstance;
+    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
+    wc.lpszClassName = m_className.c_str();
+
+    if( !RegisterClassEx(&wc) )
+        throw NExcept::CCriticalException("Windows Window Error!",
+            "Failed to register window class.");
+
+    // Calculate window rect to get the desired client area size
+    RECT rect = { 0, 0, width, height };
+    DWORD style = WS_OVERLAPPEDWINDOW;
+    AdjustWindowRect(&rect, style, FALSE);
+
+    int windowWidth = rect.right - rect.left;
+    int windowHeight = rect.bottom - rect.top;
+
+    // Center the window on the screen
+    int screenW = GetSystemMetrics(SM_CXSCREEN);
+    int screenH = GetSystemMetrics(SM_CYSCREEN);
+    int posX = (screenW - windowWidth) / 2;
+    int posY = (screenH - windowHeight) / 2;
+
+    // Create the window (pass 'this' so WndProc can find us)
+    m_hWnd = CreateWindowEx(
+        0,
+        m_className.c_str(),
+        (title != nullptr) ? title : "",
+        style,
+        posX, posY,
+        windowWidth, windowHeight,
+        nullptr,        // parent
+        nullptr,        // menu
+        hInstance,
+        this );         // lpParam → stored in GWLP_USERDATA
+
+    if( m_hWnd == nullptr )
+        throw NExcept::CCriticalException("Windows Window Error!",
+            "Failed to create window.");
+
+    // Get the device context
+    m_hDC = GetDC(m_hWnd);
+    if( m_hDC == nullptr )
+        throw NExcept::CCriticalException("Windows Window Error!",
+            "Failed to get device context.");
+
+    // Create the framebuffer
+    m_upFrameBuffer = std::make_unique<CWindowsFrameBuffer>(
+        m_hWnd, m_hDC, width, height);
+
+}   // Create
+
+
+/************************************************************************
+*    desc:  Destroy the window and free resources
+************************************************************************/
+void CWindowsWindow::Destroy()
+{
+    m_upFrameBuffer.reset();
+
+    if( m_hDC != nullptr && m_hWnd != nullptr )
+    {
+        ReleaseDC(m_hWnd, m_hDC);
+        m_hDC = nullptr;
+    }
+
+    if( m_hWnd != nullptr )
+    {
+        DestroyWindow(m_hWnd);
+        m_hWnd = nullptr;
+    }
+
+    UnregisterClass(m_className.c_str(), GetModuleHandle(nullptr));
+
+}   // Destroy
+
+
+/************************************************************************
+*    desc:  Show or hide the window
+************************************************************************/
+void CWindowsWindow::Show(bool visible)
+{
+    if( m_hWnd == nullptr )
+        return;
+
+    ShowWindow(m_hWnd, visible ? SW_SHOW : SW_HIDE);
+    if( visible )
+        UpdateWindow(m_hWnd);
+
+}   // Show
+
+
+/************************************************************************
+*    desc:  Set the window title
+************************************************************************/
+void CWindowsWindow::SetTitle(const std::string& title)
+{
+    if( m_hWnd != nullptr )
+        SetWindowText(m_hWnd, title.c_str());
+
+}   // SetTitle
+
+
+/************************************************************************
+*    desc:  Set full screen mode
+*           Saves/restores window placement and style for toggling
+************************************************************************/
+void CWindowsWindow::SetFullScreen(bool fullscreen)
+{
+    if( m_hWnd == nullptr || m_fullscreen == fullscreen )
+        return;
+
+    m_fullscreen = fullscreen;
+
+    if( fullscreen )
+    {
+        // Save current window state
+        m_savedStyle = GetWindowLong(m_hWnd, GWL_STYLE);
+        GetWindowPlacement(m_hWnd, &m_savedPlacement);
+
+        // Remove window decorations and go fullscreen
+        SetWindowLong(m_hWnd, GWL_STYLE, m_savedStyle & ~WS_OVERLAPPEDWINDOW);
+
+        MONITORINFO mi;
+        mi.cbSize = sizeof(mi);
+        GetMonitorInfo(MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTOPRIMARY), &mi);
+
+        SetWindowPos(m_hWnd, HWND_TOP,
+            mi.rcMonitor.left, mi.rcMonitor.top,
+            mi.rcMonitor.right - mi.rcMonitor.left,
+            mi.rcMonitor.bottom - mi.rcMonitor.top,
+            SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    }
+    else
+    {
+        // Restore window decorations and position
+        SetWindowLong(m_hWnd, GWL_STYLE, m_savedStyle);
+        SetWindowPlacement(m_hWnd, &m_savedPlacement);
+        SetWindowPos(m_hWnd, nullptr, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+            SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    }
+
+}   // SetFullScreen
+
+
+/************************************************************************
+*    desc:  Poll Win32 messages and push to the event queue
+************************************************************************/
+void CWindowsWindow::PollEvents()
+{
+    MSG msg;
+
+    while( PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) )
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+}   // PollEvents
+
+
+/************************************************************************
+*    desc:  Get the framebuffer owned by this window
+************************************************************************/
+IFrameBuffer* CWindowsWindow::GetFrameBuffer()
+{
+    return m_upFrameBuffer.get();
+
+}   // GetFrameBuffer
+
+
+/************************************************************************
+*    desc:  Handle Win32 messages — translate to engine events
+************************************************************************/
+LRESULT CWindowsWindow::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    CEvent event;
+    std::memset(&event, 0, sizeof(event));
+
+    switch( msg )
+    {
+        case WM_CLOSE:
+        {
+            event.type = EVENT_QUIT;
+            CEventQueue::Instance().PushEvent(event);
+            return 0;
+        }
+
+        case WM_KEYDOWN:
+        {
+            event.key.type = EVENT_KEY_DOWN;
+            event.key.keyCode = TranslateVirtualKey(wParam);
+            event.key.repeat = (lParam & 0x40000000) != 0;
+            CEventQueue::Instance().PushEvent(event);
+            return 0;
+        }
+
+        case WM_KEYUP:
+        {
+            event.key.type = EVENT_KEY_UP;
+            event.key.keyCode = TranslateVirtualKey(wParam);
+            event.key.repeat = false;
+            CEventQueue::Instance().PushEvent(event);
+            return 0;
+        }
+
+        case WM_MOUSEMOVE:
+        {
+            event.motion.type = EVENT_MOUSE_MOTION;
+            event.motion.x = LOWORD(lParam);
+            event.motion.y = HIWORD(lParam);
+            event.motion.xrel = 0;
+            event.motion.yrel = 0;
+            CEventQueue::Instance().PushEvent(event);
+            return 0;
+        }
+
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        {
+            event.button.type = EVENT_MOUSE_BUTTON_DOWN;
+            event.button.button = MapMouseButton(msg);
+            event.button.x = LOWORD(lParam);
+            event.button.y = HIWORD(lParam);
+            CEventQueue::Instance().PushEvent(event);
+            return 0;
+        }
+
+        case WM_LBUTTONUP:
+        case WM_RBUTTONUP:
+        case WM_MBUTTONUP:
+        {
+            event.button.type = EVENT_MOUSE_BUTTON_UP;
+            event.button.button = MapMouseButton(msg);
+            event.button.x = LOWORD(lParam);
+            event.button.y = HIWORD(lParam);
+            CEventQueue::Instance().PushEvent(event);
+            return 0;
+        }
+
+        case WM_DESTROY:
+        {
+            PostQuitMessage(0);
+            return 0;
+        }
+
+        default:
+            break;
+    }
+
+    return DefWindowProc(m_hWnd, msg, wParam, lParam);
+
+}   // HandleMessage
+
+#endif  // _WIN32

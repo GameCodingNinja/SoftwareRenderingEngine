@@ -8,11 +8,8 @@
 #ifndef __render_defs_h__
 #define __render_defs_h__
 
-// Physical component dependency
-
 // Standard lib dependencies
-
-// Boost lib dependencies
+#include <cstdint>
 
 // Game lib dependencies
 #include <common/vertex2d.h>
@@ -21,11 +18,25 @@
 // Forward declaration(s)
 class CSRTexture;
 
+/************************************************************************
+*    Surface data struct for the render pipeline
+************************************************************************/
+struct CSurfaceData
+{
+    uint32_t* pixels = nullptr;
+    int w = 0;
+    int h = 0;
+};
+
+
+/************************************************************************
+*    Render data passed to worker threads for triangle rasterization
+************************************************************************/
 class CRender2d
 {
 public:
 
-    CRender2d( CSRTexture * pText, SDL_Surface * pSurface ) :
+    CRender2d( CSRTexture * pText, CSurfaceData * pSurface ) :
         m_pText(pText),
         m_pSurface(pSurface)
     { }
@@ -33,8 +44,8 @@ public:
     // Texture pointer
     CSRTexture * m_pText;
 
-    // Surface pointer
-    SDL_Surface * m_pSurface;
+    // Surface data pointer
+    CSurfaceData * m_pSurface;
 
     // Three 2D vertexes
     CVertex2D m_vec[TRI];
@@ -71,5 +82,3 @@ public:
 };
 
 #endif  // __render_defs_h__
-
-

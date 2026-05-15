@@ -8,8 +8,6 @@
 #ifndef __software_render_h__
 #define __software_render_h__
 
-// Physical component dependency
-
 // Standard lib dependencies
 #include <string>
 #include <map>
@@ -20,13 +18,13 @@
 #include <common/defs.h>
 #include <common/size.h>
 #include <common/vertex2d.h>
+#include <softwareRender/renderdefs.h>
 
 // Forward declaration(s)
-struct SDL_Surface;
-struct SDL_Window;
 class CSRTexture;
 class CMatrix;
 class CRender2d;
+class IFrameBuffer;
 
 class CSoftwareRender
 {
@@ -39,17 +37,8 @@ public:
         return softwareRender;
     }
 
-    // Create the SDL window surface
-    void CreateSurface( SDL_Window * pWindow );
-
-    // Get the SDL window surface
-    SDL_Surface * GetSurface();
-
-    // Display the rendered changes
-    void Flip( SDL_Window * pWindow );
-
-    // Clear the buffers
-    void Clear();
+    // Set the surface data from a framebuffer
+    void SetSurface( IFrameBuffer * pFrameBuffer );
 
     // Create a texture
     uint CreateTexture( uchar * pData, int w, int h );
@@ -77,8 +66,8 @@ private:
     // Constructor
     CSoftwareRender();
 
-	// Destructor
-	~CSoftwareRender();
+    // Destructor
+    ~CSoftwareRender();
 
     // Get the texture
     CSRTexture * GetTexture( uint Id );
@@ -89,14 +78,10 @@ private:
     // Get the IBO
     uint * GetIBO( uint Id );
 
-    // Render the triangle
-    //void RenderTri( CRender2d * pRender );
-
 private:
 
-    // The windows surface for 2d software rendering (Do Not FREE))
-    // Will be freed if window is resized or program terminated
-    SDL_Surface * m_pSurface;
+    // Surface data for the render target
+    CSurfaceData m_surfaceData;
 
     // ID inc
     uint m_textIdInc;
@@ -117,6 +102,4 @@ private:
 
 };
 
-#endif  // __classtemplate_h__
-
-
+#endif  // __software_render_h__

@@ -22,7 +22,7 @@ public:
     virtual ~CCommonState();
 
     // Handle events
-    virtual void HandleEvent( const SDL_Event & rEvent );
+    virtual void HandleEvent( const CEvent & rEvent );
 
     // Update objects that require them
     virtual void Update();

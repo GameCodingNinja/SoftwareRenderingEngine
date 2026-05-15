@@ -434,10 +434,7 @@ XMLNode XMLNode::openFileHelper(XMLCSTR filename, XMLCSTR tag)
             ,filename,XMLNode::getError(pResults.error),pResults.nLine,pResults.nColumn,s1,s2,s3);
 
         // display message
-        // h rosenorn 09-06-2-14 commented out the below and added SDL2 message box.
-//#if defined(_XMLWINDOWS) && !defined(UNDER_CE) && !defined(_XMLPARSER_NO_MESSAGEBOX_)
-//        MessageBoxA(NULL,message,"XML Parsing error",MB_OK|MB_ICONERROR|MB_TOPMOST);
-//#endif
+        // Display the error message
         printf("%s",message);
 
         exit(255);

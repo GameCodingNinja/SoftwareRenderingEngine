@@ -15,8 +15,8 @@
 // Standard lib dependencies
 #include <tuple>
 
-// Forward declaration(s)
-union SDL_Event;
+// Game lib dependencies
+#include <system/event.h>
 
 enum EGameState
 {
@@ -92,7 +92,7 @@ public:
     virtual ~iGameState(){};
 
     // Handle events
-    virtual void HandleEvent( const SDL_Event & rEvent ){};
+    virtual void HandleEvent( const CEvent & rEvent ){};
 
     // Act upon what the user is doing
     virtual void GetUserInput( bool hasFocus ){};

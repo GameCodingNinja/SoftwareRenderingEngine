@@ -12,6 +12,7 @@ add_executable(
 target_link_libraries(
     gametemplate
     library
-    ${SDL2_LIBRARIES} )
+    ${X11_LIBRARIES}
+    ${WAYLAND_CLIENT_LIBRARIES} )
 
 install(TARGETS gametemplate DESTINATION ${CMAKE_BINARY_DIR})

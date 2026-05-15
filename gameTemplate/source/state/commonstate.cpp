@@ -8,9 +8,6 @@
 // Physical component dependency
 #include "commonstate.h"
 
-// SDL lib dependencies
-#include <SDL.h>
-
 // Game lib dependencies
 #include <system/device.h>
 
@@ -34,7 +31,7 @@ CCommonState::~CCommonState()
 /***************************************************************************
 *    desc:  handle events
 ****************************************************************************/
-void CCommonState::HandleEvent( const SDL_Event & rEvent )
+void CCommonState::HandleEvent( const CEvent & rEvent )
 {
     // Have the menu manager handle events
     //CMenuManager::Instance().HandleEvent( rEvent );

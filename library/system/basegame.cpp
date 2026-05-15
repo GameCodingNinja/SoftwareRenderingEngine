@@ -8,9 +8,6 @@
 // Physical component dependency
 #include <system/basegame.h>
 
-// SDL lib dependencies
-#include <SDL.h>
-
 // Standard lib dependencies
 #include <stdio.h>
 
@@ -21,13 +18,16 @@
 #include <utilities/highresolutiontimer.h>
 #include <utilities/statcounter.h>
 #include <system/device.h>
-#include <softwareRender/softwareRender.h>
+#include <system/iwindow.h>
+#include <system/iframebuffer.h>
+#include <system/eventqueue.h>
 
 /************************************************************************
 *    desc:  Constructer
 ************************************************************************/
 CBaseGame::CBaseGame()
     : m_pWindow(nullptr),
+      m_pFrameBuffer(nullptr),
       m_gameRunning(false)
 {
 }   // constructor
@@ -38,13 +38,6 @@ CBaseGame::CBaseGame()
 ************************************************************************/
 CBaseGame::~CBaseGame()
 {
-    // Destroy window
-    if( m_pWindow != nullptr )
-        SDL_DestroyWindow( m_pWindow );
-
-    // Quit SDL subsystems
-    SDL_Quit();
-
 }   // destructer
 
 
@@ -57,7 +50,8 @@ void CBaseGame::Create()
     CDevice::Instance().Create();
 
     // Get local copy of the window handle
-    m_pWindow = CDevice::Instance().GetWindow();
+    m_pWindow = CDevice::Instance().GetNativeWindow();
+    m_pFrameBuffer = CDevice::Instance().GetFrameBuffer();
 
     // Game start init
     Init();
@@ -74,8 +68,8 @@ void CBaseGame::Init()
     CDevice::Instance().ShowWindow( true );
 
     // Display a black screen
-    CSoftwareRender::Instance().Clear();
-    CSoftwareRender::Instance().Flip( m_pWindow );
+    m_pFrameBuffer->Clear();
+    m_pFrameBuffer->Flip();
 
 }   // Init
 
@@ -85,15 +79,16 @@ void CBaseGame::Init()
 ****************************************************************************/
 void CBaseGame::PollEvents()
 {
-    // Event handler
-    SDL_Event msgEvent;
+    // Poll native events
+    m_pWindow->PollEvents();
 
     // Handle events on queue
-    while( SDL_PollEvent( &msgEvent ) )
+    CEvent event;
+    while( CEventQueue::Instance().PollEvent(event) )
     {
         // let the game handle the event
         // turns true on quit
-        if( HandleEvent( msgEvent ) )
+        if( HandleEvent( event ) )
         {
             // Stop the game
             m_gameRunning = false;
@@ -149,7 +144,7 @@ bool CBaseGame::GameLoop()
 ****************************************************************************/
 void CBaseGame::Render()
 {
-    CSoftwareRender::Instance().Clear();
+    m_pFrameBuffer->Clear();
 
     // Do the pre render
     PreRender();
@@ -158,7 +153,7 @@ void CBaseGame::Render()
     PostRender();
 
     // Do the back buffer swap
-    CSoftwareRender::Instance().Flip( m_pWindow );
+    m_pFrameBuffer->Flip();
 
 }   // Render
 
@@ -203,4 +198,3 @@ bool CBaseGame::IsGameRunning() const
     return m_gameRunning;
 
 }   // IsGameRunning
-

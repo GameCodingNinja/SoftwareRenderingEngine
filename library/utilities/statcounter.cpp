@@ -8,10 +8,8 @@
 // Physical component dependency
 #include <utilities/statcounter.h>
 
-// SDL lib dependencies
-#include <SDL.h>
-
 // Game lib dependencies
+#include <system/iwindow.h>
 #include <utilities/genfunc.h>
 #include <utilities/highresolutiontimer.h>
 
@@ -43,7 +41,7 @@ CStatCounter::~CStatCounter()
 *
 *	 ret: bool - true if one cycle has been completed
 ************************************************************************/
-void CStatCounter::IncCycle( SDL_Window * m_pWindow )
+void CStatCounter::IncCycle( IWindow * pWindow )
 {
     // These counters are incremeented each game loop cycle so they can
     // be placed here in this function because this function is also called
@@ -56,7 +54,7 @@ void CStatCounter::IncCycle( SDL_Window * m_pWindow )
     if( m_statsDisplayTimer.Expired(CTimer::RESTART_ON_EXPIRE) )
     {
         // The call also resets the counters
-        SDL_SetWindowTitle( m_pWindow, GetStatString().c_str() );
+        pWindow->SetTitle( GetStatString() );
 
         // Now that the stats are displayed, we can reset out counters.
         ResetCounters();
