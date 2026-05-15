@@ -23,10 +23,6 @@ namespace NDefs
 {
     const char UNKNOWN_ACTION(-1);
 
-    // Analog stick max values -32768 to 32767 but to simplify it, we'll just use 32767
-    const int MAX_ANALOG_AXIS_VALUE(32767);
-    const float ANALOG_PERCENTAGE_CONVERTION(327.67f);
-
     enum EProjectionType
     {
         EPT_NULL,

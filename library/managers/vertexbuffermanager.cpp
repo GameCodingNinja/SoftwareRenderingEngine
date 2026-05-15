@@ -10,7 +10,6 @@
 
 // Game lib dependencies
 #include <common/quad2d.h>
-#include <common/shaderdata.h>
 #include <common/scaledframe.h>
 #include <common/uv.h>
 #include <softwareRender/softwareRender.h>

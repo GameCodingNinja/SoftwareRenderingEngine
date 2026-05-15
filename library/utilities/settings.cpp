@@ -8,9 +8,6 @@
 // Physical component dependency
 #include <utilities/settings.h>
 
-// SDL lib dependencies
-#include <SDL.h>
-
 // Standard lib dependencies
 #include <string>
 
@@ -24,19 +21,9 @@ CSettings::CSettings()
     : m_size(1024,768),
       m_default_size(1280,768),
       m_fullScreen(false),
-      m_vSync(false),
-      m_major(2),
-      m_minor(1),
-      m_profile(SDL_GL_CONTEXT_PROFILE_CORE),
       m_viewAngle(45.f),
       m_minZdist(5.f),
-      m_maxZdist(1000.f),
-      m_gamepadStickDeadZone(2500),
-      m_createStencilBuffer(false),
-      m_stencilBufferBitSize(0),
-      m_clearStencilBuffer(false),
-      m_enableDepthBuffer(false),
-      m_clearTargetBuffer(true)
+      m_maxZdist(1000.f)
 {
 }   // constructor
 
@@ -85,63 +72,11 @@ void CSettings::LoadFromXML( const std::string & filePath )
         XMLNode deviceNode = m_mainNode.getChildNode("device");
         if( !deviceNode.isEmpty() )
         {
-            // Get the attribute for OpenGL node
-            XMLNode OpenGLNode = deviceNode.getChildNode("OpenGL");
-            if( !OpenGLNode.isEmpty() )
-            {
-                m_major = std::stoi( OpenGLNode.getAttribute("major") );
-                m_minor = std::stoi( OpenGLNode.getAttribute("minor") );
-
-                if( std::string( OpenGLNode.getAttribute("profile") ) == "core" )
-                    m_profile = SDL_GL_CONTEXT_PROFILE_CORE;
-
-                else if( std::string( OpenGLNode.getAttribute("profile") ) == "compatibility" )
-                    m_profile = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY;
-
-                else if( std::string( OpenGLNode.getAttribute("profile") ) == "es" )
-                    m_profile = SDL_GL_CONTEXT_PROFILE_ES;
-            }
-
             // Get the projection info
             XMLNode projectionNode = deviceNode.getChildNode("projection");
             m_minZdist = std::atof(projectionNode.getAttribute("minZDist"));
             m_maxZdist = std::atof(projectionNode.getAttribute("maxZDist"));
             m_viewAngle = std::atof(projectionNode.getAttribute("view_angle")) * defs_DEG_TO_RAD;
-
-            // Get the attribute from the "backbuffer" node
-            XMLNode backBufferNode = deviceNode.getChildNode("backbuffer");
-            if( !backBufferNode.isEmpty() )
-            {
-                //tripleBuffering = (backBufferNode.getAttribute("tripleBuffering") == string("true"));
-                m_vSync = (backBufferNode.getAttribute("VSync") == std::string("true"));
-            }
-
-            XMLNode joypadNode = deviceNode.getChildNode("joypad");
-            if( !joypadNode.isEmpty() )
-            {
-                m_gamepadStickDeadZone = std::atoi(joypadNode.getAttribute("stickDeadZone"));
-            }
-
-            // Get the attribute from the "depthStencilBuffer" node
-            XMLNode depthStencilBufferNode = deviceNode.getChildNode("depthStencilBuffer");
-            if( !depthStencilBufferNode.isEmpty() )
-            {
-                // Do we enable the depth buffer
-                if( depthStencilBufferNode.isAttributeSet("enableDepthBuffer") )
-                    m_enableDepthBuffer = ( depthStencilBufferNode.getAttribute("enableDepthBuffer") == std::string("true") );
-
-                // Do we create the stencil buffer
-                if( depthStencilBufferNode.isAttributeSet("createStencilBuffer") )
-                    m_createStencilBuffer = ( depthStencilBufferNode.getAttribute("createStencilBuffer") == std::string("true") );
-
-                // Do we clear the stencil buffer
-                if( depthStencilBufferNode.isAttributeSet("clearStencilBuffer") )
-                    m_clearStencilBuffer = ( depthStencilBufferNode.getAttribute("clearStencilBuffer") == std::string("true") );
-
-                // Get the number of bits for the stencil buffer
-                if( depthStencilBufferNode.isAttributeSet( "stencilBufferBitSize" ) )
-                    m_stencilBufferBitSize = std::atoi( depthStencilBufferNode.getAttribute("stencilBufferBitSize") );
-            }
         }
     }
 
@@ -196,47 +131,6 @@ void CSettings::SetSize( const CSize<float> & size )
 const CSize<float> & CSettings::GetSizeHalf() const
 {
     return m_size_half;
-}
-
-
-/************************************************************************
-*    desc:  Get/Set vSync?
-************************************************************************/
-bool CSettings::GetVSync() const
-{
-    return m_vSync;
-}
-
-void CSettings::SetVSync( bool value )
-{
-    m_vSync = value;
-}
-
-
-/************************************************************************
-*    desc:  Get the OpenGL major version
-************************************************************************/
-int CSettings::GetMajorVersion() const
-{
-    return m_major;
-}
-
-
-/************************************************************************
-*    desc:  Get the OpenGL minor version
-************************************************************************/
-int CSettings::GetMinorVersion() const
-{
-    return m_minor;
-}
-
-
-/************************************************************************
-*    desc:  Get the OpenGL profile type
-************************************************************************/
-int CSettings::GetProfile() const
-{
-    return m_profile;
 }
 
 
@@ -318,24 +212,6 @@ float CSettings::GetDeviceRatio() const
 
 
 /************************************************************************
-*    desc:  Get the gamepad stick dead zone
-************************************************************************/
-int CSettings::GetGamePadStickDeadZone() const
-{
-    return m_gamepadStickDeadZone;
-}
-
-
-/************************************************************************
-*    desc:  Set the gamepad stick dead zone
-************************************************************************/
-void CSettings::SetGamePadStickDeadZone( int value )
-{
-    m_gamepadStickDeadZone = value;
-}
-
-
-/************************************************************************
 *    desc:  Get/Set full screen
 ************************************************************************/
 bool CSettings::GetFullScreen() const
@@ -346,61 +222,6 @@ bool CSettings::GetFullScreen() const
 void CSettings::SetFullScreen( bool value )
 {
     m_fullScreen = value;
-}
-
-
-/************************************************************************
-*    desc:  Do we create the depth stencil buffer
-*
-*    ret: bool - createDepthStencilBuffer
-************************************************************************/
-bool CSettings::GetCreateStencilBuffer() const
-{
-    return m_createStencilBuffer;
-}
-
-
-/************************************************************************
-*    desc:  Get the bit size of the stencil buffer
-*
-*    ret: int - bit size
-************************************************************************/
-int CSettings::GetStencilBufferBitSize() const
-{
-    return m_stencilBufferBitSize;
-}
-
-
-/************************************************************************
-*    desc:  Do we clear the stencil buffer
-*
-*    ret: bool - clearStencilBuffer
-************************************************************************/
-bool CSettings::GetClearStencilBuffer() const
-{
-    return m_clearStencilBuffer;
-}
-
-
-/************************************************************************
-*    desc:  Is the depth buffer enabled by default
-*
-*    ret: bool - enableDepthBuffer
-************************************************************************/
-bool CSettings::GetEnableDepthBuffer() const
-{
-    return m_enableDepthBuffer;
-}
-
-
-/************************************************************************
-*    desc:  Do we clear the target buffer
-*
-*    ret: bool - clearTargetBuffer
-************************************************************************/
-bool CSettings::GetClearTargetBuffer() const
-{
-    return m_clearTargetBuffer;
 }
 
 
@@ -434,40 +255,6 @@ void CSettings::SaveSettings()
 
                 resolutionNode.updateAttribute(tmpStr.c_str(), "fullscreen", "fullscreen");
             }
-        }
-
-        XMLNode deviceNode = m_mainNode.getChildNode("device");
-
-        if( !deviceNode.isEmpty() )
-        {
-            {
-                // Get the attribute from the "backbuffer" node
-                XMLNode backBufferNode = deviceNode.getChildNode("backbuffer");
-
-                std::string tmpStr = "false";
-
-                if( m_vSync )
-                    tmpStr = "true";
-
-                backBufferNode.updateAttribute(tmpStr.c_str(), "VSync", "VSync");
-            }
-            /*{
-                // Get the attribute from the "backbuffer" node
-                XMLNode textFilterNode = deviceNode.getChildNode("textureFiltering");
-
-                std::string tmpStr = GetTextFilterString();
-
-                textFilterNode.updateAttribute(tmpStr.c_str(), "filter", "filter");
-            }*/
-        }
-
-        {
-            // Get the attribute from the "joypad" node
-            XMLNode joypadNode = deviceNode.getChildNode("joypad");
-
-            std::string tmpStr = std::to_string(m_gamepadStickDeadZone);
-
-            joypadNode.updateAttribute(tmpStr.c_str(), "stickDeadZone", "stickDeadZone");
         }
 
         // Save the settings file

@@ -28,7 +28,6 @@ add_library(
         2d/visualcomponent2d.cpp
         common/object.cpp
         common/worldvalue.cpp
-        common/shaderdata.cpp
         common/matrix.cpp
         common/bitmask.cpp
         soil/stb_image_aug.c

@@ -1,8 +1,8 @@
 
 /************************************************************************
-*    FILE NAME:       device.h
+*    FILE NAME:       device.cpp
 *
-*    DESCRIPTION:     Class used for window and openGL management
+*    DESCRIPTION:     Class used for window management
 ************************************************************************/
 
 // Physical component dependency
@@ -20,8 +20,6 @@
 ************************************************************************/
 CDevice::CDevice()
     : m_pWindow(nullptr)
-      //m_context(nullptr),
-      //m_pScreenSurface(nullptr)
 {
 }   // constructor
 
@@ -35,22 +33,13 @@ CDevice::~CDevice()
 
 
 /***************************************************************************
-*   desc:  Create the window and OpenGL context
+*   desc:  Create the window
  ****************************************************************************/
 void CDevice::Create()
 {
     // Initialize SDL
-    if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER | SDL_INIT_TIMER ) < 0 )
+    if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_TIMER ) < 0 )
         throw NExcept::CCriticalException("SDL could not initialize!", SDL_GetError() );
-
-    // Use OpenGL 3.3 core
-    //SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, CSettings::Instance().GetMajorVersion() );
-    //SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, CSettings::Instance().GetMinorVersion() );
-    //SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, CSettings::Instance().GetProfile() );
-
-    // Do we add stencil buffer
-    //if( CSettings::Instance().GetCreateStencilBuffer() )
-    //    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, CSettings::Instance().GetStencilBufferBitSize() );
 
     // Get the window size
     const CSize<int> size( CSettings::Instance().GetSize() );
@@ -63,44 +52,14 @@ void CDevice::Create()
     // Create the surface from the window
     CSoftwareRender::Instance().CreateSurface( m_pWindow );
 
-    // Create context
-    //m_context = SDL_GL_CreateContext( m_pWindow );
-    //if( m_context == nullptr )
-        //throw NExcept::CCriticalException("OpenGL context could not be created!", SDL_GetError() );
-
-    // Initialize GLEW
-    //glewExperimental = GL_TRUE;
-    //GLenum glewError = glewInit();
-    //if( glewError != GLEW_OK )
-    //    throw NExcept::CCriticalException("Error initializing GLEW!", 
-    //                boost::str( boost::format("Error initializing GLEW (%s).\n\n%s\nLine: %s") % glewGetErrorString( glewError ) % __FUNCTION__ % __LINE__ ));
-
-    // Enable/disable v-sync
-    //EnableVSync( CSettings::Instance().GetVSync() );
-
     // Set the full screen
     if( CSettings::Instance().GetFullScreen() )
         SetFullScreen( CSettings::Instance().GetFullScreen() );
-
-    // Depth testing is off by default. Enable it?
-    //if( CSettings::Instance().GetEnableDepthBuffer() )
-    //    glEnable(GL_DEPTH_TEST);
 
     // Create the projection matrixes
     CreateProjMatrix();
     
 }   // Create
-
-
-/***************************************************************************
-*   desc:  Enable/disable v-sync
- ****************************************************************************/
-void CDevice::EnableVSync( bool enable )
-{
-    //if( SDL_GL_SetSwapInterval( (enable == true) ? 1 : 0 ) < 0 )
-        //NGenFunc::PostDebugMsg( boost::str( boost::format("Warning: Unable to set VSync! SDL GL Error: %s") % SDL_GetError() ) );
-
-}   // EnableVSync
 
 
 /************************************************************************
@@ -164,19 +123,9 @@ void CDevice::SetFullScreen( bool fullscreen )
         flag = SDL_WINDOW_FULLSCREEN;
 
     if( SDL_SetWindowFullscreen( m_pWindow, flag ) < 0 )
-        NGenFunc::PostDebugMsg( NGenFunc::FormatString("Warning: Unable to set full screen! SDL GL Error: %s", SDL_GetError()) );
+        NGenFunc::PostDebugMsg( NGenFunc::FormatString("Warning: Unable to set full screen! SDL Error: %s", SDL_GetError()) );
 
 }   // SetFullScreen
-
-
-/***************************************************************************
-*   desc:  Get the OpenGl Context
- ****************************************************************************/
-SDL_GLContext CDevice::GetContext()
-{
-    return m_context;
-
-}   // GetContext
 
 
 /***************************************************************************
@@ -187,47 +136,3 @@ SDL_Window * CDevice::GetWindow()
     return m_pWindow;
 
 }   // GetWindow
-
-
-/***************************************************************************
-*   desc:  Init current gamepads plugged in at startup
- ****************************************************************************/
-void CDevice::InitStartupGamepads()
-{
-    #ifndef _WINDOWS
-    int newMappings = SDL_GameControllerAddMappingsFromFile("data/settings/gamecontrollerdb.txt");
-    NGenFunc::PostDebugMsg( NGenFunc::FormatString("New controller mappings found: %d", newMappings) );
-    #endif
-    
-    for( int i = 0; i < SDL_NumJoysticks(); ++i )
-        AddGamepad( i );
-
-}   // InitStartupGamepads
-
-
-/***************************************************************************
-*   desc:  Add/Remove the game pad
- ****************************************************************************/
-void CDevice::AddGamepad( int id )
-{
-    if( SDL_IsGameController( id ) )
-    {
-        SDL_GameController * pGamePad = SDL_GameControllerOpen(id);
-        if( pGamePad != NULL )
-        {
-            m_pGamepadMap.insert( std::make_pair(id, pGamePad) );
-        }
-    }
-    
-}   // AddGamepad
-
-void CDevice::RemoveGamepad( int id )
-{
-    auto iter = m_pGamepadMap.find( id );
-    if( iter != m_pGamepadMap.end() )
-    {
-        SDL_GameControllerClose( iter->second );
-        m_pGamepadMap.erase( iter );
-    }
-
-}   // RemoveGamepad

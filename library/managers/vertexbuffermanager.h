@@ -19,7 +19,6 @@
 #include <common/defs.h>
 
 // Forward declaration(s)
-class CShaderData;
 class CScaledFrame;
 class CQuad2D;
 class CUV;

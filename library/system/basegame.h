@@ -14,11 +14,8 @@
 // Standard lib dependencies
 #include <string>
 
-// Boost lib dependencies
-
 // Game lib dependencies
-
-// Game dependencies
+#include <common/defs.h>
 
 // Forward declaration(s)
 
@@ -88,9 +85,6 @@ protected:
 
     // The window we'll be rendering to
     SDL_Window * m_pWindow;
-
-    // OpenGL context
-    //SDL_GLContext m_context;
 
     // flag to indicate the game is running
     bool m_gameRunning;

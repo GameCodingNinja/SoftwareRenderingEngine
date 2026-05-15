@@ -7,8 +7,8 @@
 #ifndef __highresolutiontimer_h__
 #define __highresolutiontimer_h__
 
-// SDL/OpenGL lib dependencies
-#include <SDL.h>
+// Standard lib dependencies
+#include <cstdint>
 
 class CHighResTimer
 {
@@ -41,11 +41,11 @@ private:
     // Destructor
     ~CHighResTimer();
 
-    // the inverse of the timer frenquency - multipling is faster
+    // the inverse of the timer frequency - multiplying is faster
     double m_inverseTimerFrequency;
 
     // Last recorded time
-    Uint64 m_lastTime;
+    uint64_t m_lastTime;
 
     // The amount of time that has elapsed between frames
     float m_elapsedTime;

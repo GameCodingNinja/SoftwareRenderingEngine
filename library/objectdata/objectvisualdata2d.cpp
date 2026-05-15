@@ -224,7 +224,7 @@ NDefs::EGenerationType CObjectVisualData2D::GetGenerationType() const
 /************************************************************************
 *    desc:  Get the texture ID
 ************************************************************************/
-GLuint CObjectVisualData2D::GetTextureID( uint index ) const 
+uint CObjectVisualData2D::GetTextureID( uint index ) const 
 {
     if( m_textureIDVec.empty() )
         return 0;
@@ -254,7 +254,7 @@ const CColor & CObjectVisualData2D::GetColor() const
 /************************************************************************
 *    desc:  Get the VBO
 ************************************************************************/
-GLuint CObjectVisualData2D::GetVBO() const 
+uint CObjectVisualData2D::GetVBO() const 
 {
     return m_vbo;
 }
@@ -263,7 +263,7 @@ GLuint CObjectVisualData2D::GetVBO() const
 /************************************************************************
 *    desc:  Get the IBO
 ************************************************************************/
-GLuint CObjectVisualData2D::GetIBO() const 
+uint CObjectVisualData2D::GetIBO() const 
 {
     return m_ibo;
 }

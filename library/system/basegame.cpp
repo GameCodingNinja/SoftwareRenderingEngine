@@ -16,6 +16,7 @@
 
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
+#include <utilities/genfunc.h>
 #include <utilities/settings.h>
 #include <utilities/highresolutiontimer.h>
 #include <utilities/statcounter.h>
@@ -27,7 +28,6 @@
 ************************************************************************/
 CBaseGame::CBaseGame()
     : m_pWindow(nullptr),
-      //m_context(nullptr),
       m_gameRunning(false)
 {
 }   // constructor
@@ -38,10 +38,6 @@ CBaseGame::CBaseGame()
 ************************************************************************/
 CBaseGame::~CBaseGame()
 {
-    // Destroy the OpenGL contex
-    //if( m_context != nullptr )
-        //SDL_GL_DeleteContext( m_context );
-
     // Destroy window
     if( m_pWindow != nullptr )
         SDL_DestroyWindow( m_pWindow );
@@ -57,12 +53,11 @@ CBaseGame::~CBaseGame()
  ****************************************************************************/
 void CBaseGame::Create()
 {
-    // Create the window and OpenGL context
+    // Create the window
     CDevice::Instance().Create();
 
-    // Get local copies of the device handles
+    // Get local copy of the window handle
     m_pWindow = CDevice::Instance().GetWindow();
-    //m_context = CDevice::Instance().GetContext();
 
     // Game start init
     Init();
@@ -154,7 +149,6 @@ bool CBaseGame::GameLoop()
 ****************************************************************************/
 void CBaseGame::Render()
 {
-    //glClear( m_clearBufferMask );
     CSoftwareRender::Instance().Clear();
 
     // Do the pre render
@@ -163,14 +157,8 @@ void CBaseGame::Render()
     // Do the post render
     PostRender();
 
-    // Apparently it's a good practice to do this at the end of a render cycle
-    //CShaderMgr::Instance().UnbindShaderProgram();
-    //CTextureMgr::Instance().UnbindTexture();
-    //CVertBufMgr::Instance().UnbindBuffers();
-
     // Do the back buffer swap
     CSoftwareRender::Instance().Flip( m_pWindow );
-    //SDL_GL_SwapWindow( m_pWindow );
 
 }   // Render
 
@@ -180,9 +168,7 @@ void CBaseGame::Render()
 ****************************************************************************/
 void CBaseGame::DisplayErrorMsg( const std::string & title, const std::string & msg )
 {
-    printf("Error: %s, %s", title.c_str(), msg.c_str() );
-
-    SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, title.c_str(), msg.c_str(), m_pWindow );
+    NGenFunc::PostDebugMsg( "Error: " + title + " - " + msg );
 
 }   // DisplayErrorMsg
 

@@ -8,9 +8,6 @@
 #ifndef __object_visual_data_2d_h__
 #define __object_visual_data_2d_h__
 
-// SDL/OpenGL lib dependencies
-#include <SDL_opengl.h>
-
 // Standard lib dependencies
 #include <string>
 #include <vector>
@@ -45,7 +42,7 @@ public:
     NDefs::EGenerationType GetGenerationType() const;
 
     // Get the texture ID
-    GLuint GetTextureID( uint index = 0 ) const;
+    uint GetTextureID( uint index = 0 ) const;
 
     // Get the name of the shader ID
     const std::string & GetShaderID() const;
@@ -57,10 +54,10 @@ public:
     const CPoint<float> & GetVertexScale() const;
 
     // Get the VBO
-    GLuint GetVBO() const;
+    uint GetVBO() const;
 
     // Get the IBO
-    GLuint GetIBO() const;
+    uint GetIBO() const;
 
     // Get the vertex count
     int GetVertexCount() const;
@@ -74,13 +71,13 @@ public:
 private:
 
     // Loaded texture data
-    std::vector<GLuint> m_textureIDVec;
+    std::vector<uint> m_textureIDVec;
 
     // VBO
-    GLuint m_vbo;
+    uint m_vbo;
 
     // IBO
-    GLuint m_ibo;
+    uint m_ibo;
 
     // VBO/IBO generation type
     NDefs::EGenerationType m_genType;

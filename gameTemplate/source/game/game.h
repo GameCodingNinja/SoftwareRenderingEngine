@@ -60,6 +60,4 @@ protected:
 
 };
 
-static int SDLCALL FilterEvents( void * userdata, SDL_Event * pEvent );
-
 #endif  // __game_h__

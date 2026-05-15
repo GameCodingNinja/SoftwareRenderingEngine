@@ -39,19 +39,6 @@ public:
     const CSize<float> & GetDefaultSizeHalf() const;
     void SetSize( const CSize<float> & size );
 
-    // Do we want vSync?
-    bool GetVSync() const;
-    void SetVSync( bool value );
-
-    // Get the OpenGL major version
-    int GetMajorVersion() const;
-
-    // Get the OpenGL minor version
-    int GetMinorVersion() const;
-
-    // Get the OpenGL profile type
-    int GetProfile() const;
-
     // Get the view angle
     float GetViewAngle() const;
 
@@ -67,33 +54,12 @@ public:
     // Get ratios
     float GetDeviceRatio() const;
 
-    // Get the gamepad stick dead zone
-    int GetGamePadStickDeadZone() const;
-
-    // Set the gamepad stick dead zone
-    void SetGamePadStickDeadZone( int value );
-
     // Get/Set full screen
     bool GetFullScreen() const;
     void SetFullScreen( bool value );
 
     // Calculate the ratio
     void CalcRatio();
-
-    // Do we create the depth stencil buffer
-    bool GetCreateStencilBuffer() const;
-
-    // Get the bit size of the stencil buffer
-    int GetStencilBufferBitSize() const;
-
-    // Do we clear the stencil buffer
-    bool GetClearStencilBuffer() const;
-
-    // Is the depth buffer enabled by default
-    bool GetEnableDepthBuffer() const;
-
-    // Do we clear the target buffer
-    bool GetClearTargetBuffer() const;
 
 private:
 
@@ -127,14 +93,6 @@ private:
     // Full screen flag loaded from file
     bool m_fullScreen;
 
-    // VSync flag
-    bool m_vSync;
-
-    // OpenGL versions
-    int m_major;
-    int m_minor;
-    int m_profile;
-
     // view angle
     float m_viewAngle;
 
@@ -143,24 +101,6 @@ private:
 
     // maximum Z distance
     float m_maxZdist;
-
-    // Gamepad dead zone
-    int m_gamepadStickDeadZone;
-
-    // Do we create the depth stencil buffer
-    bool m_createStencilBuffer;
-
-    // Number of bits in the stencil buffer
-    int m_stencilBufferBitSize;
-
-    // Do we clear the stencil buffer
-    bool m_clearStencilBuffer;
-
-    // Do we enable the depth buffer
-    bool m_enableDepthBuffer;
-
-    // Do we clear the target buffer
-    bool m_clearTargetBuffer;
 
 };
 

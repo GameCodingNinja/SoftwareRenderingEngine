@@ -8,9 +8,6 @@
 #ifndef __texture_manager_h__
 #define __texture_manager_h__
 
-// SDL/OpenGL lib dependencies
-#include <SDL_opengl.h>
-
 // Standard lib dependencies
 #include <string>
 #include <map>
@@ -35,12 +32,6 @@ public:
     // Texture deleting
     void DeleteTextureGroupFor2D( const std::string & group );
 
-    // Function call used to manage what texture is currently bound
-    void BindTexture( GLuint textureID );
-
-    // Unbind the texture and reset the flag
-    void UnbindTexture();
-
 private:
 
     // Constructor
@@ -54,10 +45,6 @@ private:
     // Map containing a group of texture handles
     std::map< const std::string, std::map< const std::string, CTexture > > m_textureFor2DMapMap;
 
-    // Current texture ID
-    GLuint m_currentTextureID;
-
 };
 
 #endif  // __texture_manager_h__
-

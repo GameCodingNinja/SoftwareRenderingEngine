@@ -50,9 +50,6 @@
  ****************************************************************************
  */
 
-// SDL lib dependencies
-#include <SDL.h>
-
 // disable warning about unsafe functions.
 #ifdef _MSC_VER
 #pragma warning(disable : 4996)
@@ -442,7 +439,6 @@ XMLNode XMLNode::openFileHelper(XMLCSTR filename, XMLCSTR tag)
 //        MessageBoxA(NULL,message,"XML Parsing error",MB_OK|MB_ICONERROR|MB_TOPMOST);
 //#endif
         printf("%s",message);
-        SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "XML Parser Error", message, NULL );
 
         exit(255);
     }
