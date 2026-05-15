@@ -26,7 +26,7 @@ class CX11FrameBuffer : public IFrameBuffer
 public:
 
     // Constructor
-    CX11FrameBuffer(Display* pDisplay, Window window, GC gc, int width, int height);
+    CX11FrameBuffer(Display* pDisplay, Window window, GC gc, int width, int height, bool vSync);
 
     // Destructor
     ~CX11FrameBuffer();
@@ -46,6 +46,12 @@ public:
 
 private:
 
+    // Initialize GLX for vblank synchronization
+    void InitGLXVSync();
+
+    // Clean up GLX resources
+    void CleanupGLX();
+
     // X11 handles (not owned — the window class owns these)
     Display* m_pDisplay;
     Window m_window;
@@ -61,6 +67,17 @@ private:
     // Dimensions
     int m_width;
     int m_height;
+
+    // VSync enabled flag
+    bool m_vSync;
+
+    // GLX VSync state (dynamically loaded — no link-time GL dependency)
+    void* m_pGLLib;         // dlopen handle for libGL.so.1
+    void* m_pGLXContext;    // GLXContext (stored as void*)
+
+    // GLX function pointers for vblank sync
+    int (*m_glXGetVideoSyncSGI)(unsigned int*);
+    int (*m_glXWaitVideoSyncSGI)(int, int, unsigned int*);
 };
 
 #endif  // __linux__

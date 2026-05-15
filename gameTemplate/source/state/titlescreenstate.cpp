@@ -11,6 +11,7 @@
 // Game lib dependencies
 #include <objectdata/objectdatamanager2d.h>
 #include <system/device.h>
+#include <utilities/highresolutiontimer.h>
 
 
 /************************************************************************
@@ -34,10 +35,6 @@ CTitleScreenState::CTitleScreenState()
     m_background.SetPos( CPoint<float>( -50,0,0) );
     m_background2.SetPos( CPoint<float>( 300,-300,0) );
     m_background3.SetPos( CPoint<float>( 300,300,0) );
-
-    // Clear out any active trees and set the active one and activate the root menu
-    //CMenuManager::Instance().ClearActiveTrees();
-    //CMenuManager::Instance().ActivateTree("title_screen");
 
 }	// Constructer
 
@@ -63,7 +60,8 @@ void CTitleScreenState::Update()
 {
     CCommonState::Update();
 
-    //m_background.IncRot( CPoint<float>(0,0,0.2) );
+    const float elapsed = CHighResTimer::Instance().GetElapsedTime();
+    m_background.IncRot( CPoint<float>(0,0,0.2f * elapsed) );
 
 }	// Update
 
@@ -110,27 +108,6 @@ bool CTitleScreenState::DoStateChange()
 
         // Unload the object data
         m_stateMessage.m_groupUnload.push_back("(title_screen)");
-
-        // Load the object data
-        /*m_stateMessage.m_groupLoad.push_back("(actors)");
-        m_stateMessage.m_groupLoad.push_back("(space)");
-
-        // Create the actors
-        m_stateMessage.m_actorDataLoad = "data/objects/2d/actor/actorDataList.lst";
-        m_stateMessage.m_createActor.push_back("player_ship");
-        m_stateMessage.m_createActor.push_back("green_enemy_ship");
-        m_stateMessage.m_createActorVec.push_back("player_projectiles");
-
-        // Create the Mega Texture
-        m_stateMessage.m_createMegaTexture.push_back( boost::tuple<std::string, int>("(actors)",1024) );
-        m_stateMessage.m_createMegaTexture.push_back( boost::tuple<std::string, int>("(space)",2048) );
-
-        // Creat the instance
-        m_stateMessage.m_createInstanceMesh.push_back( "(actors)" );
-        m_stateMessage.m_createInstanceMesh.push_back( "(space)" );
-
-        // generator load path
-        m_stateMessage.generatorLoadPath = "data/objects/2d/generators/generator.lst";*/
 
         return true;
     }

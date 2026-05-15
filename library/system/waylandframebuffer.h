@@ -80,6 +80,9 @@ private:
     struct wl_callback* m_pFrameCallback;
     std::atomic<bool> m_frameReady;
 
+    // Per-buffer release tracking — true means safe to draw into
+    std::atomic<bool> m_bufferReleased[2];
+
     // VSync enabled flag
     bool m_vSync;
 };

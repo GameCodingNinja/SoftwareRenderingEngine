@@ -124,6 +124,10 @@ CWaylandFrameBuffer::CWaylandFrameBuffer(
     m_pPixels[0] = nullptr;
     m_pPixels[1] = nullptr;
 
+    // Both buffers start as available (not yet submitted)
+    m_bufferReleased[0].store(true);
+    m_bufferReleased[1].store(true);
+
     // Create both buffers
     m_pBuffer[0] = CreateBuffer(pShm, m_pPixels[0]);
     m_pBuffer[1] = CreateBuffer(pShm, m_pPixels[1]);
@@ -215,6 +219,9 @@ void CWaylandFrameBuffer::Flip()
         }
     }
 
+    // Mark the buffer we're about to submit as owned by the compositor
+    m_bufferReleased[m_backIndex].store(false);
+
     // Submit the current back buffer to the compositor
     wl_surface_attach(m_pSurface, m_pBuffer[m_backIndex], 0, 0);
     wl_surface_damage_buffer(m_pSurface, 0, 0, m_width, m_height);
@@ -230,11 +237,15 @@ void CWaylandFrameBuffer::Flip()
     wl_surface_commit(m_pSurface);
     wl_display_flush(m_pDisplay);
 
-    // Swap — the compositor holds the submitted buffer while we draw
-    // to the other one. By the time we finish drawing and call Flip
-    // again, the compositor has moved on to our new buffer and released
-    // the old one.
+    // Swap to the other buffer index
     m_backIndex = 1 - m_backIndex;
+
+    // Wait until the new back buffer has been released by the compositor
+    // so we don't draw into a buffer it's still reading
+    while( !m_bufferReleased[m_backIndex].load() )
+    {
+        wl_display_dispatch(m_pDisplay);
+    }
 
 }   // Flip
 
@@ -242,10 +253,17 @@ void CWaylandFrameBuffer::Flip()
 /************************************************************************
 *    desc:  Called when the compositor releases a buffer
 ************************************************************************/
-void CWaylandFrameBuffer::OnBufferRelease(struct wl_buffer* /*buffer*/)
+void CWaylandFrameBuffer::OnBufferRelease(struct wl_buffer* buffer)
 {
-    // No-op — double buffering ensures we never write to the buffer
-    // the compositor is currently reading
+    // Mark the released buffer as available for drawing
+    for( int i = 0; i < 2; ++i )
+    {
+        if( m_pBuffer[i] == buffer )
+        {
+            m_bufferReleased[i].store(true);
+            break;
+        }
+    }
 
 }   // OnBufferRelease
 

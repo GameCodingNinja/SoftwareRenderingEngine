@@ -9,7 +9,6 @@ set(LIBRARY_SOURCES
     softwareRender/srtexture.cpp
     softwareRender/triangleslope.cpp
     system/worldcamera.cpp
-    system/basegame.cpp
     system/device.cpp
     system/eventqueue.cpp
     system/windowfactory.cpp

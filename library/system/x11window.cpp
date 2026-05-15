@@ -25,6 +25,7 @@
 #include <system/eventqueue.h>
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
+#include <utilities/settings.h>
 
 /************************************************************************
 *    desc:  Translate X11 keysym to engine key code
@@ -123,9 +124,10 @@ void CX11Window::Create(int width, int height, const char* title)
         throw NExcept::CCriticalException("X11 Window Error!",
             "Failed to create graphics context.");
 
-    // Create the framebuffer
+    // Create the framebuffer with VSync setting
     m_upFrameBuffer = std::make_unique<CX11FrameBuffer>(
-        m_pDisplay, m_window, m_gc, width, height);
+        m_pDisplay, m_window, m_gc, width, height,
+        CSettings::Instance().GetVSync());
 
 }   // Create
 
