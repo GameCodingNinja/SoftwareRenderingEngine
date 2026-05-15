@@ -54,7 +54,9 @@
 #include <SDL.h>
 
 // disable warning about unsafe functions.
+#ifdef _MSC_VER
 #pragma warning(disable : 4996)
+#endif
 
 #ifndef _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE

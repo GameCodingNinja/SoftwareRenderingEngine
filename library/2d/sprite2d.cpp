@@ -15,7 +15,9 @@
 // disable warning about 'this' used in base member initializer list
 // It's "ok" as long as it's not being used in the member constructor
 // because the class isn't finished being initialzed yet
+#ifdef _MSC_VER
 #pragma warning(disable : 4355)
+#endif
 
 /************************************************************************
 *    desc:  Constructer

@@ -27,7 +27,9 @@
 #include <utilities/exceptionhandling.h>
 
 // disable warning about unsafe functions. Can't use allocated arrays with the safe functions
+#ifdef _MSC_VER
 #pragma warning(disable : 4996)
+#endif
 
 namespace NGenFunc
 {

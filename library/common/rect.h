@@ -8,7 +8,9 @@
 #ifndef __rect_h__
 #define __rect_h__
 
+#ifdef _MSC_VER
 #pragma warning(disable : 4244)
+#endif
 
 template <class type>
 class CRect

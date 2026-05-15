@@ -14,7 +14,9 @@
 #include <common/defs.h>
 
 // disable perfomance warning forcing value to bool 'true' or 'false'
+#ifdef _MSC_VER
 #pragma warning(disable : 4800)
+#endif
 
 class CDynamicOffset
 {

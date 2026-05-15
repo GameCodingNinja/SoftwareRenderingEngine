@@ -16,8 +16,10 @@
 
 // Turn off the data type conversion warning (ie. int to float, float to int etc.)
 // We do this all the time in 3D. Don't need to be bugged by it all the time.
+#ifdef _MSC_VER
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4305)
+#endif
 
 class CQuaternion
 {

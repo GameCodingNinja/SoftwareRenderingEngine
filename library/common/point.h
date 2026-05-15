@@ -10,7 +10,9 @@
 
 #include <complex>
 
+#ifdef _MSC_VER
 #pragma warning(disable : 4244)
+#endif
 
 template <class type>
 class CPoint
