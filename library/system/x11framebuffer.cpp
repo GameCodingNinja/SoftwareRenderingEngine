@@ -163,6 +163,31 @@ void CX11FrameBuffer::Flip()
         m_glXWaitVideoSyncSGI(2, (count + 1) % 2, &count);
     }
 
+    // DEBUG: Dump first frame to PPM
+    static bool dumped = false;
+    if( !dumped )
+    {
+        dumped = true;
+        FILE* fp = fopen("/tmp/framebuffer_dump.ppm", "wb");
+        if( fp )
+        {
+            fprintf(fp, "P6\n%d %d\n255\n", m_width, m_height);
+            for(int i = 0; i < m_width * m_height; ++i)
+            {
+                uint32_t px = m_pPixels[m_backIndex][i];
+                // Format is 0xAARRGGBB
+                unsigned char rgb[3] = {
+                    (unsigned char)((px >> 16) & 0xFF),
+                    (unsigned char)((px >>  8) & 0xFF),
+                    (unsigned char)( px        & 0xFF)
+                };
+                fwrite(rgb, 1, 3, fp);
+            }
+            fclose(fp);
+            printf("DEBUG: Framebuffer dumped to /tmp/framebuffer_dump.ppm\n");
+        }
+    }
+
     XPutImage(
         m_pDisplay,
         m_window,

@@ -37,6 +37,12 @@
       </visual>
     </object>
 
+    <object name="enemy">
+      <visual>
+        <texture file="data/textures/titleScreen/enemy01a.png" blendAlpha="true"/>
+      </visual>
+    </object>
+
   </objectList>
 
 </objectDataList2D>

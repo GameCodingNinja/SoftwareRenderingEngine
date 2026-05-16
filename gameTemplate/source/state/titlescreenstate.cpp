@@ -21,6 +21,7 @@ CTitleScreenState::CTitleScreenState()
     : m_background( CObjectDataMgr2D::Instance().GetData( "(title_screen)", "background" ) ),
       m_background2( CObjectDataMgr2D::Instance().GetData( "(title_screen)", "background2" ) ),
       m_background3( CObjectDataMgr2D::Instance().GetData( "(title_screen)", "background2" ) ),
+      m_enemy( CObjectDataMgr2D::Instance().GetData( "(title_screen)", "enemy" ) ),
       m_allowStateChange(false)
 {
     // Set the game states for this object
@@ -35,6 +36,7 @@ CTitleScreenState::CTitleScreenState()
     m_background.SetPos( CPoint<float>( -50,0,0) );
     m_background2.SetPos( CPoint<float>( 300,-300,0) );
     m_background3.SetPos( CPoint<float>( 300,300,0) );
+    m_enemy.SetPos( CPoint<float>( -200,0,0) );
 
     m_background.SetRot( CPoint<float>(180,0,0) );
 
@@ -78,6 +80,7 @@ void CTitleScreenState::Transform()
     m_background.Transform();
     m_background2.Transform();
     m_background3.Transform();
+    m_enemy.Transform();
 
 }	// Transform */
 
@@ -93,6 +96,7 @@ void CTitleScreenState::PreRender()
     m_background.Render( matrix );
     m_background2.Render( matrix );
     m_background3.Render( matrix );
+    m_enemy.Render( matrix );
 
 }	// Render2D
 

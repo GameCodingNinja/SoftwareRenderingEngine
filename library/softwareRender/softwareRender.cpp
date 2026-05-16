@@ -503,7 +503,7 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
 
                     if( render.m_applyColor && render.m_blendAlpha )
                     {
-                        // Color modulation + alpha blending
+                        // Color modulation + alpha test (only render fully opaque pixels)
                         uint32_t cr = render.m_cr;
                         uint32_t cg = render.m_cg;
                         uint32_t cb = render.m_cb;
@@ -516,22 +516,12 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
                             if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
                             {
                                 uint32_t texel = *(pText + uvOffset);
-                                uint32_t alpha = ((texel >> 24) & 0xFF) * ca / 255;
 
-                                if( alpha == 255 )
+                                if( ((texel >> 24) & 0xFF) == 255 )
                                 {
                                     uint32_t r = ((texel >> 16) & 0xFF) * cr / 255;
                                     uint32_t g = ((texel >>  8) & 0xFF) * cg / 255;
                                     uint32_t b = ( texel        & 0xFF) * cb / 255;
-                                    *pDBuffer = (255 << 24) | (r << 16) | (g << 8) | b;
-                                }
-                                else if( alpha > 0 )
-                                {
-                                    uint32_t invAlpha = 255 - alpha;
-                                    uint32_t dst = *pDBuffer;
-                                    uint32_t r = (((texel >> 16) & 0xFF) * cr / 255 * alpha + ((dst >> 16) & 0xFF) * invAlpha) >> 8;
-                                    uint32_t g = (((texel >>  8) & 0xFF) * cg / 255 * alpha + ((dst >>  8) & 0xFF) * invAlpha) >> 8;
-                                    uint32_t b = (( texel        & 0xFF) * cb / 255 * alpha + ( dst        & 0xFF) * invAlpha) >> 8;
                                     *pDBuffer = (255 << 24) | (r << 16) | (g << 8) | b;
                                 }
                             }
@@ -570,7 +560,7 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
                     }
                     else if( render.m_blendAlpha )
                     {
-                        // Alpha blending only (no color modulation)
+                        // Alpha test only - render pixels with alpha == 255, skip the rest
                         while( width-- > 0 )
                         {
                             uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
@@ -578,21 +568,9 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
                             if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
                             {
                                 uint32_t texel = *(pText + uvOffset);
-                                uint32_t alpha = (texel >> 24) & 0xFF;
 
-                                if( alpha == 255 )
-                                {
+                                if( ((texel >> 24) & 0xFF) == 255 )
                                     *pDBuffer = texel;
-                                }
-                                else if( alpha > 0 )
-                                {
-                                    uint32_t invAlpha = 255 - alpha;
-                                    uint32_t dst = *pDBuffer;
-                                    uint32_t r = (((texel >> 16) & 0xFF) * alpha + ((dst >> 16) & 0xFF) * invAlpha) >> 8;
-                                    uint32_t g = (((texel >>  8) & 0xFF) * alpha + ((dst >>  8) & 0xFF) * invAlpha) >> 8;
-                                    uint32_t b = (( texel        & 0xFF) * alpha + ( dst        & 0xFF) * invAlpha) >> 8;
-                                    *pDBuffer = (255 << 24) | (r << 16) | (g << 8) | b;
-                                }
                             }
 
                             ++pDBuffer;
