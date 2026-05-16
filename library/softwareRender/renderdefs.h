@@ -36,9 +36,12 @@ class CRender2d
 {
 public:
 
-    CRender2d( CSRTexture * pText, CSurfaceData * pSurface ) :
+    CRender2d( CSRTexture * pText, CSurfaceData * pSurface, uint32_t colorR, uint32_t colorG, uint32_t colorB, uint32_t colorA, bool applyColor, bool blendAlpha ) :
         m_pText(pText),
-        m_pSurface(pSurface)
+        m_pSurface(pSurface),
+        m_cr(colorR), m_cg(colorG), m_cb(colorB), m_ca(colorA),
+        m_applyColor(applyColor),
+        m_blendAlpha(blendAlpha)
     { }
 
     // Texture pointer
@@ -46,6 +49,15 @@ public:
 
     // Surface data pointer
     CSurfaceData * m_pSurface;
+
+    // Color modulation (0-255 fixed-point, 255 = 1.0 = no change)
+    uint32_t m_cr, m_cg, m_cb, m_ca;
+
+    // Flag to apply color modulation
+    bool m_applyColor;
+
+    // Flag to enable per-pixel alpha blending
+    bool m_blendAlpha;
 
     // Three 2D vertexes
     CVertex2D m_vec[TRI];

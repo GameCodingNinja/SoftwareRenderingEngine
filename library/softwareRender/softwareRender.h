@@ -17,6 +17,7 @@
 // Game lib dependencies
 #include <common/defs.h>
 #include <common/size.h>
+#include <common/color.h>
 #include <common/vertex2d.h>
 #include <softwareRender/renderdefs.h>
 
@@ -59,7 +60,7 @@ public:
     void DeleteIBO( uint Id );
 
     // Render
-    void Render( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId );
+    void Render( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor(), bool blendAlpha = false );
 
 private:
 

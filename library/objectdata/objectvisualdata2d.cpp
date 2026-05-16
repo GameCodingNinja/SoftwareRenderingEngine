@@ -23,10 +23,10 @@ CObjectVisualData2D::CObjectVisualData2D()
     : m_vbo(0),
       m_ibo(0),
       m_genType(NDefs::EGT_NULL),
-      m_compressed(false),
       m_vertexCount(0),
       m_indexCount(0),
-      m_vertexScale(1,1,1)
+      m_vertexScale(1,1,1),
+      m_blendAlpha(false)
 {
 }   // constructor
 
@@ -68,9 +68,9 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
                 m_textureFileVec.push_back( textureNode.getAttribute( "file" ) );
             }
 
-            // Is this a compressed texture?
-            if( textureNode.isAttributeSet("compressed") )
-                m_compressed = (std::string(textureNode.getAttribute( "compressed" )) == "true");
+            // Does this texture require alpha blending?
+            if( textureNode.isAttributeSet("blendAlpha") )
+                m_blendAlpha = (std::string(textureNode.getAttribute( "blendAlpha" )) == "true");
         }
 
         // Get the mesh node
@@ -152,7 +152,7 @@ void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> 
     {
         for( size_t i = 0; i < m_textureFileVec.size(); ++i )
         {
-            texture = CTextureMgr::Instance().LoadFor2D( group, m_textureFileVec[i], m_compressed );
+            texture = CTextureMgr::Instance().LoadFor2D( group, m_textureFileVec[i] );
             m_textureIDVec.push_back( texture.GetID() );
         }
 
@@ -302,5 +302,14 @@ uint CObjectVisualData2D::GetFrameCount() const
 const CPoint<float> & CObjectVisualData2D::GetVertexScale() const 
 {
     return m_vertexScale;
+}
+
+
+/************************************************************************
+*    desc:  Is alpha blending enabled?
+************************************************************************/
+bool CObjectVisualData2D::IsAlphaBlend() const
+{
+    return m_blendAlpha;
 }
 

@@ -68,6 +68,9 @@ public:
     // Get the frame count
     uint GetFrameCount() const;
 
+    // Is alpha blending enabled for this texture?
+    bool IsAlphaBlend() const;
+
 private:
 
     // Loaded texture data
@@ -91,9 +94,6 @@ private:
     // texture file path vector
     std::vector<std::string> m_textureFileVec;
 
-    // Compressed flag
-    bool m_compressed;
-
     // mesh file path
     std::string m_meshFile;
 
@@ -111,6 +111,9 @@ private:
 
     // Scaled frame
     CScaledFrame m_scaledFrame;
+
+    // Alpha blending flag
+    bool m_blendAlpha;
 };
 
 #endif  // __object_visual_data_2d_h__

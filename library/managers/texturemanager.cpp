@@ -33,7 +33,7 @@ CTextureMgr::~CTextureMgr()
 /************************************************************************
 *    desc:  Load the texture from file path
 ************************************************************************/
-const CTexture & CTextureMgr::LoadFor2D( const std::string & group, const std::string & filePath, bool compressed )
+const CTexture & CTextureMgr::LoadFor2D( const std::string & group, const std::string & filePath )
 {
     // Create the map group if it doesn't already exist
     auto mapMapIter = m_textureFor2DMapMap.find( group );

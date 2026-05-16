@@ -6,6 +6,7 @@
       <mesh genType="quad">
         <quad uv.x1="0" uv.y1="0" uv.x2="1" uv.y2="1"/>
         <scaledFrame thicknessWidth="" thicknessHeight="" centerQuad=""/>
+        <texture file="" blendAlpha="false"/>
         <file name=""/>
       </mesh>
       <color r="1" g="1" b="1" a="1"/>
@@ -26,13 +27,13 @@
 
     <object name="background">
       <visual>
-          <texture file="data/textures/titleScreen/title_background_small.png" compressed="true"/>
+          <texture file="data/textures/titleScreen/title_background_small.png"/>
       </visual>
     </object>
 
     <object name="background2">
       <visual>
-        <texture file="data/textures/titleScreen/title_background_small299.png" compressed="true"/>
+        <texture file="data/textures/titleScreen/title_background_small299.png"/>
       </visual>
     </object>
 

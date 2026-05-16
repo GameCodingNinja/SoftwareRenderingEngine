@@ -240,7 +240,7 @@ uint * CSoftwareRender::GetIBO( uint Id )
 *   Perspective Projection: ((trans.vert[0].vert.x / trans.vert[0].vert.z) * m_halfSize.w) + m_halfSize.w + 0.5f;
 *   Orthographic Projection: (trans.vert[0].vert.x * m_halfSize.w) + m_halfSize.w + 0.5f;
 ****************************************************************************/
-void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId )
+void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color, bool blendAlpha )
 {
     CSRTexture * pText = GetTexture( textId );
     CVertex2D * pVert = (CVertex2D *)GetVBO( vboId );
@@ -262,6 +262,16 @@ void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, cons
         pTrans[i].uv.v = pVert[i].uv.v * pText->m_size.h;
     }
 
+    // Convert float color (0.0-1.0) to fixed-point (0-255) once per sprite
+    bool applyColor = false;
+    uint32_t cr = (uint32_t)(color.r * 255.0f);
+    uint32_t cg = (uint32_t)(color.g * 255.0f);
+    uint32_t cb = (uint32_t)(color.b * 255.0f);
+    uint32_t ca = (uint32_t)(color.a * 255.0f);
+
+    if( cr != 255 || cg != 255 || cb != 255 || ca != 255 )
+        applyColor = true;
+
     // Collect surviving triangles for strip-based rendering
     std::vector<CRender2d> triList;
     int triCount = indexCount / TRI;
@@ -269,7 +279,7 @@ void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, cons
 
     for( int i = 0; i < triCount; ++i )
     {
-        CRender2d render2d( pText, &m_surfaceData );
+        CRender2d render2d( pText, &m_surfaceData, cr, cg, cb, ca, applyColor, blendAlpha );
 
         // Copy over the verts for this triangle
         for( int j = 0; j < TRI; ++j )
@@ -474,18 +484,119 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
                     fixU = (int64_t)(((double)u + uOffset) * FIX_SCALE_UV);
                     fixV = (int64_t)(((double)v + vOffset) * FIX_SCALE_UV);
 
-                    while( width-- > 0 )
+                    if( render.m_applyColor && render.m_blendAlpha )
                     {
-                        uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
+                        // Color modulation + alpha blending
+                        uint32_t cr = render.m_cr;
+                        uint32_t cg = render.m_cg;
+                        uint32_t cb = render.m_cb;
+                        uint32_t ca = render.m_ca;
 
-                        // Rotation can cause reading and writing outside of the range of our buffers
-                        // Do this check to insure we are within range
-                        if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                            *pDBuffer = *(pText + uvOffset);
+                        while( width-- > 0 )
+                        {
+                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
 
-                        ++pDBuffer;
-                        fixU += fixStepU;
-                        fixV += fixStepV;
+                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
+                            {
+                                uint32_t texel = *(pText + uvOffset);
+                                uint32_t alpha = ((texel >> 24) & 0xFF) * ca / 255;
+
+                                if( alpha == 255 )
+                                {
+                                    uint32_t r = ((texel >> 16) & 0xFF) * cr / 255;
+                                    uint32_t g = ((texel >>  8) & 0xFF) * cg / 255;
+                                    uint32_t b = ( texel        & 0xFF) * cb / 255;
+                                    *pDBuffer = (255 << 24) | (r << 16) | (g << 8) | b;
+                                }
+                                else if( alpha > 0 )
+                                {
+                                    uint32_t invAlpha = 255 - alpha;
+                                    uint32_t dst = *pDBuffer;
+                                    uint32_t r = (((texel >> 16) & 0xFF) * cr / 255 * alpha + ((dst >> 16) & 0xFF) * invAlpha) >> 8;
+                                    uint32_t g = (((texel >>  8) & 0xFF) * cg / 255 * alpha + ((dst >>  8) & 0xFF) * invAlpha) >> 8;
+                                    uint32_t b = (( texel        & 0xFF) * cb / 255 * alpha + ( dst        & 0xFF) * invAlpha) >> 8;
+                                    *pDBuffer = (255 << 24) | (r << 16) | (g << 8) | b;
+                                }
+                            }
+
+                            ++pDBuffer;
+                            fixU += fixStepU;
+                            fixV += fixStepV;
+                        }
+                    }
+                    else if( render.m_applyColor )
+                    {
+                        // Color modulation only (no alpha blending)
+                        uint32_t cr = render.m_cr;
+                        uint32_t cg = render.m_cg;
+                        uint32_t cb = render.m_cb;
+                        uint32_t ca = render.m_ca;
+
+                        while( width-- > 0 )
+                        {
+                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
+
+                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
+                            {
+                                uint32_t texel = *(pText + uvOffset);
+                                uint32_t r = ((texel >> 16) & 0xFF) * cr / 255;
+                                uint32_t g = ((texel >>  8) & 0xFF) * cg / 255;
+                                uint32_t b = ( texel        & 0xFF) * cb / 255;
+                                uint32_t a = ((texel >> 24) & 0xFF) * ca / 255;
+                                *pDBuffer = (a << 24) | (r << 16) | (g << 8) | b;
+                            }
+
+                            ++pDBuffer;
+                            fixU += fixStepU;
+                            fixV += fixStepV;
+                        }
+                    }
+                    else if( render.m_blendAlpha )
+                    {
+                        // Alpha blending only (no color modulation)
+                        while( width-- > 0 )
+                        {
+                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
+
+                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
+                            {
+                                uint32_t texel = *(pText + uvOffset);
+                                uint32_t alpha = (texel >> 24) & 0xFF;
+
+                                if( alpha == 255 )
+                                {
+                                    *pDBuffer = texel;
+                                }
+                                else if( alpha > 0 )
+                                {
+                                    uint32_t invAlpha = 255 - alpha;
+                                    uint32_t dst = *pDBuffer;
+                                    uint32_t r = (((texel >> 16) & 0xFF) * alpha + ((dst >> 16) & 0xFF) * invAlpha) >> 8;
+                                    uint32_t g = (((texel >>  8) & 0xFF) * alpha + ((dst >>  8) & 0xFF) * invAlpha) >> 8;
+                                    uint32_t b = (( texel        & 0xFF) * alpha + ( dst        & 0xFF) * invAlpha) >> 8;
+                                    *pDBuffer = (255 << 24) | (r << 16) | (g << 8) | b;
+                                }
+                            }
+
+                            ++pDBuffer;
+                            fixU += fixStepU;
+                            fixV += fixStepV;
+                        }
+                    }
+                    else
+                    {
+                        // Fast path: no color modulation, no alpha blending
+                        while( width-- > 0 )
+                        {
+                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
+
+                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
+                                *pDBuffer = *(pText + uvOffset);
+
+                            ++pDBuffer;
+                            fixU += fixStepU;
+                            fixV += fixStepV;
+                        }
                     }
                 }
             }

@@ -27,7 +27,7 @@ public:
     }
 
     // Load the texture from file path
-    const CTexture & LoadFor2D( const std::string & group, const std::string & filePath, bool compressed = false );
+    const CTexture & LoadFor2D( const std::string & group, const std::string & filePath );
 
     // Texture deleting
     void DeleteTextureGroupFor2D( const std::string & group );
