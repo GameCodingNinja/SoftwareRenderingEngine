@@ -36,7 +36,7 @@ CTitleScreenState::CTitleScreenState()
     m_background2.SetPos( CPoint<float>( 300,-300,0) );
     m_background3.SetPos( CPoint<float>( 300,300,0) );
 
-    //m_background.SetRot( CPoint<float>(0,180,0) );
+    m_background.SetRot( CPoint<float>(180,0,0) );
 
 }	// Constructer
 
@@ -62,8 +62,8 @@ void CTitleScreenState::Update()
 {
     CCommonState::Update();
 
-    const float elapsed = CHighResTimer::Instance().GetElapsedTime();
-    m_background.IncRot( CPoint<float>(0,0,0.2f * elapsed) );
+    //const float elapsed = CHighResTimer::Instance().GetElapsedTime();
+    //m_background.IncRot( CPoint<float>(0,0,0.2f * elapsed) );
 
 }	// Update
 

@@ -387,9 +387,26 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
         if( render.m_vec[i].vert.y < render.m_vec[vTop].vert.y )
             vTop = i;
 
+    // Detect triangle winding order via 2D cross product.
+    // If the winding is reversed (e.g. X or Y-axis flip), swap left/right slopes
+    // so the rasterizer still produces positive scanline widths.
+    float e1x = render.m_vec[1].vert.x - render.m_vec[0].vert.x;
+    float e1y = render.m_vec[1].vert.y - render.m_vec[0].vert.y;
+    float e2x = render.m_vec[2].vert.x - render.m_vec[0].vert.x;
+    float e2y = render.m_vec[2].vert.y - render.m_vec[0].vert.y;
+
+    CTriangleSlope::ESlopeType leftType  = CTriangleSlope::EST_LEFT;
+    CTriangleSlope::ESlopeType rightType = CTriangleSlope::EST_RIGHT;
+
+    if( (e1x * e2y - e1y * e2x) < 0.0f )
+    {
+        leftType  = CTriangleSlope::EST_RIGHT;
+        rightType = CTriangleSlope::EST_LEFT;
+    }
+
     // Init the slope class for managing the scan lines
-    CTriangleSlope leftSlope( render.m_vec, vTop, CTriangleSlope::EST_LEFT );
-    CTriangleSlope rightSlope( render.m_vec, vTop, CTriangleSlope::EST_RIGHT );
+    CTriangleSlope leftSlope( render.m_vec, vTop, leftType );
+    CTriangleSlope rightSlope( render.m_vec, vTop, rightType );
     
     while( slopeCount > 0 )
     {
