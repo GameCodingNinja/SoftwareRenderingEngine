@@ -577,6 +577,39 @@ No SDL references remain (except xmlParser.cpp which is untouched).
 
 ---
 
+### Phase 5.5: Windows Build
+
+**Goal**: Configure, build, and run the project on Windows using Visual Studio / MSVC.
+
+**Build steps**:
+```
+# From the gameTemplate folder, using the VS-bundled CMake or any CMake on PATH:
+
+# Configure (auto-detects Visual Studio generator)
+cmake -S . -B build
+
+# Build Debug
+cmake --build build --config Debug
+
+# Build Release
+cmake --build build --config Release
+
+# Run
+build\source\Debug\gametemplate.exe
+# or
+build\source\Release\gametemplate.exe
+```
+
+**Checklist**:
+- [ ] CMake configure succeeds (no missing packages, no X11/Wayland errors)
+- [ ] Library compiles: only Windows backend files included (no xdg/wayland/X11 .c files)
+- [ ] Executable links against `user32.lib` and `gdi32.lib`
+- [ ] Zero build errors
+- [ ] Game window appears, renders, and responds to input
+- [ ] Clean exit on window close (no crash, no hang)
+
+---
+
 ### Phase 6: Testing & Polish
 
 **Goal**: Verify everything works correctly on all backends.

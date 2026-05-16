@@ -20,8 +20,26 @@
 const int CWorldValue::SECTOR_SIZE(1024);
 const int CWorldValue::HALF_SECTOR_SIZE( CWorldValue::SECTOR_SIZE / 2 );
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
+{
+    (void)hInstance;
+    (void)hPrevInstance;
+    (void)lpCmdLine;
+    (void)nCmdShow;
+
+#else
+
 int main( int argc, char* args[] )
 {
+    (void)argc;
+    (void)args;
+
+#endif
+
     CGame game;
 
     try
@@ -50,8 +68,7 @@ int main( int argc, char* args[] )
     }
 
     return 0;
-
-}   // main
+}
 
 
 

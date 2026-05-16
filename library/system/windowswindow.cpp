@@ -41,7 +41,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     }
 
     if( pWindow != nullptr )
-        return pWindow->HandleMessage(msg, wParam, lParam);
+        return pWindow->HandleMessage(hWnd, msg, wParam, lParam);
 
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
@@ -112,9 +112,9 @@ void CWindowsWindow::Create(int width, int height, const char* title)
     HINSTANCE hInstance = GetModuleHandle(nullptr);
 
     // Register window class
-    WNDCLASSEX wc;
+    WNDCLASSEXA wc;
     std::memset(&wc, 0, sizeof(wc));
-    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.cbSize = sizeof(WNDCLASSEXA);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
@@ -122,9 +122,12 @@ void CWindowsWindow::Create(int width, int height, const char* title)
     wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
     wc.lpszClassName = m_className.c_str();
 
-    if( !RegisterClassEx(&wc) )
+    if( !RegisterClassExA(&wc) )
+    {
+        DWORD err = GetLastError();
         throw NExcept::CCriticalException("Windows Window Error!",
-            "Failed to register window class.");
+            NGenFunc::FormatString("Failed to register window class. GetLastError: %d", err));
+    }
 
     // Calculate window rect to get the desired client area size
     RECT rect = { 0, 0, width, height };
@@ -141,7 +144,7 @@ void CWindowsWindow::Create(int width, int height, const char* title)
     int posY = (screenH - windowHeight) / 2;
 
     // Create the window (pass 'this' so WndProc can find us)
-    m_hWnd = CreateWindowEx(
+    m_hWnd = CreateWindowExA(
         0,
         m_className.c_str(),
         (title != nullptr) ? title : "",
@@ -154,8 +157,11 @@ void CWindowsWindow::Create(int width, int height, const char* title)
         this );         // lpParam → stored in GWLP_USERDATA
 
     if( m_hWnd == nullptr )
+    {
+        DWORD err = GetLastError();
         throw NExcept::CCriticalException("Windows Window Error!",
-            "Failed to create window.");
+            NGenFunc::FormatString("Failed to create window. GetLastError: %d", err));
+    }
 
     // Get the device context
     m_hDC = GetDC(m_hWnd);
@@ -189,7 +195,7 @@ void CWindowsWindow::Destroy()
         m_hWnd = nullptr;
     }
 
-    UnregisterClass(m_className.c_str(), GetModuleHandle(nullptr));
+    UnregisterClassA(m_className.c_str(), GetModuleHandle(nullptr));
 
 }   // Destroy
 
@@ -215,7 +221,7 @@ void CWindowsWindow::Show(bool visible)
 void CWindowsWindow::SetTitle(const std::string& title)
 {
     if( m_hWnd != nullptr )
-        SetWindowText(m_hWnd, title.c_str());
+        SetWindowTextA(m_hWnd, title.c_str());
 
 }   // SetTitle
 
@@ -292,7 +298,7 @@ IFrameBuffer* CWindowsWindow::GetFrameBuffer()
 /************************************************************************
 *    desc:  Handle Win32 messages — translate to engine events
 ************************************************************************/
-LRESULT CWindowsWindow::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CWindowsWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     CEvent event;
     std::memset(&event, 0, sizeof(event));
@@ -369,7 +375,7 @@ LRESULT CWindowsWindow::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
             break;
     }
 
-    return DefWindowProc(m_hWnd, msg, wParam, lParam);
+    return DefWindowProc(hWnd, msg, wParam, lParam);
 
 }   // HandleMessage
 

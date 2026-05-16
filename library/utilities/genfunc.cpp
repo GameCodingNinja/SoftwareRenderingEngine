@@ -4,7 +4,7 @@
 *    DESCRIPTION:     General mutipurpose functions
 ************************************************************************/           
 
-#ifdef _WINDOWS
+#ifdef _WIN32
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -123,7 +123,7 @@ namespace NGenFunc
     ************************************************************************/
     void PostDebugMsg( const std::string & msg )
     {
-    #ifdef _WINDOWS
+    #ifdef _WIN32
         std::string tmp = msg + "\n";
         OutputDebugString( tmp.c_str() );
     #else

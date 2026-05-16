@@ -16,16 +16,19 @@ project(gametemplate)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -no-pie -std=c++17 -Wall -pthread")
 
 # The version number.
 set(gametemplate_VERSION_MAJOR 1)
 set(gametemplate_VERSION_MINOR 0)
 
-# Find packages
-find_package(PkgConfig REQUIRED)
-find_package(X11 REQUIRED)
-pkg_search_module(WAYLAND_CLIENT REQUIRED wayland-client)
+if(UNIX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -no-pie -Wall -pthread")
+
+    # Find packages
+    find_package(PkgConfig REQUIRED)
+    find_package(X11 REQUIRED)
+    pkg_search_module(WAYLAND_CLIENT REQUIRED wayland-client)
+endif()
 
 # List all the include directories
 include_directories(

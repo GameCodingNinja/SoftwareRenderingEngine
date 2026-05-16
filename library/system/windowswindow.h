@@ -55,7 +55,7 @@ public:
     IFrameBuffer* GetFrameBuffer() override;
 
     // Win32 window procedure (must be public for static callback)
-    LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam);
+    LRESULT HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
 

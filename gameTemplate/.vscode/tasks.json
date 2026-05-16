@@ -12,6 +12,9 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
+            },
+            "windows": {
+                "command": "cmake --build . --config Debug"
             }
         },
         {
@@ -21,7 +24,10 @@
                 "cwd": "${workspaceRoot}/build"
             },
             "command": "cmake --build . --parallel -j4",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "windows": {
+                "command": "cmake --build . --config Debug --parallel"
+            }
         },
         {
             "label": "CMake Debug",
@@ -30,7 +36,10 @@
                 "cwd": "${workspaceRoot}"
             },
             "command": "rm -rfd build; mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Debug ..",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "windows": {
+                "command": "if (Test-Path build) { Remove-Item -Recurse -Force build }; cmake -S . -B build"
+            }
         },
         {
             "label": "CMake Release",
@@ -39,7 +48,10 @@
                 "cwd": "${workspaceRoot}"
             },
             "command": "rm -rfd build; mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release ..",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "windows": {
+                "command": "if (Test-Path build) { Remove-Item -Recurse -Force build }; cmake -S . -B build"
+            }
         },
         {
             "label": "Clean",
@@ -48,7 +60,10 @@
                 "cwd": "${workspaceRoot}"
             },
             "command": "rm -rfd build; rm -rfd ${workspaceRoot}/../library/build",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "windows": {
+                "command": "if (Test-Path build) { Remove-Item -Recurse -Force build }; if (Test-Path ..\\library\\build) { Remove-Item -Recurse -Force ..\\library\\build }"
+            }
         },
         {
             "label": "Execute",
@@ -57,7 +72,10 @@
                 "cwd": "${workspaceRoot}"
             },
             "command": "${workspaceRoot}/build/source/gametemplate",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "windows": {
+                "command": ".\\build\\source\\Debug\\gametemplate.exe"
+            }
         }
     ]
 }

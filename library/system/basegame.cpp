@@ -11,6 +11,11 @@
 // Standard lib dependencies
 #include <stdio.h>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
@@ -168,6 +173,10 @@ void CBaseGame::Render()
 void CBaseGame::DisplayErrorMsg( const std::string & title, const std::string & msg )
 {
     NGenFunc::PostDebugMsg( "Error: " + title + " - " + msg );
+
+    #ifdef _WIN32
+    MessageBoxA( nullptr, msg.c_str(), title.c_str(), MB_OK | MB_ICONERROR );
+    #endif
 
 }   // DisplayErrorMsg
 
