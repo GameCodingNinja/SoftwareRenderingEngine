@@ -345,12 +345,13 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
 
     // Define all the variables up here for speed reasons.
     int xStart, xEnd, width, height, slopeCount(TRI);
-    uint fixStepU, fixStepV, fixU, fixV;
+    int64_t fixStepU, fixStepV, fixU, fixV;
     float u, v, stepU, stepV, step;
     uint * pDBuffer;
 
-    // Fixed point shift amount needed for UV
-    const uint UV_SHIFT(20);
+    // Fixed point shift amount needed for UV (64-bit for precision on x64)
+    const int UV_SHIFT(32);
+    const double FIX_SCALE_UV = (double)(1LL << UV_SHIFT);
 
     // Setup local variables for faster access to data
     uint screenW( render.m_pSurface->w );
@@ -360,8 +361,8 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
     uint * pText = (uint *)render.m_pText->m_pData;
 
     // Calculate if we need uv plotting correction. .5 is needed for odd sizes
-    float uOffset( (textureW % 2) ? 0.5f : 0.f );
-    float vOffset( (textureH % 2) ? 0.5f : 0.f );
+    double uOffset( (textureW % 2) ? 0.5 : 0.0 );
+    double vOffset( (textureH % 2) ? 0.5 : 0.0 );
 
     // Create the range check variables
     uint uvOffsetMax = render.m_pText->m_size.w * render.m_pText->m_size.h;
@@ -467,15 +468,15 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
                     // Index into the starting point of the display buffers scan line
                     pDBuffer = pPixels + yIndex + xStart;
 
-                    // Init the fix point varaibles for speedy rendering
-                    fixStepU = stepU * float( 1 << UV_SHIFT );
-                    fixStepV = stepV * float( 1 << UV_SHIFT );
-                    fixU = (u + uOffset) * float( 1 << UV_SHIFT );
-                    fixV = (v + vOffset) * float( 1 << UV_SHIFT );
+                    // Init the 64-bit fix point variables for speedy rendering
+                    fixStepU = (int64_t)((double)stepU * FIX_SCALE_UV);
+                    fixStepV = (int64_t)((double)stepV * FIX_SCALE_UV);
+                    fixU = (int64_t)(((double)u + uOffset) * FIX_SCALE_UV);
+                    fixV = (int64_t)(((double)v + vOffset) * FIX_SCALE_UV);
 
                     while( width-- > 0 )
                     {
-                        uvOffset = ((fixV >> UV_SHIFT) * textureW) + (fixU >> UV_SHIFT);
+                        uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
 
                         // Rotation can cause reading and writing outside of the range of our buffers
                         // Do this check to insure we are within range
