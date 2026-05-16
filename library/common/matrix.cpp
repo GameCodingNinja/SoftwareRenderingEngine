@@ -698,7 +698,7 @@ void CMatrix::Set( const CQuaternion & quat )
 
     temp[m10] = 2.0f * (xy + wz);
     temp[m11] = 1.0f - 2.0f * (x2 + z2);
-    temp[m12] = 2.0f * (yz - wx), 0.0f;
+    temp[m12] = 2.0f * (yz - wx);
 
     temp[m20] = 2.0f * (xz - wy);
     temp[m21] = 2.0f * (yz + wx);

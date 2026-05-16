@@ -13,12 +13,12 @@
 *    desc:  Constructor
 ************************************************************************/
 CTriangleSlope::CTriangleSlope( const CVertex2D trans[], int vTop, ESlopeType slopeType ) :
+    m_length(0),
+    y(0),
     m_pVert( trans ),
     m_vTop( vTop ),
     m_vNext( vTop ),
-    m_length(0),
-    m_slopeType( slopeType ),
-    y(0)
+    m_slopeType( slopeType )
 {
 }   // constructor
 
