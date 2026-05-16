@@ -367,8 +367,8 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
     uint uvOffsetMax = render.m_pText->m_size.w * render.m_pText->m_size.h;
     uint uvOffset;
 
-    uint scrnOffsetMax = render.m_pSurface->w * render.m_pSurface->h;
-    uint scrnOffset;
+    // Pointer-based screen bounds check (eliminates per-pixel offset increment)
+    uint * pPixelsEnd = pPixels + (render.m_pSurface->w * render.m_pSurface->h);
 
     // Loop to find the top vert of the triangle to extablish vertex order
     int vTop(0);
@@ -422,6 +422,9 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
         // This is where we spend most of our time
         ////////////////////////////////////////////
 
+        // Init the y index for scanline offset accumulation (avoids per-line multiply)
+        int yIndex = leftSlope.y * (int)screenW;
+
         // Loop for the height of the slope
         while( height-- > 0 )
         {
@@ -462,8 +465,7 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
                     }
 
                     // Index into the starting point of the display buffers scan line
-                    scrnOffset = (leftSlope.y * screenW) + xStart;
-                    pDBuffer = pPixels + scrnOffset;
+                    pDBuffer = pPixels + yIndex + xStart;
 
                     // Init the fix point varaibles for speedy rendering
                     fixStepU = stepU * float( 1 << UV_SHIFT );
@@ -477,11 +479,10 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
 
                         // Rotation can cause reading and writing outside of the range of our buffers
                         // Do this check to insure we are within range
-                        if( (uvOffset < uvOffsetMax) && (scrnOffset < scrnOffsetMax) )
+                        if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
                             *pDBuffer = *(pText + uvOffset);
 
                         ++pDBuffer;
-                        ++scrnOffset;
                         fixU += fixStepU;
                         fixV += fixStepV;
                     }
@@ -490,6 +491,7 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
 
             leftSlope.Inc();
             rightSlope.Inc();
+            yIndex += screenW;
         }
     }
 

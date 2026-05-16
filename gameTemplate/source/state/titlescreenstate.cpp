@@ -30,7 +30,7 @@ CTitleScreenState::CTitleScreenState()
     //m_background.SetRot( CPoint<float>(0,0,65) );
     //m_background.SetPos( CPoint<float>(0,-400,0) );
     //m_background.SetPos( CPoint<float>(-400,0,0) );
-    //m_background.SetScale( CPoint<float>(.5,.5,0) );
+    m_background.SetScale( CPoint<float>(.5,.5,0) );
 
     m_background.SetPos( CPoint<float>( -50,0,0) );
     m_background2.SetPos( CPoint<float>( 300,-300,0) );
