@@ -12,7 +12,7 @@
 #include "commonstate.h"
 
 // Game lib dependencies
-#include <2d/sprite2d.h>
+#include <2d/sprite.h>
 
 class CTitleScreenState : public CCommonState
 {
@@ -42,9 +42,9 @@ public:
 private:
 
     // title screen background
-    CSprite2D m_background;
-    CSprite2D m_background2;
-    CSprite2D m_background3;
+    CSprite m_background;
+    CSprite m_background2;
+    CSprite m_background3;
 
     // Allow for the state change
     bool m_allowStateChange;

@@ -36,6 +36,8 @@ CTitleScreenState::CTitleScreenState()
     m_background2.SetPos( CPoint<float>( 300,-300,0) );
     m_background3.SetPos( CPoint<float>( 300,300,0) );
 
+    //m_background.SetRot( CPoint<float>(0,180,0) );
+
 }	// Constructer
 
 

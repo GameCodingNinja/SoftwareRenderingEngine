@@ -1,12 +1,12 @@
 
 /************************************************************************
-*    FILE NAME:       sprite2d.h
+*    FILE NAME:       sprite.h
 *
 *    DESCRIPTION:     2D sprite class
 ************************************************************************/
 
-#ifndef __sprite_2d_h__
-#define __sprite_2d_h__
+#ifndef __sprite_h__
+#define __sprite_h__
 
 // Physical component dependency
 #include <common/object.h>
@@ -17,18 +17,18 @@
 // Forward declaration(s)
 class CObjectData2D;
 
-class CSprite2D : public CObject
+class CSprite : public CObject
 {
 public:
 
     // Constructor
-    CSprite2D( const CObjectData2D & objectData );
+    CSprite( const CObjectData2D & objectData );
 
     // Destructor
-    virtual ~CSprite2D();
+    virtual ~CSprite();
 
-    CSprite2D(const CSprite2D&) = delete;
-    CSprite2D& operator=(const CSprite2D&) = delete;
+    CSprite(const CSprite&) = delete;
+    CSprite& operator=(const CSprite&) = delete;
 
     // Get the object data
     const CObjectData2D & GetObjectData() const;
@@ -55,4 +55,4 @@ private:
 
 };
 
-#endif  // __sprite_2d_h__
+#endif  // __sprite_h__

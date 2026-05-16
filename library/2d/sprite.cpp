@@ -1,12 +1,12 @@
 
 /************************************************************************
-*    FILE NAME:       sprite2d.cpp
+*    FILE NAME:       sprite.cpp
 *
 *    DESCRIPTION:     2D sprite class
 ************************************************************************/
 
 // Physical component dependency
-#include <2d/sprite2d.h>
+#include <2d/sprite.h>
 
 // Game lib dependencies
 #include <objectdata/objectdata2d.h>
@@ -14,7 +14,7 @@
 /************************************************************************
 *    desc:  Constructer
 ************************************************************************/
-CSprite2D::CSprite2D( const CObjectData2D & objectData )
+CSprite::CSprite( const CObjectData2D & objectData )
     : m_objectData( objectData ),
       m_visualComponent( objectData )
 {
@@ -24,7 +24,7 @@ CSprite2D::CSprite2D( const CObjectData2D & objectData )
 /************************************************************************
 *    desc:  destructer                                                             
 ************************************************************************/
-CSprite2D::~CSprite2D()
+CSprite::~CSprite()
 {
 }	// destructer
 
@@ -32,7 +32,7 @@ CSprite2D::~CSprite2D()
 /************************************************************************
 *    desc:  Update the sprite                                                           
 ************************************************************************/
-void CSprite2D::Update()
+void CSprite::Update()
 {
 }   // Update
 
@@ -40,7 +40,7 @@ void CSprite2D::Update()
 /************************************************************************
 *    desc:  do the render                                                            
 ************************************************************************/
-void CSprite2D::Render( const CMatrix & matrix )
+void CSprite::Render( const CMatrix & matrix )
 {
     if( m_visible )
         m_visualComponent.Render( m_trans_matrix * matrix );
@@ -51,7 +51,7 @@ void CSprite2D::Render( const CMatrix & matrix )
 /************************************************************************
 *    desc:  Get the visual component                                                            
 ************************************************************************/
-CVisualComponent2d & CSprite2D::GetVisualComponent()
+CVisualComponent2d & CSprite::GetVisualComponent()
 {
     return m_visualComponent;
 
@@ -61,7 +61,7 @@ CVisualComponent2d & CSprite2D::GetVisualComponent()
 /************************************************************************
 *    desc:  Get the object data                                                            
 ************************************************************************/
-const CObjectData2D & CSprite2D::GetObjectData() const
+const CObjectData2D & CSprite::GetObjectData() const
 {
     return m_objectData;
 

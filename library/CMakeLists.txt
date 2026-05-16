@@ -24,7 +24,7 @@ set(LIBRARY_SOURCES
     managers/texturemanager.cpp
     managers/managerbase.cpp
     managers/vertexbuffermanager.cpp
-    2d/sprite2d.cpp
+    2d/sprite.cpp
     2d/visualcomponent2d.cpp
     common/object.cpp
     common/matrix.cpp
