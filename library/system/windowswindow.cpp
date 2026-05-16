@@ -51,9 +51,99 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 *    desc:  Translate Win32 virtual key code to engine key code
 *           For now, pass through the VK code directly.
 ************************************************************************/
-static int TranslateVirtualKey(WPARAM vk)
+static EKeyCode TranslateVirtualKey(WPARAM vk)
 {
-    return static_cast<int>(vk);
+    // Printable ASCII: Windows VK codes for 0-9 and A-Z match ASCII uppercase.
+    // Our EKeyCode uses lowercase for letters, so convert.
+    if( vk >= 'A' && vk <= 'Z' )
+        return static_cast<EKeyCode>(vk - 'A' + KEY_A);
+
+    if( vk >= '0' && vk <= '9' )
+        return static_cast<EKeyCode>(vk);
+
+    switch( vk )
+    {
+        case VK_BACK:       return KEY_BACKSPACE;
+        case VK_TAB:        return KEY_TAB;
+        case VK_RETURN:     return KEY_RETURN;
+        case VK_ESCAPE:     return KEY_ESCAPE;
+        case VK_SPACE:      return KEY_SPACE;
+        case VK_DELETE:     return KEY_DELETE;
+
+        // Navigation
+        case VK_UP:         return KEY_UP;
+        case VK_DOWN:       return KEY_DOWN;
+        case VK_LEFT:       return KEY_LEFT;
+        case VK_RIGHT:      return KEY_RIGHT;
+        case VK_INSERT:     return KEY_INSERT;
+        case VK_HOME:       return KEY_HOME;
+        case VK_END:        return KEY_END;
+        case VK_PRIOR:      return KEY_PAGEUP;
+        case VK_NEXT:       return KEY_PAGEDOWN;
+
+        // Function keys
+        case VK_F1:         return KEY_F1;
+        case VK_F2:         return KEY_F2;
+        case VK_F3:         return KEY_F3;
+        case VK_F4:         return KEY_F4;
+        case VK_F5:         return KEY_F5;
+        case VK_F6:         return KEY_F6;
+        case VK_F7:         return KEY_F7;
+        case VK_F8:         return KEY_F8;
+        case VK_F9:         return KEY_F9;
+        case VK_F10:        return KEY_F10;
+        case VK_F11:        return KEY_F11;
+        case VK_F12:        return KEY_F12;
+
+        // Modifiers
+        case VK_LSHIFT:     return KEY_LSHIFT;
+        case VK_RSHIFT:     return KEY_RSHIFT;
+        case VK_LCONTROL:   return KEY_LCTRL;
+        case VK_RCONTROL:   return KEY_RCTRL;
+        case VK_LMENU:      return KEY_LALT;
+        case VK_RMENU:      return KEY_RALT;
+
+        // Lock keys
+        case VK_CAPITAL:    return KEY_CAPSLOCK;
+        case VK_NUMLOCK:    return KEY_NUMLOCK;
+        case VK_SCROLL:     return KEY_SCROLLLOCK;
+
+        // Special
+        case VK_SNAPSHOT:   return KEY_PRINTSCREEN;
+        case VK_PAUSE:      return KEY_PAUSE;
+
+        // Numpad
+        case VK_NUMPAD0:    return KEY_KP_0;
+        case VK_NUMPAD1:    return KEY_KP_1;
+        case VK_NUMPAD2:    return KEY_KP_2;
+        case VK_NUMPAD3:    return KEY_KP_3;
+        case VK_NUMPAD4:    return KEY_KP_4;
+        case VK_NUMPAD5:    return KEY_KP_5;
+        case VK_NUMPAD6:    return KEY_KP_6;
+        case VK_NUMPAD7:    return KEY_KP_7;
+        case VK_NUMPAD8:    return KEY_KP_8;
+        case VK_NUMPAD9:    return KEY_KP_9;
+        case VK_DECIMAL:    return KEY_KP_PERIOD;
+        case VK_DIVIDE:     return KEY_KP_DIVIDE;
+        case VK_MULTIPLY:   return KEY_KP_MULTIPLY;
+        case VK_SUBTRACT:   return KEY_KP_MINUS;
+        case VK_ADD:        return KEY_KP_PLUS;
+
+        // Punctuation (OEM keys — US layout)
+        case VK_OEM_1:      return KEY_SEMICOLON;
+        case VK_OEM_PLUS:   return KEY_EQUALS;
+        case VK_OEM_COMMA:  return KEY_COMMA;
+        case VK_OEM_MINUS:  return KEY_MINUS;
+        case VK_OEM_PERIOD: return KEY_PERIOD;
+        case VK_OEM_2:      return KEY_SLASH;
+        case VK_OEM_3:      return KEY_GRAVE;
+        case VK_OEM_4:      return KEY_LEFTBRACKET;
+        case VK_OEM_5:      return KEY_BACKSLASH;
+        case VK_OEM_6:      return KEY_RIGHTBRACKET;
+        case VK_OEM_7:      return KEY_APOSTROPHE;
+
+        default:            return KEY_UNKNOWN;
+    }
 
 }   // TranslateVirtualKey
 
@@ -62,17 +152,17 @@ static int TranslateVirtualKey(WPARAM vk)
 *    desc:  Map Win32 mouse button message to button index
 *           1=left, 2=middle, 3=right
 ************************************************************************/
-static uint8_t MapMouseButton(UINT msg)
+static EMouseButton MapMouseButton(UINT msg)
 {
     switch( msg )
     {
         case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:   return 1;
+        case WM_LBUTTONUP:   return MOUSE_BUTTON_LEFT;
         case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:   return 2;
+        case WM_MBUTTONUP:   return MOUSE_BUTTON_MIDDLE;
         case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:   return 3;
-        default:              return 0;
+        case WM_RBUTTONUP:   return MOUSE_BUTTON_RIGHT;
+        default:              return static_cast<EMouseButton>(0);
     }
 
 }   // MapMouseButton

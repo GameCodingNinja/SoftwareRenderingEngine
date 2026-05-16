@@ -25,7 +25,7 @@ namespace NGenFunc
         inline T toFmtArg(T v) { return v; }
     }
 
-    // Printf-style string formatting (C++17 replacement for boost::format)
+    // Printf-style string formatting
     template<typename... Args>
     std::string FormatString(const char* fmt, Args&&... args)
     {

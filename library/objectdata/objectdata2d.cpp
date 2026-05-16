@@ -11,8 +11,6 @@
 // Standard lib dependencies
 #include <math.h>
 
-// Boost lib dependencies
-
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
 #include <utilities/xmlparsehelper.h>

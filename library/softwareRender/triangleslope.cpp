@@ -8,14 +8,6 @@
 // Physical component dependency
 #include <softwareRender/triangleslope.h>
 
-// Standard lib dependencies
-
-// Boost lib dependencies
-
-// Game lib dependencies
-
-// Game dependencies
-
 
 /************************************************************************
 *    desc:  Constructor

@@ -19,7 +19,7 @@
 // Standard lib dependencies
 #include <cstring>
 #include <poll.h>
-#include <linux/input-event-codes.h>
+
 
 // Game lib dependencies
 #include <system/event.h>
@@ -27,6 +27,121 @@
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
 #include <utilities/settings.h>
+
+
+/************************************************************************
+*    desc:  Translate Linux evdev key code to engine EKeyCode.
+*           Uses raw numeric evdev values to avoid #include conflicts
+*           with linux/input-event-codes.h which defines KEY_* macros.
+************************************************************************/
+static EKeyCode TranslateEvdevKey(uint32_t key)
+{
+    switch( key )
+    {
+        case 1:   return KEY_ESCAPE;        // KEY_ESC
+        case 2:   return KEY_1;
+        case 3:   return KEY_2;
+        case 4:   return KEY_3;
+        case 5:   return KEY_4;
+        case 6:   return KEY_5;
+        case 7:   return KEY_6;
+        case 8:   return KEY_7;
+        case 9:   return KEY_8;
+        case 10:  return KEY_9;
+        case 11:  return KEY_0;
+        case 12:  return KEY_MINUS;
+        case 13:  return KEY_EQUALS;
+        case 14:  return KEY_BACKSPACE;
+        case 15:  return KEY_TAB;
+        case 16:  return KEY_Q;
+        case 17:  return KEY_W;
+        case 18:  return KEY_E;
+        case 19:  return KEY_R;
+        case 20:  return KEY_T;
+        case 21:  return KEY_Y;
+        case 22:  return KEY_U;
+        case 23:  return KEY_I;
+        case 24:  return KEY_O;
+        case 25:  return KEY_P;
+        case 26:  return KEY_LEFTBRACKET;
+        case 27:  return KEY_RIGHTBRACKET;
+        case 28:  return KEY_RETURN;
+        case 29:  return KEY_LCTRL;
+        case 30:  return KEY_A;
+        case 31:  return KEY_S;
+        case 32:  return KEY_D;
+        case 33:  return KEY_F;
+        case 34:  return KEY_G;
+        case 35:  return KEY_H;
+        case 36:  return KEY_J;
+        case 37:  return KEY_K;
+        case 38:  return KEY_L;
+        case 39:  return KEY_SEMICOLON;
+        case 40:  return KEY_APOSTROPHE;
+        case 41:  return KEY_GRAVE;
+        case 42:  return KEY_LSHIFT;
+        case 43:  return KEY_BACKSLASH;
+        case 44:  return KEY_Z;
+        case 45:  return KEY_X;
+        case 46:  return KEY_C;
+        case 47:  return KEY_V;
+        case 48:  return KEY_B;
+        case 49:  return KEY_N;
+        case 50:  return KEY_M;
+        case 51:  return KEY_COMMA;
+        case 52:  return KEY_PERIOD;
+        case 53:  return KEY_SLASH;
+        case 54:  return KEY_RSHIFT;
+        case 55:  return KEY_KP_MULTIPLY;
+        case 56:  return KEY_LALT;
+        case 57:  return KEY_SPACE;
+        case 58:  return KEY_CAPSLOCK;
+        case 59:  return KEY_F1;
+        case 60:  return KEY_F2;
+        case 61:  return KEY_F3;
+        case 62:  return KEY_F4;
+        case 63:  return KEY_F5;
+        case 64:  return KEY_F6;
+        case 65:  return KEY_F7;
+        case 66:  return KEY_F8;
+        case 67:  return KEY_F9;
+        case 68:  return KEY_F10;
+        case 69:  return KEY_NUMLOCK;
+        case 70:  return KEY_SCROLLLOCK;
+        case 71:  return KEY_KP_7;
+        case 72:  return KEY_KP_8;
+        case 73:  return KEY_KP_9;
+        case 74:  return KEY_KP_MINUS;
+        case 75:  return KEY_KP_4;
+        case 76:  return KEY_KP_5;
+        case 77:  return KEY_KP_6;
+        case 78:  return KEY_KP_PLUS;
+        case 79:  return KEY_KP_1;
+        case 80:  return KEY_KP_2;
+        case 81:  return KEY_KP_3;
+        case 82:  return KEY_KP_0;
+        case 83:  return KEY_KP_PERIOD;
+        case 87:  return KEY_F11;
+        case 88:  return KEY_F12;
+        case 96:  return KEY_KP_ENTER;
+        case 97:  return KEY_RCTRL;
+        case 98:  return KEY_KP_DIVIDE;
+        case 99:  return KEY_PRINTSCREEN;
+        case 100: return KEY_RALT;
+        case 102: return KEY_HOME;
+        case 103: return KEY_UP;
+        case 104: return KEY_PAGEUP;
+        case 105: return KEY_LEFT;
+        case 106: return KEY_RIGHT;
+        case 107: return KEY_END;
+        case 108: return KEY_DOWN;
+        case 109: return KEY_PAGEDOWN;
+        case 110: return KEY_INSERT;
+        case 111: return KEY_DELETE;
+        case 119: return KEY_PAUSE;
+        default:  return KEY_UNKNOWN;
+    }
+}
 
 
 // ======================================================================
@@ -668,7 +783,7 @@ void CWaylandWindow::OnKeyboardKey(struct wl_keyboard* /*keyboard*/,
     std::memset(&event, 0, sizeof(event));
 
     event.key.type = (state == WL_KEYBOARD_KEY_STATE_PRESSED) ? EVENT_KEY_DOWN : EVENT_KEY_UP;
-    event.key.keyCode = static_cast<int>(key);
+    event.key.keyCode = TranslateEvdevKey(key);
     event.key.repeat = false;
 
     CEventQueue::Instance().PushEvent(event);
@@ -714,13 +829,14 @@ void CWaylandWindow::OnPointerButton(struct wl_pointer* /*pointer*/,
     event.button.type = (state == WL_POINTER_BUTTON_STATE_PRESSED)
         ? EVENT_MOUSE_BUTTON_DOWN : EVENT_MOUSE_BUTTON_UP;
 
-    // Map Linux button codes to simple 1/2/3
+    // Map Linux button codes to EMouseButton
+    // BTN_LEFT=0x110, BTN_RIGHT=0x111, BTN_MIDDLE=0x112
     switch( button )
     {
-        case BTN_LEFT:   event.button.button = 1; break;
-        case BTN_RIGHT:  event.button.button = 3; break;
-        case BTN_MIDDLE: event.button.button = 2; break;
-        default:         event.button.button = static_cast<uint8_t>(button); break;
+        case 0x110: event.button.button = MOUSE_BUTTON_LEFT; break;    // BTN_LEFT
+        case 0x111: event.button.button = MOUSE_BUTTON_RIGHT; break;   // BTN_RIGHT
+        case 0x112: event.button.button = MOUSE_BUTTON_MIDDLE; break;  // BTN_MIDDLE
+        default:    event.button.button = static_cast<EMouseButton>(button); break;
     }
 
     event.button.x = m_lastMouseX;
