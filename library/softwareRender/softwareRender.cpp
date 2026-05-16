@@ -10,6 +10,8 @@
 
 // Standard lib dependencies
 #include <cstring>
+#include <cfloat>
+#include <algorithm>
 
 // Game lib dependencies
 #include <common/matrix.h>
@@ -51,6 +53,8 @@ CSoftwareRender::~CSoftwareRender()
     NDelFunc::DeleteMapArrayPointers(m_pVBOMap);
     NDelFunc::DeleteMapArrayPointers(m_pIBOMap);
 
+    delete[] m_surfaceData.zBuffer;
+
 }	// destructor
 
 
@@ -68,6 +72,11 @@ void CSoftwareRender::SetSurface( IFrameBuffer * pFrameBuffer )
     m_surfaceData.h = pFrameBuffer->GetHeight();
     m_halfScreen.w = m_surfaceData.w / 2;
     m_halfScreen.h = m_surfaceData.h / 2;
+
+    // Allocate the z-buffer
+    delete[] m_surfaceData.zBuffer;
+    m_surfaceData.zBuffer = new float[m_surfaceData.w * m_surfaceData.h];
+    ClearZBuffer();
 
 }   // SetSurface
 
@@ -235,6 +244,29 @@ uint * CSoftwareRender::GetIBO( uint Id )
 
 
 /***************************************************************************
+*   desc:  Enable or disable the z-buffer
+****************************************************************************/
+void CSoftwareRender::EnableZBuffer( bool enable )
+{
+    m_surfaceData.zBufferEnabled = enable;
+
+}   // EnableZBuffer
+
+
+/***************************************************************************
+*   desc:  Clear the z-buffer to max depth
+****************************************************************************/
+void CSoftwareRender::ClearZBuffer()
+{
+    if( m_surfaceData.zBuffer != nullptr )
+        std::fill( m_surfaceData.zBuffer,
+                   m_surfaceData.zBuffer + (m_surfaceData.w * m_surfaceData.h),
+                   FLT_MAX );
+
+}   // ClearZBuffer
+
+
+/***************************************************************************
 *   desc:  Render
 *
 *   Perspective Projection: ((trans.vert[0].vert.x / trans.vert[0].vert.z) * m_halfSize.w) + m_halfSize.w + 0.5f;
@@ -347,7 +379,9 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
     int xStart, xEnd, width, height, slopeCount(TRI);
     uint fixStepU, fixStepV, fixU, fixV;
     float u, v, stepU, stepV, step;
+    float z, stepZ;
     uint * pDBuffer;
+    float * pZBuffer;
 
     // Fixed point shift amount needed for UV
     const uint UV_SHIFT(20);
@@ -357,6 +391,8 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
     uint textureW( render.m_pText->m_size.w );
     uint textureH( render.m_pText->m_size.h );
     uint * pPixels = (uint *)render.m_pSurface->pixels;
+    float * pZBuf = render.m_pSurface->zBuffer;
+    bool zEnabled = render.m_pSurface->zBufferEnabled;
     uint * pText = (uint *)render.m_pText->m_pData;
 
     // Calculate if we need uv plotting correction. .5 is needed for odd sizes
@@ -471,19 +507,50 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
                     fixU = (u + uOffset) * float( 1 << UV_SHIFT );
                     fixV = (v + vOffset) * float( 1 << UV_SHIFT );
 
-                    while( width-- > 0 )
+                    if( zEnabled )
                     {
-                        uvOffset = ((fixV >> UV_SHIFT) * textureW) + (fixU >> UV_SHIFT);
+                        z = leftSlope.m_slope.vert.z;
+                        stepZ = (rightSlope.m_slope.vert.z - z) / width;
 
-                        // Rotation can cause reading and writing outside of the range of our buffers
-                        // Do this check to insure we are within range
-                        if( (uvOffset < uvOffsetMax) && (scrnOffset < scrnOffsetMax) )
-                            *pDBuffer = *(pText + uvOffset);
+                        if( xStart == 0 && leftSlope.m_slope.vert.x < 0 )
+                            z += stepZ * (-leftSlope.m_slope.vert.x);
 
-                        ++pDBuffer;
-                        ++scrnOffset;
-                        fixU += fixStepU;
-                        fixV += fixStepV;
+                        pZBuffer = pZBuf + scrnOffset;
+
+                        while( width-- > 0 )
+                        {
+                            uvOffset = ((fixV >> UV_SHIFT) * textureW) + (fixU >> UV_SHIFT);
+
+                            if( (uvOffset < uvOffsetMax) && (scrnOffset < scrnOffsetMax) && z < *pZBuffer )
+                            {
+                                *pDBuffer = *(pText + uvOffset);
+                                *pZBuffer = z;
+                            }
+
+                            ++pDBuffer;
+                            ++pZBuffer;
+                            ++scrnOffset;
+                            fixU += fixStepU;
+                            fixV += fixStepV;
+                            z += stepZ;
+                        }
+                    }
+                    else
+                    {
+                        while( width-- > 0 )
+                        {
+                            uvOffset = ((fixV >> UV_SHIFT) * textureW) + (fixU >> UV_SHIFT);
+
+                            // Rotation can cause reading and writing outside of the range of our buffers
+                            // Do this check to insure we are within range
+                            if( (uvOffset < uvOffsetMax) && (scrnOffset < scrnOffsetMax) )
+                                *pDBuffer = *(pText + uvOffset);
+
+                            ++pDBuffer;
+                            ++scrnOffset;
+                            fixU += fixStepU;
+                            fixV += fixStepV;
+                        }
                     }
                 }
             }

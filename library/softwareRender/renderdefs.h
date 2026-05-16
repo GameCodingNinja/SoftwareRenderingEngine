@@ -24,8 +24,10 @@ class CSRTexture;
 struct CSurfaceData
 {
     uint32_t* pixels = nullptr;
+    float* zBuffer = nullptr;
     int w = 0;
     int h = 0;
+    bool zBufferEnabled = false;
 };
 
 

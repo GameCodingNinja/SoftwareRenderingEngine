@@ -61,6 +61,12 @@ public:
     // Render
     void Render( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId );
 
+    // Enable or disable the z-buffer
+    void EnableZBuffer( bool enable );
+
+    // Clear the z-buffer to max depth
+    void ClearZBuffer();
+
 private:
 
     // Constructor
