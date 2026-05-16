@@ -9,14 +9,11 @@
 
 // Game lib dependencies
 #include <common/point.h>
-#include <common/worldvalue.h>
 
 namespace NMathFunc
 {
     // 2D dot product
     float DotProduct2D( const CPoint<float> & p1, const CPoint<float> & p2 );
-    CWorldValue DotProduct2D( const CPoint<CWorldValue> & p1, const CPoint<CWorldValue> & p2 );
-    CWorldValue DotProduct2D( const CPoint<CWorldValue> & p1, const CPoint<float> & p2 );
 
     // 2D cross products
     float CrossProduct2D( const CPoint<float> & p1, const CPoint<float> & p2 );

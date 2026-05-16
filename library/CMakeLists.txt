@@ -27,7 +27,6 @@ set(LIBRARY_SOURCES
     2d/sprite2d.cpp
     2d/visualcomponent2d.cpp
     common/object.cpp
-    common/worldvalue.cpp
     common/matrix.cpp
     common/bitmask.cpp
     soil/stb_image_aug.c

@@ -46,48 +46,33 @@ namespace NParseHelper
     *
     *    param: node - passed in node
     ************************************************************************/
-    CPoint<CWorldValue> LoadPosition( const XMLNode & node, bool & loaded )
+    CPoint<float> LoadPosition( const XMLNode & node, bool & loaded )
     {
-        CPoint<CWorldValue> point;
+        CPoint<float> point;
 
         loaded = false;
 
-            XMLNode positionNode = node.getChildNode( "position" );
+        XMLNode positionNode = node.getChildNode( "position" );
 
         if( !positionNode.isEmpty() )
         {
             loaded = true;
 
-            if( positionNode.isAttributeSet( "xi" ) )
-                point.x.i = std::atoi( positionNode.getAttribute( "xi" ) );
+            if( positionNode.isAttributeSet( "x" ) )
+                point.x = std::atof( positionNode.getAttribute( "x" ) );
 
-            if( positionNode.isAttributeSet( "yi" ) )
-                point.y.i = std::atoi( positionNode.getAttribute( "yi" ) );
+            if( positionNode.isAttributeSet( "y" ) )
+                point.y = std::atof( positionNode.getAttribute( "y" ) );
 
-            if( positionNode.isAttributeSet( "zi" ) )
-                point.z.i = std::atoi( positionNode.getAttribute( "zi" ) );
-
-            if( positionNode.isAttributeSet( "xf" ) )
-                point.x.f = std::atof( positionNode.getAttribute( "xf" ) );
-            else if( positionNode.isAttributeSet( "x" ) )
-                point.x.f = std::atof( positionNode.getAttribute( "x" ) );
-
-            if( positionNode.isAttributeSet( "yf" ) )
-                point.y.f = std::atof( positionNode.getAttribute( "yf" ) );
-            else if( positionNode.isAttributeSet( "y" ) )
-                    point.y.f = std::atof( positionNode.getAttribute( "y" ) );
-
-            if( positionNode.isAttributeSet( "zf" ) )
-                point.z.f = std::atof( positionNode.getAttribute( "zf" ) );
-            else if( positionNode.isAttributeSet( "z" ) )
-                point.z.f = std::atof( positionNode.getAttribute( "z" ) );
+            if( positionNode.isAttributeSet( "z" ) )
+                point.z = std::atof( positionNode.getAttribute( "z" ) );
         }
 
         return point;
 
     }	// LoadPosition
 
-    CPoint<CWorldValue> LoadPosition( const XMLNode & node )
+    CPoint<float> LoadPosition( const XMLNode & node )
     {
         bool dummy;
         return LoadPosition( node, dummy );

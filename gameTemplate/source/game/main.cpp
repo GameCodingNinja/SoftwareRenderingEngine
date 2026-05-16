@@ -13,13 +13,6 @@
 // Game dependencies
 #include "game.h"
 
-// Game lib dependencies
-#include <common/worldvalue.h>
-
-// Game-specific sector size
-const int CWorldValue::SECTOR_SIZE(1024);
-const int CWorldValue::HALF_SECTOR_SIZE( CWorldValue::SECTOR_SIZE / 2 );
-
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

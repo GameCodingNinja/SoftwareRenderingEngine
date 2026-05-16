@@ -12,7 +12,6 @@
 #include <common/object.h>
 
 // Game lib dependencies
-#include <common/worldvalue.h>
 #include <common/point.h>
 #include <common/matrix.h>
 
@@ -28,8 +27,8 @@ public:
     }
 
     // Set-Get-Inc the camera's world position
-    void SetPos( const CPoint<CWorldValue> & pos );
-    void IncPos( const CPoint<CWorldValue> & pos );
+    void SetPos( const CPoint<float> & pos );
+    void IncPos( const CPoint<float> & pos );
 
 protected:
 

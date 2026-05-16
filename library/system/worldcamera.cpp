@@ -30,7 +30,7 @@ CWorldCamera::~CWorldCamera()
 *
 *	 param:	CWorldPoint & pos - position to set to
 ************************************************************************/  
-void CWorldCamera::SetPos( const CPoint<CWorldValue> & pos )
+void CWorldCamera::SetPos( const CPoint<float> & pos )
 {
     CObject::SetPos( -pos );
 
@@ -42,7 +42,7 @@ void CWorldCamera::SetPos( const CPoint<CWorldValue> & pos )
 *
 *	 param:	CPoint & pos - amount to increment
 ************************************************************************/  
-void CWorldCamera::IncPos( const CPoint<CWorldValue> & pos )
+void CWorldCamera::IncPos( const CPoint<float> & pos )
 {
     CObject::IncPos( -pos );
 

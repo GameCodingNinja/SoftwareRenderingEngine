@@ -14,7 +14,6 @@
 
 // Game lib dependencies
 #include <common/point.h>
-#include <common/worldvalue.h>
 //#include <common/transformdata.h>
 #include <common/color.h>
 #include <common/size.h>
@@ -30,8 +29,8 @@ namespace NParseHelper
     //CVertex2D LoadVertex2d( const XMLNode & node );
 
     // load position data
-    CPoint<CWorldValue> LoadPosition( const XMLNode & node );
-    CPoint<CWorldValue> LoadPosition( const XMLNode & node, bool & loaded );
+    CPoint<float> LoadPosition( const XMLNode & node );
+    CPoint<float> LoadPosition( const XMLNode & node, bool & loaded );
 
     // Load the rotation
     CPoint<float> LoadRotation( const XMLNode & node );

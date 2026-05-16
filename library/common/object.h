@@ -9,7 +9,6 @@
 
 // Game lib dependencies
 #include <common/point.h>
-#include <common/worldvalue.h>
 #include <common/matrix.h>
 #include <common/bitmask.h>
 
@@ -28,11 +27,11 @@ public:
     void LoadTransFromNode( const XMLNode & node );
 
     // Set-Get the object's position
-    void SetPos( const CPoint<CWorldValue> & position );
-    const CPoint<CWorldValue> & GetPos() const;
+    void SetPos( const CPoint<float> & position );
+    const CPoint<float> & GetPos() const;
 
     // Increment the object's position
-    void IncPos( const CPoint<CWorldValue> & position );
+    void IncPos( const CPoint<float> & position );
 
     // Set-Get the object's rotation
     void SetRot( const CPoint<float> & rotation );
@@ -79,7 +78,7 @@ private:
 protected:
 
     // Translated position
-    CPoint<CWorldValue> m_trans_pos;
+    CPoint<float> m_trans_pos;
 
     // Visibility flag
     bool m_visible;
@@ -97,7 +96,7 @@ private:
     CMatrix m_matrix;
 
     // Local position
-    CPoint<CWorldValue> m_pos;
+    CPoint<float> m_pos;
 
     // Local Rotation
     CPoint<float> m_rot;

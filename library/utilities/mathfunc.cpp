@@ -15,25 +15,13 @@ namespace NMathFunc
     *	 param: const CPoint/CWorldPoint & p1 - point to compare
     *			const CPoint/CWorldPoint & p2 - point to compare 
     *
-    *	 ret:	float/CWorldValue - result of dot product
+    *	 ret:	float - result of dot product
     ************************************************************************/
     float DotProduct2D( const CPoint<float> & p1, const CPoint<float> & p2 )
     {
         return p1.x * p2.x + p1.y * p2.y;
 
     }	// DotProduct2D 
-
-    CWorldValue DotProduct2D( const CPoint<CWorldValue> & p1, const CPoint<CWorldValue> & p2 )
-    {
-        return p1.x * p2.x + p1.y * p2.y;
-
-    }	// DotProduct2D 
-
-    CWorldValue DotProduct2D( const CPoint<CWorldValue> & p1, const CPoint<float> & p2 )
-    {
-        return p1.x * p2.x + p1.y * p2.y;
-
-    }	// DotProduct2D
 
 
     /************************************************************************

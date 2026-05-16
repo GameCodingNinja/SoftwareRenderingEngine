@@ -35,7 +35,7 @@ void CObject::LoadTransFromNode( const XMLNode & node )
 {
     bool loadedFlag;
 
-    CPoint<CWorldValue> pos = NParseHelper::LoadPosition( node, loadedFlag );
+    CPoint<float> pos = NParseHelper::LoadPosition( node, loadedFlag );
     if( loadedFlag )
         SetPos( pos );
 
@@ -55,7 +55,7 @@ void CObject::LoadTransFromNode( const XMLNode & node )
 *  
 *    ret:	const CWorldPoint & - object's world position
 ************************************************************************/
-const CPoint<CWorldValue> & CObject::GetPos() const
+const CPoint<float> & CObject::GetPos() const
 {
     return m_pos;
 
@@ -79,7 +79,7 @@ const CPoint<float> & CObject::GetRot() const
 *  
 *    param: const CPoint/CPointInt/CWorldPoint & position - pos to set
 ************************************************************************/
-void CObject::SetPos( const CPoint<CWorldValue> & position )
+void CObject::SetPos( const CPoint<float> & position )
 {
     m_parameters.Add( NDefs::TRANSFORM_LOCAL );
 
@@ -93,7 +93,7 @@ void CObject::SetPos( const CPoint<CWorldValue> & position )
 *  
 *    param: const CPoint/CPointInt/CWorldPoint & position - pos to inc
 ************************************************************************/
-void CObject::IncPos( const CPoint<CWorldValue> & position )
+void CObject::IncPos( const CPoint<float> & position )
 {
     m_parameters.Add( NDefs::TRANSFORM_LOCAL );
 
