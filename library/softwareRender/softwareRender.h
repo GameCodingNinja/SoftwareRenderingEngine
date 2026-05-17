@@ -18,7 +18,7 @@
 #include <common/defs.h>
 #include <common/size.h>
 #include <common/color.h>
-#include <common/vertex2d.h>
+#include <common/vertex.h>
 #include <softwareRender/renderdefs.h>
 
 // Forward declaration(s)
@@ -59,8 +59,14 @@ public:
     // Delete the IBO
     void DeleteIBO( uint Id );
 
-    // Render
+    // Render 2D (orthographic)
     void Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor(), bool blendAlpha = false );
+
+    // Render 3D (perspective with z-buffer)
+    void Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor() );
+
+    // Clear the z-buffer
+    void ClearZBuffer();
 
 private:
 
@@ -100,6 +106,9 @@ private:
 
     // Half size of view port
     CSize<float> m_halfScreen;
+
+    // Z-buffer for 3D depth testing
+    std::vector<int32_t> m_zBuffer;
 
 };
 

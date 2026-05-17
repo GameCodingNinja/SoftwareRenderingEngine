@@ -9,7 +9,7 @@
 #ifndef __quad_2d_h__
 #define __quad_2d_h__
 
-#include <common/vertex2d.h>
+#include <common/vertex.h>
 
 class CQuad2D
 {
@@ -22,7 +22,7 @@ public:
     }
 
     // Verts
-    CVertex2D vert[4];
+    CVertex vert[4];
 
 };
 

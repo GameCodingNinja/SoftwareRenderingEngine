@@ -12,7 +12,7 @@
 #include <vector>
 
 // Game lib dependencies
-#include <common/vertex2d.h>
+#include <common/vertex.h>
 
 class CTriangleSlope
 {
@@ -25,7 +25,7 @@ public:
     };
 
     // Constructor
-    CTriangleSlope( const CVertex2D trans[], int vTop, ESlopeType slopeType );
+    CTriangleSlope( const CVertex trans[], int vTop, ESlopeType slopeType );
 
 	// Destructor
 	~CTriangleSlope();
@@ -37,7 +37,7 @@ public:
     void Inc();
 
     // slopt position
-    CVertex2D m_slope;
+    CVertex m_slope;
 
     // Length of slope
     int m_length;
@@ -53,7 +53,7 @@ private:
 private:
 
     // Vector of projected verts
-    const CVertex2D * m_pVert;
+    const CVertex * m_pVert;
 
     // Top vert index
     int m_vTop;
@@ -62,7 +62,7 @@ private:
     int m_vNext;
 
     // step interpolation
-    CVertex2D m_step;
+    CVertex m_step;
 
     // The type of slope
     const ESlopeType m_slopeType;

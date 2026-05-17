@@ -7,7 +7,7 @@
 #ifndef __face_2d_h__
 #define __face_2d_h__
 
-#include <common/vertex2d.h>
+#include <common/vertex.h>
 
 class CFace2D
 {
@@ -20,7 +20,7 @@ public:
     }
 
     // Verts
-    CVertex2D vert[3];
+    CVertex vert[3];
 
 };
 

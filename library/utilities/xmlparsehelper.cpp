@@ -14,9 +14,9 @@ namespace NParseHelper
     *
     *    param: node - passed in node
     ************************************************************************/
-    /*CVertex2D LoadVertex2d( const XMLNode & node )
+    /*CVertex LoadVertex2d( const XMLNode & node )
     {
-        CVertex2D vert2D;
+        CVertex vert2D;
 
         if( !node.isEmpty() )
         {
