@@ -12,7 +12,7 @@
 #include "commonstate.h"
 
 // Game lib dependencies
-#include <2d/sprite.h>
+#include <sprite/sprite.h>
 
 class CTitleScreenState : public CCommonState
 {

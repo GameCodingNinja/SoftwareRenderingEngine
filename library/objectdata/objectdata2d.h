@@ -13,6 +13,7 @@
 
 // Game lib dependencies
 #include <common/point.h>
+#include <objectdata/iobjectdata.h>
 #include <objectdata/objectvisualdata2d.h>
 #include <objectdata/objectphysicsdata2d.h>
 #include <utilities/xmlParser.h>
@@ -21,7 +22,7 @@
 // Forward Declarations
 struct XMLNode;
 
-class CObjectData2D
+class CObjectData2D : public iObjectData
 {
 public:
 
@@ -37,7 +38,11 @@ public:
     void CreateFromData( const std::string & group );
 
     // Access functions for the visual data
-    const CObjectVisualData2D & GetVisualData() const;
+    const CObjectVisualData2D & GetVisualData() const override;
+
+    // Is this 2D data?
+    bool Is2D() const override
+    { return true; }
 
     // Access functions for the physics data
     const CObjectPhysicsData2D & GetPhysicsData() const;

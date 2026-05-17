@@ -92,22 +92,6 @@ const CColor & CVisualComponent2d::GetColor() const
 
 
 /************************************************************************
-*    desc:  Set/Get the alpha 
-************************************************************************/
-void CVisualComponent2d::SetAlpha( float alpha )
-{
-    m_color.a = alpha;
-
-}   // SetAlpha
-
-float CVisualComponent2d::GetAlpha() const
-{
-    return m_color.a;
-
-}   // GetAlpha
-
-
-/************************************************************************
 *    desc:  Set the texture ID from index
 ************************************************************************/
 void CVisualComponent2d::SetTextureID( uint index )

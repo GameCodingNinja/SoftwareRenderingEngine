@@ -2,7 +2,7 @@
 /************************************************************************
 *    FILE NAME:       sprite.h
 *
-*    DESCRIPTION:     2D sprite class
+*    DESCRIPTION:     Sprite class
 ************************************************************************/
 
 #ifndef __sprite_h__
@@ -12,17 +12,21 @@
 #include <common/object.h>
 
 // Game lib dependencies
-#include <2d/visualcomponent2d.h>
+#include <objectdata/iobjectdata.h>
+
+// Standard lib dependencies
+#include <memory>
 
 // Forward declaration(s)
-class CObjectData2D;
+class CMatrix;
+class iVisualComponent;
 
 class CSprite : public CObject
 {
 public:
 
     // Constructor
-    CSprite( const CObjectData2D & objectData );
+    CSprite( const iObjectData & objectData );
 
     // Destructor
     virtual ~CSprite();
@@ -31,10 +35,10 @@ public:
     CSprite& operator=(const CSprite&) = delete;
 
     // Get the object data
-    const CObjectData2D & GetObjectData() const;
+    const iObjectData & GetObjectData() const;
 
     // Get the visual component
-    CVisualComponent2d & GetVisualComponent();
+    iVisualComponent * GetVisualComponent();
 
     // Update the sprite 
     void Update();
@@ -45,10 +49,10 @@ public:
 private:
 
     // The object data
-    const CObjectData2D & m_objectData;
+    const iObjectData & m_objectData;
 
-    // The visual part of the 2d sprite
-    CVisualComponent2d m_visualComponent;
+    // The visual part of the sprite
+    std::unique_ptr<iVisualComponent> m_upVisualComponent;
 
     // The projection matrix
     const CMatrix m_projectionMatrix;

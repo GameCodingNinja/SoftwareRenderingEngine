@@ -9,6 +9,7 @@
 #include "titlescreenstate.h"
 
 // Game lib dependencies
+#include <objectdata/objectdata2d.h>
 #include <objectdata/objectdatamanager2d.h>
 #include <system/device.h>
 #include <utilities/highresolutiontimer.h>

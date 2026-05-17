@@ -2,22 +2,33 @@
 /************************************************************************
 *    FILE NAME:       sprite.cpp
 *
-*    DESCRIPTION:     2D sprite class
+*    DESCRIPTION:     Sprite class
 ************************************************************************/
 
 // Physical component dependency
-#include <2d/sprite.h>
+#include <sprite/sprite.h>
 
 // Game lib dependencies
+#include <objectdata/iobjectdata.h>
 #include <objectdata/objectdata2d.h>
+#include <2d/visualcomponent2d.h>
 
 /************************************************************************
 *    desc:  Constructer
 ************************************************************************/
-CSprite::CSprite( const CObjectData2D & objectData )
-    : m_objectData( objectData ),
-      m_visualComponent( objectData )
+CSprite::CSprite( const iObjectData & objectData )
+    : m_objectData( objectData )
 {
+    if( objectData.Is2D() )
+    {
+        m_upVisualComponent.reset( new CVisualComponent2d( static_cast<const CObjectData2D &>(objectData) ) );
+    }
+    // Future 3D visual component would go here
+    //else if( objectData.Is3D() )
+    //{
+    //    m_upVisualComponent.reset( new CVisualComponent3d( static_cast<const CObjectData3D &>(objectData) ) );
+    //}
+
 }   // constructor
 
 
@@ -43,7 +54,7 @@ void CSprite::Update()
 void CSprite::Render( const CMatrix & matrix )
 {
     if( m_visible )
-        m_visualComponent.Render( m_trans_matrix * matrix );
+        m_upVisualComponent->Render( m_trans_matrix * matrix );
 
 }	// Render
 
@@ -51,9 +62,9 @@ void CSprite::Render( const CMatrix & matrix )
 /************************************************************************
 *    desc:  Get the visual component                                                            
 ************************************************************************/
-CVisualComponent2d & CSprite::GetVisualComponent()
+iVisualComponent * CSprite::GetVisualComponent()
 {
-    return m_visualComponent;
+    return m_upVisualComponent.get();
 
 }   // GetVisualComponent
 
@@ -61,7 +72,7 @@ CVisualComponent2d & CSprite::GetVisualComponent()
 /************************************************************************
 *    desc:  Get the object data                                                            
 ************************************************************************/
-const CObjectData2D & CSprite::GetObjectData() const
+const iObjectData & CSprite::GetObjectData() const
 {
     return m_objectData;
 

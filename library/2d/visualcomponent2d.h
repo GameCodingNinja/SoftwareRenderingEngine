@@ -12,6 +12,7 @@
 #include <string>
 
 // Game lib dependencies
+#include <common/ivisualcomponent.h>
 #include <common/matrix.h>
 #include <common/color.h>
 #include <common/point.h>
@@ -21,7 +22,7 @@
 class CObjectData2D;
 class CObjectVisualData2D;
 
-class CVisualComponent2d
+class CVisualComponent2d : public iVisualComponent
 {
 public:
 
@@ -29,24 +30,20 @@ public:
     CVisualComponent2d( const CObjectData2D & objectData );
 
     // Destructor
-    ~CVisualComponent2d();
+    virtual ~CVisualComponent2d();
 
     // do the render
-    void Render( const CMatrix & matrix );
+    void Render( const CMatrix & matrix ) override;
 
     // Is this component active?
-    bool IsActive();
+    bool IsActive() override;
 
     // Set/Get the color
-    void SetColor( const CColor & color );
-    const CColor & GetColor() const;
-
-    // Set/Get the alpha
-    void SetAlpha( float alpha );
-    float GetAlpha() const;
+    void SetColor( const CColor & color ) override;
+    const CColor & GetColor() const override;
 
     // Set the texture ID from index
-    void SetTextureID( uint index );
+    void SetTextureID( uint index ) override;
 
 private:
 

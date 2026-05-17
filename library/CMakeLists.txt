@@ -24,7 +24,7 @@ set(LIBRARY_SOURCES
     managers/texturemanager.cpp
     managers/managerbase.cpp
     managers/vertexbuffermanager.cpp
-    2d/sprite.cpp
+    sprite/sprite.cpp
     2d/visualcomponent2d.cpp
     common/object.cpp
     common/matrix.cpp
@@ -63,6 +63,7 @@ include_directories(
     system
     utilities
     managers
+    sprite
     2d
     common
     soil )
