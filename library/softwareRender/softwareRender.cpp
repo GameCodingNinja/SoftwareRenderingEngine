@@ -22,10 +22,10 @@
 #include <system/iframebuffer.h>
 
 // Render a single triangle within a screen strip
-void RenderTriStrip( const CRender2d & render, int yMin, int yMax );
+void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax );
 
 // Render all triangles within a screen strip
-void RenderStrip( const std::vector<CRender2d> * pTriList, int yMin, int yMax );
+void RenderStrip2d( const std::vector<CRender2d> * pTriList, int yMin, int yMax );
 
 /************************************************************************
 *    desc:  Constructor
@@ -39,8 +39,7 @@ CSoftwareRender::CSoftwareRender() :
     if( !CThreadPool::Instance().isActive() )
         CThreadPool::Instance().init( 2, 0 );
 
-}   // constructor
-
+}
 
 /************************************************************************
 *    desc:  destructor                                                             
@@ -51,8 +50,7 @@ CSoftwareRender::~CSoftwareRender()
     NDelFunc::DeleteMapArrayPointers(m_pVBOMap);
     NDelFunc::DeleteMapArrayPointers(m_pIBOMap);
 
-}	// destructor
-
+}
 
 /***************************************************************************
 *   desc:  Set the surface data from a framebuffer
@@ -69,8 +67,7 @@ void CSoftwareRender::SetSurface( IFrameBuffer * pFrameBuffer )
     m_halfScreen.w = m_surfaceData.w / 2;
     m_halfScreen.h = m_surfaceData.h / 2;
 
-}   // SetSurface
-
+}
 
 /***************************************************************************
 *   desc:  Create a texture. The pointer is now owned by this class
@@ -83,8 +80,7 @@ uint CSoftwareRender::CreateTexture( uchar * pData, int w, int h )
 
     return m_textIdInc;
 
-}   // CreateTexture
-
+}
 
 /***************************************************************************
 *   desc:  Create the VBO
@@ -100,8 +96,7 @@ uint CSoftwareRender::CreateVBO( float * pData, uint sizeInBytes )
 
     return m_vboIdInc;
 
-}   // CreateVBO
-
+}
 
 /***************************************************************************
 *   desc:  Create the IBO
@@ -117,8 +112,7 @@ uint CSoftwareRender::CreateIBO( uint * pData, uint sizeInBytes )
 
     return m_iboIdInc;
 
-}   // CreateVBO
-
+}
 
 /***************************************************************************
 *   desc:  Delete the texture
@@ -133,8 +127,7 @@ void CSoftwareRender::DeleteTexture( uint Id )
         m_pTextureMap.erase( mapIter );
     }
 
-}   // DeleteTexture
-
+}
 
 /***************************************************************************
 *   desc:  Delete the VBO
@@ -149,8 +142,7 @@ void CSoftwareRender::DeleteVBO( uint Id )
         m_pVBOMap.erase( mapIter );
     }
 
-}   // DeleteVBO
-
+}
 
 /***************************************************************************
 *   desc:  Delete the IBO
@@ -165,8 +157,7 @@ void CSoftwareRender::DeleteIBO( uint Id )
         m_pIBOMap.erase( mapIter );
     }
 
-}   // DeleteVBO
-
+}
 
 /***************************************************************************
 *   desc:  Get the texture
@@ -187,8 +178,7 @@ CSRTexture * CSoftwareRender::GetTexture( uint Id )
 
     return nullptr;
 
-}   // GetTexture
-
+}
 
 /***************************************************************************
 *   desc:  Get the VBO
@@ -209,8 +199,7 @@ float * CSoftwareRender::GetVBO( uint Id )
 
     return nullptr;
 
-}   // GetVBO
-
+}
 
 /***************************************************************************
 *   desc:  Get the IBO
@@ -231,16 +220,13 @@ uint * CSoftwareRender::GetIBO( uint Id )
 
     return nullptr;
 
-}   // GetIBO
-
+}
 
 /***************************************************************************
-*   desc:  Render
-*
 *   Perspective Projection: ((trans.vert[0].vert.x / trans.vert[0].vert.z) * m_halfSize.w) + m_halfSize.w + 0.5f;
 *   Orthographic Projection: (trans.vert[0].vert.x * m_halfSize.w) + m_halfSize.w + 0.5f;
 ****************************************************************************/
-void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color, bool blendAlpha )
+void CSoftwareRender::Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color, bool blendAlpha )
 {
     CSRTexture * pText = GetTexture( textId );
     CVertex2D * pVert = (CVertex2D *)GetVBO( vboId );
@@ -308,7 +294,7 @@ void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, cons
                 int yMax = (t == threads - 1) ? screenH : (t + 1) * stripH;
 
                 futures.emplace_back(
-                    CThreadPool::Instance().post( RenderStrip, &triList, yMin, yMax ) );
+                    CThreadPool::Instance().post( RenderStrip2d, &triList, yMin, yMax ) );
             }
 
             for( auto & fut : futures )
@@ -317,30 +303,27 @@ void CSoftwareRender::Render( const CMatrix & matrix, const uint vertCount, cons
         else
         {
             // Fallback: single-threaded
-            RenderStrip( &triList, 0, screenH );
+            RenderStrip2d( &triList, 0, screenH );
         }
     }
 
     NDelFunc::DeleteArray( pTrans );
 
-}   // Render
-
+}
 
 /***************************************************************************
 *   desc:  Render all triangles within a horizontal screen strip
 ****************************************************************************/
-void RenderStrip( const std::vector<CRender2d> * pTriList, int yMin, int yMax )
+void RenderStrip2d( const std::vector<CRender2d> * pTriList, int yMin, int yMax )
 {
     for( const auto & tri : *pTriList )
-        RenderTriStrip( tri, yMin, yMax );
-
-}   // RenderStrip
-
+        RenderTriStrip2d( tri, yMin, yMax );
+}
 
 /***************************************************************************
 *   desc:  Render a single triangle, only writing scanlines in [yMin, yMax)
 ****************************************************************************/
-void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
+void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax )
 {
     // Early out if triangle doesn't overlap this strip
     float triYMin = render.m_vec[0].vert.y;
@@ -507,7 +490,6 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
                         uint32_t cr = render.m_cr;
                         uint32_t cg = render.m_cg;
                         uint32_t cb = render.m_cb;
-                        uint32_t ca = render.m_ca;
 
                         while( width-- > 0 )
                         {
@@ -537,7 +519,6 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
                         uint32_t cr = render.m_cr;
                         uint32_t cg = render.m_cg;
                         uint32_t cb = render.m_cb;
-                        uint32_t ca = render.m_ca;
 
                         while( width-- > 0 )
                         {
@@ -549,8 +530,7 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
                                 uint32_t r = ((texel >> 16) & 0xFF) * cr / 255;
                                 uint32_t g = ((texel >>  8) & 0xFF) * cg / 255;
                                 uint32_t b = ( texel        & 0xFF) * cb / 255;
-                                uint32_t a = ((texel >> 24) & 0xFF) * ca / 255;
-                                *pDBuffer = (a << 24) | (r << 16) | (g << 8) | b;
+                                *pDBuffer = (255 << 24) | (r << 16) | (g << 8) | b;
                             }
 
                             ++pDBuffer;
@@ -601,5 +581,4 @@ void RenderTriStrip( const CRender2d & render, int yMin, int yMax )
             yIndex += screenW;
         }
     }
-
-}   // RenderTriStrip
+}

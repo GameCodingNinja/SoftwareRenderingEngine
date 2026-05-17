@@ -60,7 +60,7 @@ public:
     void DeleteIBO( uint Id );
 
     // Render
-    void Render( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor(), bool blendAlpha = false );
+    void Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor(), bool blendAlpha = false );
 
 private:
 
