@@ -644,9 +644,9 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
         // Store 1/W in vert.z for z-buffer and perspective correction
         pTrans[i].vert.z = oneOverW;
 
-        // Convert UV to U/W and V/W in pixel coordinates for perspective-correct mapping
-        pTrans[i].uv.u = pVert[i].uv.u * pText->m_size.w * oneOverW;
-        pTrans[i].uv.v = pVert[i].uv.v * pText->m_size.h * oneOverW;
+        // Convert UV to U/W and V/W for perspective-correct mapping (raw 0-1 range)
+        pTrans[i].uv.u = pVert[i].uv.u * oneOverW;
+        pTrans[i].uv.v = pVert[i].uv.v * oneOverW;
     }
 
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per mesh
@@ -745,19 +745,18 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
     // Define all the variables up here for speed reasons
     int xStart, xEnd, width, height, slopeCount(TRI);
-    float u, v, z, stepU, stepV, stepZ, step;
+    float u, v, z, stepU, stepV, stepZ;
     int64_t fixZ, fixStepZ;
+    int64_t fixTx1, fixTy1;
     uint * pDBuffer;
     int32_t * pZBuffer;
 
-    // Fixed point shift amount for UV (64-bit for precision)
-    const int UV_SHIFT(32);
-    const double FIX_SCALE_UV = (double)(1LL << UV_SHIFT);
+    // Fixed point scale for Z-buffer (2^26 like legacy)
+    const double FIX_SCALE_Z = 67108864.0; // 2^26
 
-    // Z-buffer scale: 1/W values are typically small floats (0.01-10.0),
-    // scale up to spread them across the int32_t range for depth precision.
-    // No shift needed — the scaled value IS the z-buffer value.
-    const double FIX_SCALE_Z = 16777216.0; // 2^24
+    // Fixed point shift for texture coordinates (32-bit fraction for precision)
+    const int TEX_SHIFT(32);
+    const double FIX_SCALE_TEX = (double)(1LL << TEX_SHIFT);
 
     // Subdivision run length
     const int RUN_LENGTH(16);
@@ -842,10 +841,10 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                 // Make sure we are within the bounds of the screen
                 if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < yMax) )
                 {
-                    // Get the interpolated 1/Z and U/Z, V/Z at the left edge
-                    z = leftSlope.m_slope.vert.z;       // 1/Z
-                    u = leftSlope.m_slope.uv.u;         // U/Z
-                    v = leftSlope.m_slope.uv.v;         // V/Z
+                    // Get the interpolated 1/W and U/W, V/W at the left edge
+                    z = leftSlope.m_slope.vert.z;
+                    u = leftSlope.m_slope.uv.u;
+                    v = leftSlope.m_slope.uv.v;
 
                     // Create the step amounts for the scan line
                     stepZ = (rightSlope.m_slope.vert.z - z) / width;
@@ -855,11 +854,11 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                     // Clip the scan-line
                     if( xStart < 0 )
                     {
-                        step = -xStart;
+                        float clip = -xStart;
 
-                        z += (stepZ * step);
-                        u += (stepU * step);
-                        v += (stepV * step);
+                        z += (stepZ * clip);
+                        u += (stepU * clip);
+                        v += (stepV * clip);
 
                         xStart = 0;
                         width = xEnd;
@@ -876,8 +875,8 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                     pZBuffer = pZBuf + yIndex + xStart;
 
                     // Init the 64-bit fixed point Z for z-buffer testing
-                    fixZ = (int64_t)((double)z * FIX_SCALE_Z);
-                    fixStepZ = (int64_t)((double)stepZ * FIX_SCALE_Z);
+                    fixZ = (int64_t)(z * FIX_SCALE_Z);
+                    fixStepZ = (int64_t)(stepZ * FIX_SCALE_Z);
 
                     ////////////////////////////////////////////
                     // Perspective-correct texture mapping with
@@ -886,9 +885,10 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                     ////////////////////////////////////////////
 
                     // Calculate the first real texture coordinates
+                    // U/W divided by 1/W recovers raw U (0-1), multiply by texture size
                     float realZ = 1.0f / z;
-                    int64_t fixTx1 = (int64_t)((double)(u * realZ) * FIX_SCALE_UV);
-                    int64_t fixTy1 = (int64_t)((double)(v * realZ) * FIX_SCALE_UV);
+                    fixTx1 = (int64_t)((double)(u * realZ) * (double)textureW * FIX_SCALE_TEX);
+                    fixTy1 = (int64_t)((double)(v * realZ) * (double)textureH * FIX_SCALE_TEX);
 
                     // Calculate subdivision loops (width / 16)
                     int runLoops = width >> RUN_SHIFT;
@@ -912,23 +912,23 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
                         // Calculate the next point to interpolate
                         float nextRealZ = 1.0f / RZ;
-                        int64_t fixTx2 = (int64_t)((double)(u * nextRealZ) * FIX_SCALE_UV);
-                        int64_t fixTy2 = (int64_t)((double)(v * nextRealZ) * FIX_SCALE_UV);
+                        int64_t fixTx2 = (int64_t)((double)(u * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
+                        int64_t fixTy2 = (int64_t)((double)(v * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
 
-                        // Calculate the per-pixel step within this subdivision (divide by 16 via shift)
+                        // Divide by 16 via shift
                         int64_t fixTxStep = (fixTx2 - fixTx1) >> RUN_SHIFT;
                         int64_t fixTyStep = (fixTy2 - fixTy1) >> RUN_SHIFT;
 
                         int64_t fixTx = fixTx1;
                         int64_t fixTy = fixTy1;
 
-                        // Loop for width of subdivision
+                        // Loop for width of scan-line
                         while( length-- > 0 )
                         {
                             if( *pZBuffer < (int32_t)fixZ && pDBuffer < pPixelsEnd )
                             {
-                                uint texX = (uint)(fixTx >> UV_SHIFT);
-                                uint texY = (uint)(fixTy >> UV_SHIFT);
+                                uint texX = (uint)(fixTx >> TEX_SHIFT);
+                                uint texY = (uint)(fixTy >> TEX_SHIFT);
 
                                 // Clamp texture coordinates
                                 if( texX >= textureW ) texX = textureW - 1;
@@ -979,8 +979,8 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
                         // Calculate the next point to interpolate
                         float nextRealZ = 1.0f / RZ;
-                        int64_t fixTx2 = (int64_t)((double)(u * nextRealZ) * FIX_SCALE_UV);
-                        int64_t fixTy2 = (int64_t)((double)(v * nextRealZ) * FIX_SCALE_UV);
+                        int64_t fixTx2 = (int64_t)((double)(u * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
+                        int64_t fixTy2 = (int64_t)((double)(v * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
 
                         int64_t fixTxStep = (fixTx2 - fixTx1) / length;
                         int64_t fixTyStep = (fixTy2 - fixTy1) / length;
@@ -993,8 +993,8 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                         {
                             if( *pZBuffer < (int32_t)fixZ && pDBuffer < pPixelsEnd )
                             {
-                                uint texX = (uint)(fixTx >> UV_SHIFT);
-                                uint texY = (uint)(fixTy >> UV_SHIFT);
+                                uint texX = (uint)(fixTx >> TEX_SHIFT);
+                                uint texY = (uint)(fixTy >> TEX_SHIFT);
 
                                 // Clamp texture coordinates
                                 if( texX >= textureW ) texX = textureW - 1;
