@@ -684,7 +684,7 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
         int screenH = m_surfaceData.h;
         size_t threads = CThreadPool::Instance().threadCount();
 
-        /*if( threads > 0 )
+        if( threads > 0 )
         {
             int stripH = screenH / threads;
             std::vector<std::future<void>> futures;
@@ -701,7 +701,7 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
             for( auto & fut : futures )
                 fut.get();
         }
-        else*/
+        else
         {
             // Fallback: single-threaded
             RenderStrip3d( &triList, 0, screenH );
@@ -903,17 +903,15 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                     {
                         int length = RUN_LENGTH;
 
-                        float RZ = z;
-
                         // Jump ahead to next subdivision
-                        u  += subUStep;
-                        v  += subVStep;
-                        RZ += subZStep;
+                        float nextU = u + subUStep;
+                        float nextV = v + subVStep;
+                        float nextZ = z + subZStep;
 
                         // Calculate the next point to interpolate
-                        float nextRealZ = 1.0f / RZ;
-                        int64_t fixTx2 = (int64_t)((double)(u * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
-                        int64_t fixTy2 = (int64_t)((double)(v * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
+                        float nextRealZ = 1.0f / nextZ;
+                        int64_t fixTx2 = (int64_t)((double)(nextU * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
+                        int64_t fixTy2 = (int64_t)((double)(nextV * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
 
                         // Divide by 16 via shift
                         int64_t fixTxStep = (fixTx2 - fixTx1) >> RUN_SHIFT;
@@ -960,6 +958,11 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                             ++pZBuffer;
                         }
 
+                        // Advance u, v, z to the next subdivision point
+                        u = nextU;
+                        v = nextV;
+                        z = nextZ;
+
                         // Reuse the last calculations as the first
                         fixTx1 = fixTx2;
                         fixTy1 = fixTy2;
@@ -970,17 +973,15 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
                     if( length > 0 )
                     {
-                        float RZ = z;
-
                         // Jump ahead to the remainder
-                        u  += (stepU * length);
-                        v  += (stepV * length);
-                        RZ += (stepZ * length);
+                        float nextU = u + (stepU * length);
+                        float nextV = v + (stepV * length);
+                        float nextZ = z + (stepZ * length);
 
                         // Calculate the next point to interpolate
-                        float nextRealZ = 1.0f / RZ;
-                        int64_t fixTx2 = (int64_t)((double)(u * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
-                        int64_t fixTy2 = (int64_t)((double)(v * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
+                        float nextRealZ = 1.0f / nextZ;
+                        int64_t fixTx2 = (int64_t)((double)(nextU * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
+                        int64_t fixTy2 = (int64_t)((double)(nextV * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
 
                         int64_t fixTxStep = (fixTx2 - fixTx1) / length;
                         int64_t fixTyStep = (fixTy2 - fixTy1) / length;

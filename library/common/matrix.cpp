@@ -795,6 +795,7 @@ void CMatrix::PerspectiveFovRH( float fovy, float aspect, float zn, float zf )
     matrix[m22] = zf / (zn-zf);
     matrix[m23] = -1;
     matrix[m32] = zn * zf / (zn-zf);
+    matrix[m33] = 0;
 
 }   // PerspectiveFovRH
 
