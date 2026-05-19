@@ -28,9 +28,6 @@ protected:
     CManagerBase();
     virtual ~CManagerBase();
 
-    // Load custom data from node
-    virtual void LoadFromNode( const XMLNode & node );
-
 protected:
 
     // Holds the list table map
@@ -39,5 +36,3 @@ protected:
 };
 
 #endif  // __manager_base_h__
-
-

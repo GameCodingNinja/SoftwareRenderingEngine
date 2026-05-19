@@ -616,30 +616,37 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
 
     CVertex * pTrans = new CVertex[vertCount];
 
+    // Get raw matrix data for W computation
+    const float * mat = matrix();
+
     for( uint i = 0; i < vertCount; ++i )
     {
-        // Transform the verts
+        // Transform the verts (computes x, y, z but not w)
         matrix.Transform( pTrans[i].vert, pVert[i].vert );
 
-        // Skip verts behind or at the camera (near clip)
-        if( pTrans[i].vert.z <= 0.0f )
-        {
-            pTrans[i].vert.z = 0.001f;
-        }
+        // Compute W from the projection matrix (row 3: m03, m13, m23, m33)
+        float w = ( pVert[i].vert.x * mat[m03] )
+                + ( pVert[i].vert.y * mat[m13] )
+                + ( pVert[i].vert.z * mat[m23] )
+                + mat[m33];
 
-        // Calculate 1/Z for perspective-correct interpolation and z-buffer
-        float oneOverZ = 1.0f / pTrans[i].vert.z;
+        // Near clip: skip verts behind the camera
+        if( w <= 0.0f )
+            w = 0.001f;
 
-        // Perspective projection to screen coordinates
-        pTrans[i].vert.x = (pTrans[i].vert.x * oneOverZ * m_halfScreen.w) + m_halfScreen.w;
-        pTrans[i].vert.y = (pTrans[i].vert.y * oneOverZ * m_halfScreen.h) + m_halfScreen.h;
+        // Calculate 1/W for perspective-correct interpolation and z-buffer
+        float oneOverW = 1.0f / w;
 
-        // Store 1/Z in vert.z for z-buffer and perspective correction
-        pTrans[i].vert.z = oneOverZ;
+        // Perspective divide and convert to screen coordinates
+        pTrans[i].vert.x = (pTrans[i].vert.x * oneOverW * m_halfScreen.w) + m_halfScreen.w;
+        pTrans[i].vert.y = (pTrans[i].vert.y * oneOverW * m_halfScreen.h) + m_halfScreen.h;
 
-        // Convert UV to U/Z and V/Z in pixel coordinates for perspective-correct mapping
-        pTrans[i].uv.u = pVert[i].uv.u * pText->m_size.w * oneOverZ;
-        pTrans[i].uv.v = pVert[i].uv.v * pText->m_size.h * oneOverZ;
+        // Store 1/W in vert.z for z-buffer and perspective correction
+        pTrans[i].vert.z = oneOverW;
+
+        // Convert UV to U/W and V/W in pixel coordinates for perspective-correct mapping
+        pTrans[i].uv.u = pVert[i].uv.u * pText->m_size.w * oneOverW;
+        pTrans[i].uv.v = pVert[i].uv.v * pText->m_size.h * oneOverW;
     }
 
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per mesh
@@ -677,7 +684,7 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
         int screenH = m_surfaceData.h;
         size_t threads = CThreadPool::Instance().threadCount();
 
-        if( threads > 0 )
+        /*if( threads > 0 )
         {
             int stripH = screenH / threads;
             std::vector<std::future<void>> futures;
@@ -694,7 +701,7 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
             for( auto & fut : futures )
                 fut.get();
         }
-        else
+        else*/
         {
             // Fallback: single-threaded
             RenderStrip3d( &triList, 0, screenH );
@@ -743,9 +750,14 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
     uint * pDBuffer;
     int32_t * pZBuffer;
 
-    // Fixed point shift amount for Z (64-bit for precision)
-    const int Z_SHIFT(32);
-    const double FIX_SCALE_Z = (double)(1LL << Z_SHIFT);
+    // Fixed point shift amount for UV (64-bit for precision)
+    const int UV_SHIFT(32);
+    const double FIX_SCALE_UV = (double)(1LL << UV_SHIFT);
+
+    // Z-buffer scale: 1/W values are typically small floats (0.01-10.0),
+    // scale up to spread them across the int32_t range for depth precision.
+    // No shift needed — the scaled value IS the z-buffer value.
+    const double FIX_SCALE_Z = 16777216.0; // 2^24
 
     // Subdivision run length
     const int RUN_LENGTH(16);
@@ -875,8 +887,8 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
                     // Calculate the first real texture coordinates
                     float realZ = 1.0f / z;
-                    int64_t fixTx1 = (int64_t)((double)(u * realZ) * FIX_SCALE_Z);
-                    int64_t fixTy1 = (int64_t)((double)(v * realZ) * FIX_SCALE_Z);
+                    int64_t fixTx1 = (int64_t)((double)(u * realZ) * FIX_SCALE_UV);
+                    int64_t fixTy1 = (int64_t)((double)(v * realZ) * FIX_SCALE_UV);
 
                     // Calculate subdivision loops (width / 16)
                     int runLoops = width >> RUN_SHIFT;
@@ -900,8 +912,8 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
                         // Calculate the next point to interpolate
                         float nextRealZ = 1.0f / RZ;
-                        int64_t fixTx2 = (int64_t)((double)(u * nextRealZ) * FIX_SCALE_Z);
-                        int64_t fixTy2 = (int64_t)((double)(v * nextRealZ) * FIX_SCALE_Z);
+                        int64_t fixTx2 = (int64_t)((double)(u * nextRealZ) * FIX_SCALE_UV);
+                        int64_t fixTy2 = (int64_t)((double)(v * nextRealZ) * FIX_SCALE_UV);
 
                         // Calculate the per-pixel step within this subdivision (divide by 16 via shift)
                         int64_t fixTxStep = (fixTx2 - fixTx1) >> RUN_SHIFT;
@@ -913,10 +925,10 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                         // Loop for width of subdivision
                         while( length-- > 0 )
                         {
-                            if( *pZBuffer < (int32_t)(fixZ >> Z_SHIFT) && pDBuffer < pPixelsEnd )
+                            if( *pZBuffer < (int32_t)fixZ && pDBuffer < pPixelsEnd )
                             {
-                                uint texX = (uint)(fixTx >> Z_SHIFT);
-                                uint texY = (uint)(fixTy >> Z_SHIFT);
+                                uint texX = (uint)(fixTx >> UV_SHIFT);
+                                uint texY = (uint)(fixTy >> UV_SHIFT);
 
                                 // Clamp texture coordinates
                                 if( texX >= textureW ) texX = textureW - 1;
@@ -937,7 +949,7 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                                     }
 
                                     *pDBuffer = texel;
-                                    *pZBuffer = (int32_t)(fixZ >> Z_SHIFT);
+                                    *pZBuffer = (int32_t)fixZ;
                                 }
                             }
 
@@ -967,8 +979,8 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
                         // Calculate the next point to interpolate
                         float nextRealZ = 1.0f / RZ;
-                        int64_t fixTx2 = (int64_t)((double)(u * nextRealZ) * FIX_SCALE_Z);
-                        int64_t fixTy2 = (int64_t)((double)(v * nextRealZ) * FIX_SCALE_Z);
+                        int64_t fixTx2 = (int64_t)((double)(u * nextRealZ) * FIX_SCALE_UV);
+                        int64_t fixTy2 = (int64_t)((double)(v * nextRealZ) * FIX_SCALE_UV);
 
                         int64_t fixTxStep = (fixTx2 - fixTx1) / length;
                         int64_t fixTyStep = (fixTy2 - fixTy1) / length;
@@ -979,10 +991,10 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                         // Loop for remainder width
                         while( length-- > 0 )
                         {
-                            if( *pZBuffer < (int32_t)(fixZ >> Z_SHIFT) && pDBuffer < pPixelsEnd )
+                            if( *pZBuffer < (int32_t)fixZ && pDBuffer < pPixelsEnd )
                             {
-                                uint texX = (uint)(fixTx >> Z_SHIFT);
-                                uint texY = (uint)(fixTy >> Z_SHIFT);
+                                uint texX = (uint)(fixTx >> UV_SHIFT);
+                                uint texY = (uint)(fixTy >> UV_SHIFT);
 
                                 // Clamp texture coordinates
                                 if( texX >= textureW ) texX = textureW - 1;
@@ -1003,7 +1015,7 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                                     }
 
                                     *pDBuffer = texel;
-                                    *pZBuffer = (int32_t)(fixZ >> Z_SHIFT);
+                                    *pZBuffer = (int32_t)fixZ;
                                 }
                             }
 

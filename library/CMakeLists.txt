@@ -2,9 +2,11 @@
 # Platform-independent source files
 set(LIBRARY_SOURCES
     objectdata/objectdata2d.cpp
-    objectdata/objectdatamanager2d.cpp
+    objectdata/objectdata3d.cpp
+    objectdata/objectdatamanager.cpp
     objectdata/objectphysicsdata2d.cpp
     objectdata/objectvisualdata2d.cpp
+    objectdata/objectvisualdata3d.cpp
     softwareRender/softwareRender.cpp
     softwareRender/srtexture.cpp
     softwareRender/triangleslope.cpp
@@ -26,6 +28,7 @@ set(LIBRARY_SOURCES
     managers/vertexbuffermanager.cpp
     sprite/sprite.cpp
     2d/visualcomponent2d.cpp
+    3d/visualcomponent3d.cpp
     common/object.cpp
     common/matrix.cpp
     common/bitmask.cpp
@@ -65,5 +68,6 @@ include_directories(
     managers
     sprite
     2d
+    3d
     common
     soil )

@@ -1,12 +1,12 @@
 
 /************************************************************************
-*    FILE NAME:       ojectvisualdata2d.h
+*    FILE NAME:       objectvisualdata3d.h
 *
-*    DESCRIPTION:     Class containing the 2D object's visual data
+*    DESCRIPTION:     Class containing the 3D object's visual data
 ************************************************************************/
 
-#ifndef __object_visual_data_2d_h__
-#define __object_visual_data_2d_h__
+#ifndef __object_visual_data_3d_h__
+#define __object_visual_data_3d_h__
 
 // Standard lib dependencies
 #include <string>
@@ -18,19 +18,18 @@
 #include <common/rect.h>
 #include <common/point.h>
 #include <common/defs.h>
-#include <common/scaledframe.h>
 #include <utilities/xmlParser.h>
 
 // Forward Declarations
 struct XMLNode;
 
-class CObjectVisualData2D
+class CObjectVisualData3D
 {
 public:
 
     // Constructor/Destructor
-    CObjectVisualData2D();
-    ~CObjectVisualData2D();
+    CObjectVisualData3D();
+    ~CObjectVisualData3D();
 
     // Load thes object data from node
     void LoadFromNode( const XMLNode & objectNode );
@@ -62,11 +61,6 @@ public:
     // Get Index count
     int GetIndexCount() const;
 
-    // Get the frame count
-    uint GetFrameCount() const;
-
-    // Is alpha blending enabled for this texture?
-    bool IsAlphaBlend() const;
 
 private:
 
@@ -102,12 +96,6 @@ private:
 
     // The vertex scale of the object
     CPoint<float> m_vertexScale;
-
-    // Scaled frame
-    CScaledFrame m_scaledFrame;
-
-    // Alpha blending flag
-    bool m_blendAlpha;
 };
 
-#endif  // __object_visual_data_2d_h__
+#endif  // __object_visual_data_3d_h__

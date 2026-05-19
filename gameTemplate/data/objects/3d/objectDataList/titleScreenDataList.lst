@@ -1,11 +1,10 @@
-<objectDataList2D>
+<objectDataList3D>
 
   <!-- DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT -->
   <default  name="">
     <visual>
       <mesh genType="quad">
         <quad uv.x1="0" uv.y1="0" uv.x2="1" uv.y2="1"/>
-        <scaledFrame thicknessWidth="" thicknessHeight="" centerQuad=""/>
         <texture file="" blendAlpha="false"/>
         <file name=""/>
       </mesh>
@@ -24,25 +23,13 @@
   
   <objectList>
 
-    <object name="background">
+    <object name="logo">
       <visual>
-          <texture file="data/textures/titleScreen/title_background_small.png"/>
-      </visual>
-    </object>
-
-    <object name="background2">
-      <visual>
-        <texture file="data/textures/titleScreen/title_background_small299.png"/>
-      </visual>
-    </object>
-
-    <object name="enemy">
-      <visual>
-        <texture file="data/textures/titleScreen/enemy01a.png" blendAlpha="true"/>
+          <texture file="data/textures/titleScreen/logo.png"/>
       </visual>
     </object>
 
   </objectList>
 
-</objectDataList2D>
+</objectDataList3D>
 

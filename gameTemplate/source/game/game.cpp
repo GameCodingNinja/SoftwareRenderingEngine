@@ -234,6 +234,9 @@ void CGame::Render()
 
     m_pFrameBuffer->Clear();
 
+    // Clear the z-buffer for 3D rendering
+    CSoftwareRender::Instance().ClearZBuffer();
+
     // Do the pre render
     PreRender();
 

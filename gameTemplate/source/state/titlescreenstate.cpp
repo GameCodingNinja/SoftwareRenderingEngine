@@ -10,7 +10,7 @@
 
 // Game lib dependencies
 #include <objectdata/objectdata2d.h>
-#include <objectdata/objectdatamanager2d.h>
+#include <objectdata/objectdatamanager.h>
 #include <system/device.h>
 #include <utilities/highresolutiontimer.h>
 
@@ -19,10 +19,11 @@
 *    desc:  Constructer                                                             
 ************************************************************************/
 CTitleScreenState::CTitleScreenState()
-    : m_background( CObjectDataMgr2D::Instance().GetData( "(title_screen)", "background" ) ),
-      m_background2( CObjectDataMgr2D::Instance().GetData( "(title_screen)", "background2" ) ),
-      m_background3( CObjectDataMgr2D::Instance().GetData( "(title_screen)", "background2" ) ),
-      m_enemy( CObjectDataMgr2D::Instance().GetData( "(title_screen)", "enemy" ) ),
+    : m_background( CObjectDataMgr::Instance().GetData( "(title_screen)", "background" ) ),
+      m_background2( CObjectDataMgr::Instance().GetData( "(title_screen)", "background2" ) ),
+      m_background3( CObjectDataMgr::Instance().GetData( "(title_screen)", "background2" ) ),
+      m_enemy( CObjectDataMgr::Instance().GetData( "(title_screen)", "enemy" ) ),
+      m_logo( CObjectDataMgr::Instance().GetData( "(logo)", "logo" ) ),
       m_allowStateChange(false)
 {
     // Set the game states for this object
@@ -38,6 +39,8 @@ CTitleScreenState::CTitleScreenState()
     m_background2.SetPos( CPoint<float>( 300,-300,0) );
     m_background3.SetPos( CPoint<float>( 300,300,0) );
     m_enemy.SetPos( CPoint<float>( -200,0,0) );
+    m_logo.SetPos( CPoint<float>( 0, 0, -1.5) );
+    m_logo.SetScale( CPoint<float>(1,1, 1) );
 
     m_background.SetRot( CPoint<float>(180,0,0) );
 
@@ -82,6 +85,7 @@ void CTitleScreenState::Transform()
     m_background2.Transform();
     m_background3.Transform();
     m_enemy.Transform();
+    m_logo.Transform();
 
 }	// Transform */
 
@@ -93,11 +97,14 @@ void CTitleScreenState::PreRender()
 {
     CCommonState::PreRender();
 
-    const CMatrix & matrix = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_ORTHOGRAPHIC );
+    /*const CMatrix & matrix = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_ORTHOGRAPHIC );
     m_background.Render( matrix );
     m_background2.Render( matrix );
     m_background3.Render( matrix );
-    m_enemy.Render( matrix );
+    m_enemy.Render( matrix );*/
+
+    const CMatrix & matrix3d = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_PERSPECTIVE );
+    m_logo.Render( matrix3d );
 
 }	// Render2D
 

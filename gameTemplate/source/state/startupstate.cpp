@@ -12,7 +12,7 @@
 #include <vector>
 
 // Game lib dependencies
-#include <objectdata/objectdatamanager2d.h>
+#include <objectdata/objectdatamanager.h>
 #include <system/device.h>
 #include <utilities/genfunc.h>
 #include <utilities/highresolutiontimer.h>
@@ -37,8 +37,10 @@ CStartUpState::CStartUpState()
 void CStartUpState::Load()
 {
     // Load all of the meshes and materials in these groups
-    CObjectDataMgr2D::Instance().LoadListTable( "data/objects/2d/objectDataList/dataListTable.lst" );
-    CObjectDataMgr2D::Instance().LoadGroup( "(title_screen)" );
+    CObjectDataMgr::Instance().LoadListTable( "data/objects/2d/objectDataList/dataListTable.lst" );
+    CObjectDataMgr::Instance().LoadListTable( "data/objects/3d/objectDataList/dataListTable.lst" );
+    CObjectDataMgr::Instance().LoadGroup( "(title_screen)" );
+    CObjectDataMgr::Instance().LoadGroup( "(logo)" );
 
 }   // Load
 

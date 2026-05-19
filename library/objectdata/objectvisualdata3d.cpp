@@ -1,12 +1,12 @@
 
 /************************************************************************
-*    FILE NAME:       ojectvisualdata2d.cpp
+*    FILE NAME:       objectvisualdata3d.cpp
 *
 *    DESCRIPTION:     Class containing the 3D object's visual data
 ************************************************************************/
 
 // Physical component dependency
-#include <objectdata/objectvisualdata2d.h>
+#include <objectdata/objectvisualdata3d.h>
 
 // Game lib dependencies
 #include <managers/texturemanager.h>
@@ -19,14 +19,13 @@
 /************************************************************************
 *    desc:  Constructer
 ************************************************************************/
-CObjectVisualData2D::CObjectVisualData2D()
+CObjectVisualData3D::CObjectVisualData3D()
     : m_vbo(0),
       m_ibo(0),
       m_genType(NDefs::EGT_NULL),
       m_vertexCount(0),
       m_indexCount(0),
-      m_vertexScale(1,1,1),
-      m_blendAlpha(false)
+      m_vertexScale(1,1,1)
 {
 }   // constructor
 
@@ -34,7 +33,7 @@ CObjectVisualData2D::CObjectVisualData2D()
 /************************************************************************
 *    desc:  Destructer                                                             
 ************************************************************************/
-CObjectVisualData2D::~CObjectVisualData2D()
+CObjectVisualData3D::~CObjectVisualData3D()
 {
     // NOTE: Nothing should ever be deleted here
 }   // Destructer
@@ -43,7 +42,7 @@ CObjectVisualData2D::~CObjectVisualData2D()
 /************************************************************************
 *    desc:  Load the object data from node
 ************************************************************************/
-void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
+void CObjectVisualData3D::LoadFromNode( const XMLNode & objectNode )
 {
     const XMLNode visualNode = objectNode.getChildNode( "visual" );
 
@@ -67,10 +66,6 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
             {
                 m_textureFileVec.push_back( textureNode.getAttribute( "file" ) );
             }
-
-            // Does this texture require alpha blending?
-            if( textureNode.isAttributeSet("blendAlpha") )
-                m_blendAlpha = (std::string(textureNode.getAttribute( "blendAlpha" )) == "true");
         }
 
         // Get the mesh node
@@ -84,14 +79,10 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
                 if( genTypeStr == "quad" )
                     m_genType = NDefs::EGT_QUAD;
 
-                else if( genTypeStr == "scaled_frame" )
-                    m_genType = NDefs::EGT_SCALED_FRAME;
-
                 else if( genTypeStr == "file" )
                     m_genType = NDefs::EGT_MESH_FILE;
 
-                else if( genTypeStr == "font" )
-                    m_genType = NDefs::EGT_FONT;
+
             }
 
             const XMLNode quadNode = meshNode.getChildNode( "quad" );
@@ -101,16 +92,6 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
                 m_uv.y1 = std::atof(quadNode.getAttribute( "uv.y1" ));
                 m_uv.x2 = std::atof(quadNode.getAttribute( "uv.x2" ));
                 m_uv.y2 = std::atof(quadNode.getAttribute( "uv.y2" ));
-            }
-
-            const XMLNode scaledFrameNode = meshNode.getChildNode( "scaledFrame" );
-            if( !scaledFrameNode.isEmpty() )
-            {
-                m_scaledFrame.m_frame.w = std::atof(scaledFrameNode.getAttribute( "thicknessWidth" ));
-                m_scaledFrame.m_frame.h = std::atof(scaledFrameNode.getAttribute( "thicknessHeight" ));
-
-                if( scaledFrameNode.isAttributeSet("centerQuad") )
-                    m_scaledFrame.m_centerQuad = (std::string(scaledFrameNode.getAttribute( "centerQuad" )) != "false");
             }
 
             const XMLNode fileNode = meshNode.getChildNode( "file" );
@@ -130,7 +111,7 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
 /************************************************************************
 *    desc:  Create the object from data
 ************************************************************************/
-void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> & rSize )
+void CObjectVisualData3D::CreateFromData( const std::string & group, CSize<int> & rSize )
 {
     CTexture texture;
 
@@ -156,43 +137,11 @@ void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> 
         m_vbo = CVertBufMgr::Instance().CreateQuadVBO( group, vboName, m_uv );
         m_ibo = CVertBufMgr::Instance().CreateIBO( group, "quad_0123", indexData, sizeof(indexData) );
 
-        // For this generation type, the image size is the default scale
-        m_vertexScale.x = rSize.w;
-        m_vertexScale.y = rSize.h;
-
         // A quad has 4 verts
         m_vertexCount = 4;
 
         // A quad has 6 indexes
         m_indexCount = 6;
-    }
-    else if( m_genType == NDefs::EGT_SCALED_FRAME )
-    {
-        std::string vboName = NGenFunc::FormatString("scaled_frame_%d_%d_%d_%d_%d_%d", (int)rSize.w, (int)rSize.h, (int)m_scaledFrame.m_frame.w, (int)m_scaledFrame.m_frame.h, (int)texture.m_size.w, (int)texture.m_size.h);
-
-        m_vbo = CVertBufMgr::Instance().CreateScaledFrame(
-            group, vboName,m_scaledFrame, texture.GetSize(), rSize );
-
-        uint indexData[] = {0,1,2,     0,3,1,
-                               2,4,5,     2,1,4,
-                               1,6,4,     1,7,6,
-                               7,8,6,     7,9,8,
-                               10,9,7,    10,11,9,
-                               12,11,10,  12,13,11,
-                               14,10,3,   14,12,10,
-                               15,3,0,    15,14,3,
-                               3,7,1,     3,10,7};
-
-        // Create the reusable IBO buffer
-        m_ibo = CVertBufMgr::Instance().CreateIBO( group, "scaled_frame", indexData, sizeof(indexData) );
-
-        // Set the vert count depending on the number of quads being rendered
-        // If the center quad is not used, just adjust the vertex count because
-        // the center quat is just reused verts anyways and is that last 6 in the IBO
-        m_vertexCount = 16;
-        m_indexCount = 6 * 8;
-        if( m_scaledFrame.m_centerQuad )
-            m_indexCount += 6;
     }
 
 }   // CreateFromData
@@ -201,7 +150,7 @@ void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> 
 /************************************************************************
 *    desc:  Get the gne type
 ************************************************************************/
-NDefs::EGenerationType CObjectVisualData2D::GetGenerationType() const 
+NDefs::EGenerationType CObjectVisualData3D::GetGenerationType() const 
 {
     return m_genType;
 }
@@ -210,7 +159,7 @@ NDefs::EGenerationType CObjectVisualData2D::GetGenerationType() const
 /************************************************************************
 *    desc:  Get the texture ID
 ************************************************************************/
-uint CObjectVisualData2D::GetTextureID( uint index ) const 
+uint CObjectVisualData3D::GetTextureID( uint index ) const 
 {
     if( m_textureIDVec.empty() )
         return 0;
@@ -222,7 +171,7 @@ uint CObjectVisualData2D::GetTextureID( uint index ) const
 /************************************************************************
 *    desc:  Get the color
 ************************************************************************/
-const CColor & CObjectVisualData2D::GetColor() const 
+const CColor & CObjectVisualData3D::GetColor() const 
 {
     return m_color;
 }
@@ -231,7 +180,7 @@ const CColor & CObjectVisualData2D::GetColor() const
 /************************************************************************
 *    desc:  Get the VBO
 ************************************************************************/
-uint CObjectVisualData2D::GetVBO() const 
+uint CObjectVisualData3D::GetVBO() const 
 {
     return m_vbo;
 }
@@ -240,7 +189,7 @@ uint CObjectVisualData2D::GetVBO() const
 /************************************************************************
 *    desc:  Get the IBO
 ************************************************************************/
-uint CObjectVisualData2D::GetIBO() const 
+uint CObjectVisualData3D::GetIBO() const 
 {
     return m_ibo;
 }
@@ -249,7 +198,7 @@ uint CObjectVisualData2D::GetIBO() const
 /************************************************************************
 *    desc:  Get the vertex count
 ************************************************************************/
-int CObjectVisualData2D::GetVertexCount() const 
+int CObjectVisualData3D::GetVertexCount() const 
 {
     return m_vertexCount;
 }
@@ -258,35 +207,16 @@ int CObjectVisualData2D::GetVertexCount() const
 /************************************************************************
 *    desc:  Get the index count
 ************************************************************************/
-int CObjectVisualData2D::GetIndexCount() const 
+int CObjectVisualData3D::GetIndexCount() const 
 {
     return m_indexCount;
 }
 
 
 /************************************************************************
-*    desc:  Get the frame count
-************************************************************************/
-uint CObjectVisualData2D::GetFrameCount() const 
-{
-    return m_textureIDVec.size();
-}
-
-
-/************************************************************************
 *    desc:  Get the vertex scale
 ************************************************************************/
-const CPoint<float> & CObjectVisualData2D::GetVertexScale() const 
+const CPoint<float> & CObjectVisualData3D::GetVertexScale() const 
 {
     return m_vertexScale;
 }
-
-
-/************************************************************************
-*    desc:  Is alpha blending enabled?
-************************************************************************/
-bool CObjectVisualData2D::IsAlphaBlend() const
-{
-    return m_blendAlpha;
-}
-

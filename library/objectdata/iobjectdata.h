@@ -8,9 +8,6 @@
 #ifndef __iobject_data_h__
 #define __iobject_data_h__
 
-// Forward declaration(s)
-class CObjectVisualData2D;
-
 class iObjectData
 {
 public:
@@ -20,9 +17,6 @@ public:
 
     // Destructor
     virtual ~iObjectData(){}
-
-    // Access functions for the visual data
-    virtual const CObjectVisualData2D & GetVisualData() const = 0;
 
     // Is this 2D data?
     virtual bool Is2D() const

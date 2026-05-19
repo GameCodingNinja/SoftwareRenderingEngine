@@ -11,7 +11,9 @@
 // Game lib dependencies
 #include <objectdata/iobjectdata.h>
 #include <objectdata/objectdata2d.h>
+#include <objectdata/objectdata3d.h>
 #include <2d/visualcomponent2d.h>
+#include <3d/visualcomponent3d.h>
 
 /************************************************************************
 *    desc:  Constructer
@@ -23,11 +25,10 @@ CSprite::CSprite( const iObjectData & objectData )
     {
         m_upVisualComponent.reset( new CVisualComponent2d( static_cast<const CObjectData2D &>(objectData) ) );
     }
-    // Future 3D visual component would go here
-    //else if( objectData.Is3D() )
-    //{
-    //    m_upVisualComponent.reset( new CVisualComponent3d( static_cast<const CObjectData3D &>(objectData) ) );
-    //}
+    else if( objectData.Is3D() )
+    {
+        m_upVisualComponent.reset( new CVisualComponent3d( static_cast<const CObjectData3D &>(objectData) ) );
+    }
 
 }   // constructor
 
