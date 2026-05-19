@@ -143,7 +143,7 @@ void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> 
         }
 
         // If the passed in size reference is empty, set it to the texture size
-        if( rSize.IsEmpty() )
+        if( rSize.isEmpty() )
             rSize = texture.GetSize();
     }
 

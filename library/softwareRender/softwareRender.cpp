@@ -248,7 +248,7 @@ void CSoftwareRender::Render2D( const CMatrix & matrix, const uint vertCount, co
     for( uint i = 0; i < vertCount; ++i )
     {
         // Transform the verts
-        matrix.Transform( pTrans[i].vert, pVert[i].vert );
+        matrix.transform( pTrans[i].vert, pVert[i].vert );
 
         // Convert to screen coordinates
         pTrans[i].vert.x = (pTrans[i].vert.x * m_halfScreen.w) + m_halfScreen.w;
@@ -637,13 +637,13 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
     for( uint i = 0; i < vertCount; ++i )
     {
         // Transform the verts (computes x, y, z but not w)
-        matrix.Transform( pTrans[i].pos, pVert[i].vert );
+        matrix.transform( pTrans[i].pos, pVert[i].vert );
 
         // Compute W from the projection matrix
-        pTrans[i].w = ( pVert[i].vert.x * mat[m03] )
-                    + ( pVert[i].vert.y * mat[m13] )
-                    + ( pVert[i].vert.z * mat[m23] )
-                    + mat[m33];
+        pTrans[i].w = ( pVert[i].vert.x * mat[CMatrix::m03] )
+                    + ( pVert[i].vert.y * mat[CMatrix::m13] )
+                    + ( pVert[i].vert.z * mat[CMatrix::m23] )
+                    + mat[CMatrix::m33];
 
         // Store raw UVs for clipping interpolation
         pTrans[i].u = pVert[i].uv.u;

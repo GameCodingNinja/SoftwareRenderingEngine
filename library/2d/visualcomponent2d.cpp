@@ -55,7 +55,7 @@ void CVisualComponent2d::Render( const CMatrix & matrix )
         {
             // Calculate the final matrix
             CMatrix finalMatrix;
-            finalMatrix.Scale( m_visualData.GetVertexScale() );
+            finalMatrix.setScale( m_visualData.GetVertexScale() );
             finalMatrix *= matrix;
 
             CSoftwareRender::Instance().Render2D( finalMatrix, m_vertexCount, m_IndexCount, m_textureID, m_vbo, m_ibo, m_color, m_visualData.IsAlphaBlend() );

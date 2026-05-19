@@ -54,8 +54,8 @@ void CSprite::Update()
 ************************************************************************/
 void CSprite::Render( const CMatrix & matrix )
 {
-    if( m_visible )
-        m_upVisualComponent->Render( m_trans_matrix * matrix );
+    if( isVisible() )
+        m_upVisualComponent->Render( m_matrix * matrix );
 
 }	// Render
 

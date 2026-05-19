@@ -3,26 +3,30 @@
 *    FILE NAME:       size.h
 *
 *    DESCRIPTION:     Size class
-************************************************************************/  
+************************************************************************/
 
-#ifndef __size_h__
-#define __size_h__
+#pragma once
 
+// Standard lib dependencies
 #include <math.h>
+#include <complex>
 
-#ifdef _MSC_VER
+#if defined(_WINDOWS)
 #pragma warning(disable : 4244)
 #endif
 
-template <class type>
+template <typename type>
+class CPoint;
+
+template <typename type>
 class CSize
 {
 public:
 
-    // size values. 
+    // size values.
     type w, h;
 
-    /************************************************************************                                                             
+    /************************************************************************
     *    desc:  Constructor
     ************************************************************************/
     CSize():w(0),h(0)
@@ -40,22 +44,17 @@ public:
     {
     }
 
-    /************************************************************************                                                             
+    /************************************************************************
     *    desc:  Get functions
     ************************************************************************/
-    type GetW() const
+    type getW() const
     { return w; }
 
-    type GetH() const
+    type getH() const
     { return h; }
 
-
-    /************************************************************************                                                             
-    *    desc:  The multiplication operator 
-    *
-    *    param:  CSize & size * size to multiply
-    *
-    *    return: CSize - multiplied size
+    /************************************************************************
+    *    desc:  The multiplication operator
     ************************************************************************/
     CSize operator * ( const CSize & size ) const
     {
@@ -66,13 +65,6 @@ public:
         return tmp;
     }
 
-    /************************************************************************                                                             
-    *    desc:  The multiplication operator 
-    *
-    *    param:  float value - value to multiply
-    *
-    *    return: CSize - multiplied size
-    ************************************************************************/
     CSize operator * ( float value ) const
     {
         CSize tmp;
@@ -82,13 +74,6 @@ public:
         return tmp;
     }
 
-    /************************************************************************                                                             
-    *    desc:  The multiplication operator 
-    *
-    *    param:  int value - value to multiply
-    *
-    *    return: CSize - multiplied size
-    ************************************************************************/
     CSize operator * ( int value ) const
     {
         CSize tmp;
@@ -98,12 +83,18 @@ public:
         return tmp;
     }
 
-    /************************************************************************                                                             
-    *    desc:  The division operator 
-    *
-    *    param:  CSize & size - size to divide
-    *
-    *    return: CSize - divided size
+    template <typename U>
+    CSize<U> operator * ( const CPoint<U> & value ) const
+    {
+        CSize tmp;
+        tmp.w = w * value.x;
+        tmp.h = h * value.y;
+
+        return tmp;
+    }
+    
+    /************************************************************************
+    *    desc:  The division operator
     ************************************************************************/
     CSize operator / ( const CSize & size ) const
     {
@@ -114,13 +105,6 @@ public:
         return tmp;
     }
 
-    /************************************************************************                                                             
-    *    desc:  The division operator 
-    *
-    *    param:  float value - value to divide
-    *
-    *    return: CSize - divided size
-    ************************************************************************/
     CSize operator / ( float value ) const
     {
         CSize tmp;
@@ -130,13 +114,6 @@ public:
         return tmp;
     }
 
-    /************************************************************************                                                             
-    *    desc:  The division operator 
-    *
-    *    param:  int value - value to divide
-    *
-    *    return: CSize - divided size
-    ************************************************************************/
     CSize operator / ( int value ) const
     {
         CSize tmp;
@@ -145,14 +122,9 @@ public:
 
         return tmp;
     }
-
-
-    /************************************************************************                                                             
-    *    desc:  The addition operator 
-    *
-    *    param:  CSize & size - size to add
-    *
-    *    return: CSize - added size
+    
+    /************************************************************************
+    *    desc:  The addition operator
     ************************************************************************/
     CSize operator + ( const CSize & size ) const
     {
@@ -161,16 +133,28 @@ public:
         tmp.h = h + size.h;
 
         return tmp;
+    }
+    
+    CSize operator + ( float value ) const
+    {
+        CSize tmp;
+        tmp.w = w + static_cast<type>(value);
+        tmp.h = h + static_cast<type>(value);
 
-    }   // operator +
+        return tmp;
+    }
+    
+    CSize operator + ( int value ) const
+    {
+        CSize tmp;
+        tmp.w = w + static_cast<type>(value);
+        tmp.h = h + static_cast<type>(value);
 
+        return tmp;
+    }
 
-    /************************************************************************                                                             
-    *    desc:  The subtraction operator 
-    *
-    *    param:  CSize & size - size to subtract
-    *
-    *    return: CSize - subtracted size
+    /************************************************************************
+    *    desc:  The subtraction operator
     ************************************************************************/
     CSize operator - ( const CSize & size ) const
     {
@@ -179,16 +163,82 @@ public:
         tmp.h = h - size.h;
 
         return tmp;
+    }
+    
+    CSize operator - ( float value ) const
+    {
+        CSize tmp;
+        tmp.w = w - static_cast<type>(value);
+        tmp.h = h - static_cast<type>(value);
 
-    }   // operator -
+        return tmp;
+    }
+    
+    CSize operator - ( int value ) const
+    {
+        CSize tmp;
+        tmp.w = w - static_cast<type>(value);
+        tmp.h = h - static_cast<type>(value);
 
+        return tmp;
+    }
 
-    /************************************************************************                                                             
-    *    desc:  The addition operator 
-    *
-    *    param:  CSize & size - size to add
-    *
-    *    return: CSize - added size
+    /************************************************************************
+    *    desc:  The multiplication equal operator
+    ************************************************************************/
+    CSize operator *= ( const CSize & size )
+    {
+        w *= size.w;
+        h *= size.h;
+
+        return *this;
+    }
+
+    CSize operator *= ( float value )
+    {
+        w *= static_cast<type>(value);
+        h *= static_cast<type>(value);
+
+        return *this;
+    }
+
+    CSize operator *= ( int value )
+    {
+        w *= static_cast<type>(value);
+        h *= static_cast<type>(value);
+
+        return *this;
+    }
+
+    /************************************************************************
+    *    desc:  The division equal operator
+    ************************************************************************/
+    CSize operator /= ( const CSize & size )
+    {
+        w /= size.w;
+        h /= size.h;
+
+        return *this;
+    }
+
+    CSize operator /= ( float value )
+    {
+        w /= static_cast<type>(value);
+        h /= static_cast<type>(value);
+
+        return *this;
+    }
+
+    CSize operator /= ( int value )
+    {
+        w /= static_cast<type>(value);
+        h /= static_cast<type>(value);
+
+        return *this;
+    }
+
+    /************************************************************************
+    *    desc:  The addition operator
     ************************************************************************/
     CSize operator += ( const CSize & size )
     {
@@ -196,16 +246,26 @@ public:
         h += size.h;
 
         return *(this);
+    }
+    
+    CSize operator += ( float value )
+    {
+        w += static_cast<type>(value);
+        h += static_cast<type>(value);
 
-    }   // operator +=
+        return *(this);
+    }
+    
+    CSize operator += ( int value )
+    {
+        w += static_cast<type>(value);
+        h += static_cast<type>(value);
 
+        return *(this);
+    }
 
-    /************************************************************************                                                             
-    *    desc:  The subtraction operator 
-    *
-    *    param:  CSize & size - size to subtract
-    *
-    *    return: CSize - subtracted size
+    /************************************************************************
+    *    desc:  The subtraction operator
     ************************************************************************/
     CSize operator -= ( const CSize & size )
     {
@@ -213,16 +273,26 @@ public:
         h -= size.h;
 
         return *(this);
+    }
+    
+    CSize operator -= ( float value )
+    {
+        w -= static_cast<type>(value);
+        h -= static_cast<type>(value);
 
-    }   // operator -=
+        return *(this);
+    }
+    
+    CSize operator -= ( int value )
+    {
+        w -= static_cast<type>(value);
+        h -= static_cast<type>(value);
 
+        return *(this);
+    }
 
-    /************************************************************************                                                             
-    *    desc:  The equate operator 
-    *
-    *    param:  CSize & size - size to compair
-    *
-    *    return: bool
+    /************************************************************************
+    *    desc:  The equate operator
     ************************************************************************/
     bool operator == ( const CSize & size ) const
     {
@@ -230,16 +300,10 @@ public:
             return true;
 
         return false;
+    }
 
-    }   // operator ==
-
-
-    /************************************************************************                                                             
-    *    desc:  The equate operator 
-    *
-    *    param:  CSize & size - size to compair
-    *
-    *    return: bool
+    /************************************************************************
+    *    desc:  The equate operator
     ************************************************************************/
     bool operator != ( const CSize & size ) const
     {
@@ -247,51 +311,136 @@ public:
             return false;
 
         return true;
-
-    }   // operator !=
-
-
-    /************************************************************************                                                             
-    *    desc:  Does this size not have any data? 
-    *
-    *    return: bool
+    }
+    
+    /************************************************************************
+    *    desc:  Greater than operator
     ************************************************************************/
-    bool IsEmpty() const
+    bool operator > ( const CSize & size ) const
     {
-        return ( IsWEmpty() && IsHEmpty() );
+        if( ( w > size.w ) || ( h > size.h ) )
+            return true;
+
+        return false;
+    }
+    
+    /************************************************************************
+    *    desc:  Greater than or equal to operator
+    ************************************************************************/
+    bool operator >= ( const CSize & size ) const
+    {
+        if( ( w >= size.w ) || ( h >= size.h ) )
+            return true;
+
+        return false;
+    }
+    
+    /************************************************************************
+    *    desc:  Less than or equal to operator
+    ************************************************************************/
+    bool operator < ( const CSize & size ) const
+    {
+        if( ( w < size.w ) || ( h < size.h ) )
+            return true;
+
+        return false;
+    }
+    
+    /************************************************************************
+    *    desc:  Less than or equal to operator
+    ************************************************************************/
+    bool operator <= ( const CSize & size ) const
+    {
+        if( ( w <= size.w ) || ( h <= size.h ) )
+            return true;
+
+        return false;
+    }
+    
+    /************************************************************************
+    *    desc:  Does this size not have any data?
+    ************************************************************************/
+    bool isEmpty() const
+    {
+        return ( isWEmpty() && isHEmpty() );
     }
 
-    bool IsWEmpty() const
+    bool isWEmpty() const
     {
+        #if defined(__GNUC__)
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wstrict-aliasing"
+        #endif
         // This looks at the bits of the data as an int
         return ( (0 == w) || (*(int*)&w == 0) );
+        #if defined(__GNUC__)
+        #pragma GCC diagnostic pop
+        #endif
+    }
 
-    }   // IsWEmpty
-
-    bool IsHEmpty() const
+    bool isHEmpty() const
     {
+        #if defined(__GNUC__)
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wstrict-aliasing"
+        #endif
         // This looks at the bits of the data as an int
         return ( (0 == h) || (*(int*)&h == 0) );
+        #if defined(__GNUC__)
+        #pragma GCC diagnostic pop
+        #endif
+    }
 
-    }   // IsWEmpty
-
-    /************************************************************************                                                             
-    *    desc:  Reset the data 
+    /************************************************************************
+    *    desc:  Clear the data
     ************************************************************************/
-    void Reset()
+    void clear()
     {
         w = 0;
         h = 0;
     }
-
-    /************************************************************************                                                             
-    *    desc:  Round out the floating point number 
+    
+    /************************************************************************
+    *    desc:  Set the size data
     ************************************************************************/
-    void Round()
+    void set( type _w, type _h )
+    {
+        w = _w;
+        h = _h;
+    }
+
+    /************************************************************************
+    *    desc:  Round out the floating point number
+    ************************************************************************/
+    void round()
     {
         w = floor(w + 0.5);
         h = floor(h + 0.5);
     }
-};
 
-#endif  // __size_h__
+    /************************************************************************
+    *    desc:  Get the squared length of the size from the origin
+    ************************************************************************/
+    type getLengthSquared() const
+    {
+        return ( w * w ) +  ( h * h );
+    }
+
+    /************************************************************************
+    *    desc:  Get the length of the size from the origin
+    ************************************************************************/
+    type getLength() const
+    {
+        return std::sqrt( getLengthSquared() );
+    }
+    
+    /************************************************************************
+    *    desc:  Swap the width and height
+    ************************************************************************/
+    void swap()
+    {
+        type tmp = w;
+        w = h;
+        h = tmp;
+    }
+};

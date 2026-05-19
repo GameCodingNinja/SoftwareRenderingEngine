@@ -44,7 +44,7 @@ void CDevice::Create()
 
     // Create the native window
     m_upWindow = CreateNativeWindow();
-    m_upWindow->Create( size.GetW(), size.GetH() );
+    m_upWindow->Create( size.getW(), size.getH() );
 
     // Set the software render surface to the window's framebuffer
     CSoftwareRender::Instance().SetSurface( m_upWindow->GetFrameBuffer() );
@@ -65,18 +65,18 @@ void CDevice::Create()
 void CDevice::CreateProjMatrix()
 {
     // Calc the aspect ratio
-    float aspectRatio = CSettings::Instance().GetSize().GetW() / 
-                        CSettings::Instance().GetSize().GetH();
+    float aspectRatio = CSettings::Instance().GetSize().getW() / 
+                        CSettings::Instance().GetSize().getH();
 
-    m_perspectiveMatrix.PerspectiveFovRH(
+    m_perspectiveMatrix.perspectiveFovRH(
         CSettings::Instance().GetViewAngle(),
         aspectRatio,
         CSettings::Instance().GetMinZdist(),
         CSettings::Instance().GetMaxZdist() );
 
-    m_orthographicMatrix.OrthographicRH(
-        CSettings::Instance().GetDefaultSize().GetW(),
-        CSettings::Instance().GetDefaultSize().GetH(),
+    m_orthographicMatrix.orthographicRH(
+        CSettings::Instance().GetDefaultSize().getW(),
+        CSettings::Instance().GetDefaultSize().getH(),
         CSettings::Instance().GetMinZdist(),
         CSettings::Instance().GetMaxZdist() );
 

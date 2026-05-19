@@ -134,7 +134,7 @@ namespace NParseHelper
             loaded = true;
 
             if( scaleNode.isAttributeSet( "uniform" ) )
-                    point.Set( std::atof( scaleNode.getAttribute( "uniform" ) ) );
+                    point.set( std::atof( scaleNode.getAttribute( "uniform" ) ) );
 
             else
             {
@@ -186,7 +186,7 @@ namespace NParseHelper
                 color.a = std::atof(colorNode.getAttribute( "a" ));
 
             // Convert if in RGBA format
-            color.Convert();
+            color.convert();
         }
 
         return color;

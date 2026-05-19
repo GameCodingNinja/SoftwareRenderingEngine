@@ -117,7 +117,7 @@ void CObjectPhysicsData2D::LoadFromNode( const XMLNode & objectNode )
                 m_rightMod = atof( sizeModNode.getAttribute( "right" ) );
 
             // If we've set the physics size, let's modify it
-            if( !m_size.IsEmpty() )
+            if( !m_size.isEmpty() )
             {
                 m_size.w += m_rightMod + m_leftMod;
                 m_size.h += m_topMod + m_bottomMod;

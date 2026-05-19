@@ -4,108 +4,166 @@
 *    DESCRIPTION:     object class
 ************************************************************************/
 
-#ifndef __object_h__
-#define __object_h__
+#pragma once
 
 // Game lib dependencies
+#include <common/size.h>
 #include <common/point.h>
-#include <common/matrix.h>
 #include <common/bitmask.h>
+#include <common/matrix.h>
+
+// Standard lib dependencies
+#include <cstdint>
 
 // Forward declaration(s)
-class CMatrix;
 struct XMLNode;
 
 class CObject
 {
 public:
+
+    enum
+    {
+        // No parameters
+        NONE                = 0x00,
+
+        // Transform parameters
+        TRANSLATE           = 0x01,
+        ROTATE              = 0x02,
+        SCALE               = 0x04,
+        CENTER_POINT        = 0x08,
+        CROP_OFFSET         = 0x10,
+
+        // Translate parameters
+        TRANSFORM           = 0x20,
+        WAS_TRANSFORMED     = 0x40,
+
+        // Visible bit
+        VISIBLE             = 0x100,
+    };
     
     CObject();
     virtual ~CObject();
 
     // Load the transform data from node
-    void LoadTransFromNode( const XMLNode & node );
+    void loadTransFromNode( const XMLNode & node );
 
-    // Set-Get the object's position
-    void SetPos( const CPoint<float> & position );
-    const CPoint<float> & GetPos() const;
+    // Set/Get the object's position
+    void setPos( const CPoint<float> & position );
+    void setPos( float x = 0, float y = 0, float z = 0 );
+    const CPoint<float> & getPos() const;
 
     // Increment the object's position
-    void IncPos( const CPoint<float> & position );
+    void incPos( const CPoint<float> & position );
+    void incPos( float x = 0, float y = 0, float z = 0 );
 
-    // Set-Get the object's rotation
-    void SetRot( const CPoint<float> & rotation );
-    const CPoint<float> & GetRot() const;
+    // Invert the object's position
+    void invertPos();
+
+    // Set/Get the object's rotation
+    // NOTE: Rotation is stored as radians
+    void setRot( const CPoint<float> & rotation, bool convertToRadians = true );
+    void setRot( float x = 0, float y = 0, float z = 0, bool convertToRadians = true );
+    const CPoint<float> & getRot() const;
 
     // Increment the object's rotation
-    void IncRot( const CPoint<float> & rotation );
+    // NOTE: Rotation is stored as radians
+    void incRot( const CPoint<float> & rotation, bool convertToRadians = true );
+    void incRot( float x = 0, float y = 0, float z = 0, bool convertToRadians = true );
 
     // Set the object's scale
-    void SetScale( float scale );
-    void SetScale( const CPoint<float> & scale );
+    void setScale( const CPoint<float> & scale );
+    void setScale( float x = 1, float y = 1, float z = 1 );
 
     // Increment the object's scale
-    void IncScale( float scale );
-    void IncScale( const CPoint<float> & scale );
+    void incScale( const CPoint<float> & scale );
+    void incScale( float x = 1, float y = 1, float z = 1 );
 
     // Get the object's scale
-    const CPoint<float> & GetScale() const;
+    const CPoint<float> & getScale() const;
+    
+    // Set/Get the object's center position
+    void setCenterPos( const CPoint<float> & position );
+    void setCenterPos( float x = 0, float y = 0, float z = 0 );
+    const CPoint<float> & getCenterPos() const;
+    
+    // Set the object's crop offset
+    void setCropOffset( const CSize<int16_t> & offset );
 
     // Set the object's visibility
-    void SetVisible( bool value = true );
+    void setVisible( bool value = true );
 
     // Is the object visible
-    bool IsVisible() const;
+    bool isVisible() const;
+
+public: // transform related members
+    
+    // Copy the transform to the passed in object
+    void copyTransform( const CObject * pObject );
+    
+    // Get the parameters
+    CBitmask & getParameters();
 
     // Transform - One call for those objects that don't have parents
-    void Transform();
-    void Transform( const CMatrix & matrix, bool tranformWorldPos = false );
+    virtual void transform();
+    virtual void transform( const CObject & object );
 
     // Get the object's matrix
-    const CMatrix & GetMatrix() const;
+    const CMatrix & getMatrix() const;
+    
+    // Get the object's rotation matrix
+    virtual const CMatrix & getRotMatrix() const;
+    virtual CMatrix & getRotMatrix();
 
-    // Was the world position transformed?
-    bool WasWorldPosTranformed() const;
+    // Was this object transformed?
+    bool wasTranformed() const;
 
-    // Force the world transform
-    void ForceWorldTransform();
+    // Force the transform
+    void forceTransform();
+    
+    // Get the object's translated position
+    const CPoint<float> & getTransPos() const;
+    
+    // Use a point to set a column - used for 3d physics
+    virtual void setRotMatrixColumn( const int col, const float x, const float y, const float z ){};
 
-private:
+protected: // transform related members
 
     // Transform the object in local space
-    void TransformLocal();
+    void transformLocal( CMatrix & matrix );
+    
+    // Apply the scale
+    virtual void applyScale( CMatrix & matrix );
+
+    // Apply the rotation
+    virtual void applyRotation( CMatrix & matrix );
 
 protected:
-
-    // Translated position
-    CPoint<float> m_trans_pos;
-
-    // Visibility flag
-    bool m_visible;
-
-    // translated matrix class
-    CMatrix m_trans_matrix;
-
-private:
-
-    // Bitmask letting us know if the object needs
-    // to be transformed and/or projected
+    
+    // Bitmask settings to record if the object needs to be transformed
     CBitmask m_parameters;
-
-    // local matrix
-    CMatrix m_matrix;
 
     // Local position
     CPoint<float> m_pos;
 
-    // Local Rotation
+    // Local Rotation stored in radians
     CPoint<float> m_rot;
 
     // Local scale
     CPoint<float> m_scale;
+    
+    // The center point. Point of rotation
+    // This is used for defining a different center point
+    CPoint<float> m_centerPos;
+    
+    // Offset due to a sprite sheet crop.
+    CSize<int16_t> m_cropOffset;
 
-    // Flag to indicate the need to transform the world position
-    bool m_tranformWorldPos;
+    // Translated position
+    CPoint<float> m_transPos;
+
+protected: // transform related members
+
+    // local matrix
+    CMatrix m_matrix;
 };
-
-#endif  // __object_2d_h__

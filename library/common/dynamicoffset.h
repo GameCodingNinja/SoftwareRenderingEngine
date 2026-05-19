@@ -67,7 +67,7 @@ public:
     CPoint<float> GetDynamicPos( CPoint<float> pos, CSize<float> screenCenter )
     {
         // Strip out any fractional component for correct rendering
-        screenCenter.Round();
+        screenCenter.round();
 
         if( IsBitSet( CDynamicOffset::EDO_LEFT ) )
             pos.x = -(screenCenter.w - point.x);

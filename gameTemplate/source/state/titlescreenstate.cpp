@@ -30,19 +30,19 @@ CTitleScreenState::CTitleScreenState()
     m_gameState = EGS_TITLE_SCREEN;
     m_nextState = EGS_GAME_LOAD;
 
-    //m_background.SetRot( CPoint<float>(0,0,65) );
-    //m_background.SetPos( CPoint<float>(0,-400,0) );
-    //m_background.SetPos( CPoint<float>(-400,0,0) );
-    //m_background.SetScale( CPoint<float>(.5,.5,0) );
+    //m_background.setRot( CPoint<float>(0,0,65) );
+    //m_background.setPos( CPoint<float>(0,-400,0) );
+    //m_background.setPos( CPoint<float>(-400,0,0) );
+    //m_background.setScale( CPoint<float>(.5,.5,0) );
 
-    m_background.SetPos( CPoint<float>( -50,0,0) );
-    m_background2.SetPos( CPoint<float>( 300,-300,0) );
-    m_background3.SetPos( CPoint<float>( 300,300,0) );
-    m_enemy.SetPos( CPoint<float>( -200,0,0) );
-    m_logo.SetPos( CPoint<float>( 0, 0, -6) );
-    m_logo.SetScale( CPoint<float>(2,2, 2) );
+    m_background.setPos( CPoint<float>( -50,0,0) );
+    m_background2.setPos( CPoint<float>( 300,-300,0) );
+    m_background3.setPos( CPoint<float>( 300,300,0) );
+    m_enemy.setPos( CPoint<float>( -200,0,0) );
+    m_logo.setPos( CPoint<float>( 0, 0, -6) );
+    m_logo.setScale( CPoint<float>(2,2, 2) );
 
-    m_background.SetRot( CPoint<float>(180,0,0) );
+    m_background.setRot( CPoint<float>(180,0,0) );
 
 }	// Constructer
 
@@ -68,10 +68,10 @@ void CTitleScreenState::Update()
 {
     CCommonState::Update();
 
-    const float elapsed = CHighResTimer::Instance().GetElapsedTime();
-    //m_background.IncRot( CPoint<float>(0,0,0.2f * elapsed) );
+    //const float elapsed = CHighResTimer::Instance().GetElapsedTime();
+    //m_background.incRot( CPoint<float>(0,0,0.2f * elapsed) );
 
-    m_logo.IncRot( CPoint<float>(0, 0.1f * elapsed, 0) );
+    //m_logo.incRot( CPoint<float>(0, 0.1f * elapsed, 0) );
 
 }	// Update
 
@@ -83,11 +83,11 @@ void CTitleScreenState::Transform()
 {
     CCommonState::Transform();
 
-    m_background.Transform();
-    m_background2.Transform();
-    m_background3.Transform();
-    m_enemy.Transform();
-    m_logo.Transform();
+    m_background.transform();
+    m_background2.transform();
+    m_background3.transform();
+    m_enemy.transform();
+    m_logo.transform();
 
 }	// Transform */
 

@@ -4,17 +4,16 @@
 *    DESCRIPTION:     Color class
 ************************************************************************/
 
-#ifndef __color_h__
-#define __color_h__
+#pragma once
+
+// Game lib dependencies
+#include <common/defs.h>
 
 // Standard lib dependencies
 #include <string>
 #include <cmath>
 
-// Game lib dependencies
-#include <common/defs.h>
-
-#ifdef _MSC_VER
+#if defined(_WINDOWS)
 #pragma warning(disable : 4244)
 #endif
 
@@ -34,52 +33,51 @@ public:
     ************************************************************************/
     CColor():r(1),g(1),b(1),a(1){};
     CColor(float _r, float _g, float _b, float _a) : r(_r), g(_g), b(_b), a(_a)
-    { Convert(); }
+    { convert(); }
 
     // Copy constructor
     CColor( const CColor & color ) : r(color.r), g(color.g), b(color.b), a(color.a)
-    { Convert(); }
+    { convert(); }
 
     
     /************************************************************************                                                             
     *    desc:  Get functions
     ************************************************************************/
-    float GetR() const
+    float getR() const
     { return r; }
 
-    float GetG() const
+    float getG() const
     { return g; }
 
-    float GetB() const
+    float getB() const
     { return b; }
 
-    float GetA() const
+    float getA() const
     { return a; }
 
     /************************************************************************                                                             
-    *    desc:  Convert from RGBA to 
+    *    desc:  Convert from integer to decimal
     ************************************************************************/
-    void Convert()
-    {
-        // See if we are using whole RGB numbers and do the conversion
+    void convert()
+	{
         // 0.00390625f = 1 / 256;
-        if( r > 1.5f )
-                r *= defs_RGB_TO_DEC;
+        if (r > 1.5f)
+            r *= defs_RGB_TO_DEC;
 
-        if( g > 1.5f )
-                g *= defs_RGB_TO_DEC;
+        if (g > 1.5f)
+            g *= defs_RGB_TO_DEC;
 
-        if( b > 1.5f )
-                b *= defs_RGB_TO_DEC;
+        if (b > 1.5f)
+            b *= defs_RGB_TO_DEC;
 
-        if( a > 1.5f )
-                a *= defs_RGB_TO_DEC;
+        if (a > 1.5f)
+            a *= defs_RGB_TO_DEC;
     }
 
     /************************************************************************                                                             
     *    desc:  Clear the values
     ************************************************************************/
-    void Clear()
+    void clear()
     {
         r = 0;
         g = 0;
@@ -90,7 +88,7 @@ public:
     /************************************************************************                                                             
     *    desc:  Reset the values back to 1
     ************************************************************************/
-    void Reset()
+    void reset()
     {
         r = 1;
         g = 1;
@@ -100,10 +98,6 @@ public:
 
     /************************************************************************                                                             
     *    desc:  The equality operator 
-    *
-    *    param: CColor & color - color to equate
-    *
-    *    ret:	bool - true or false
     ************************************************************************/
     bool operator == ( const CColor & color ) const
     {
@@ -112,15 +106,10 @@ public:
             return true;
         }
         return false;
-
-    }   // operator ==
+    }
 
     /************************************************************************                                                             
     *    desc:  The inequality operator 
-    *
-    *    param: CColor & color - color to check
-    *
-    *    ret:	bool - true or false
     ************************************************************************/
     bool operator != ( const CColor & color ) const
     {
@@ -129,9 +118,7 @@ public:
             return true;
         }
         return false;
-
-    }   // operator !=
-
+    }
 
     /********************************************************************************************                                                             
     *    SUBTRACTION
@@ -139,10 +126,6 @@ public:
 
     /************************************************************************                                                             
     *    desc:  The subtraction operator 
-    *
-    *    param: CColor & color - color to subtract
-    *
-    *    ret:	CColor - subtracted color
     ************************************************************************/
     CColor operator - ( const CColor & color ) const
     {
@@ -153,15 +136,10 @@ public:
         tmp.a = a - color.a;
 
         return tmp;
-
-    }   // operator -
+    }
 
     /************************************************************************                                                             
     *    desc:  The subtraction operator 
-    *
-    *    param: type * value - value to subtract
-    *
-    *    ret:	CColor - subtracted color
     ************************************************************************/
     CColor operator - ( float value ) const
     {
@@ -172,15 +150,10 @@ public:
         tmp.a = a - value;
 
         return tmp;
-
-    }   // operator -
+    }
 
     /************************************************************************                                                             
     *    desc:  The addition operator 
-    *
-    *    param:  CColor & color - color to add
-    *
-    *    return: CColor - added color
     ************************************************************************/
     CColor operator -= ( const CColor & color )
     {
@@ -190,15 +163,10 @@ public:
         a -= color.a;
 
         return *this;
-
-    }   // operator -=
+    }
 
     /************************************************************************                                                             
     *    desc:  The addition operator 
-    *
-    *    param: type value - value to add
-    *
-    *    ret:	CColor - added color
     ************************************************************************/
     CColor operator -= ( float value )
     {
@@ -208,9 +176,7 @@ public:
         a -= value;
 
         return *this;
-
-    }   // operator -=
-
+    }
 
     /********************************************************************************************                                                             
     *    ADDITION
@@ -218,10 +184,6 @@ public:
 
     /************************************************************************                                                             
     *    desc:  The addition operator 
-    *
-    *    param: CColor & color - color to add
-    *
-    *    ret:	CColor - added color
     ************************************************************************/
     CColor operator + ( const CColor & color ) const
     {
@@ -232,15 +194,10 @@ public:
         tmp.a = a + color.a;
 
         return tmp;
-
-    }   // operator +
+    }
 
     /************************************************************************                                                             
     *    desc:  The addition operator 
-    *
-    *    param: type value - value to add
-    *
-    *    ret:	CColor - added color
     ************************************************************************/
     CColor operator + ( float value ) const
     {
@@ -251,15 +208,10 @@ public:
         tmp.a = a + value;
 
         return tmp;
-
-    }   // operator +
+    }
 
     /************************************************************************                                                             
     *    desc:  The addition operator 
-    *
-    *    param: CColor & color - color to add
-    *
-    *    ret:	CColor - added color
     ************************************************************************/
     CColor operator += ( const CColor & color )
     {
@@ -269,15 +221,10 @@ public:
         a += color.a;
 
         return *this;
-
-    }   // operator +=
+    }
 
     /************************************************************************                                                             
     *    desc:  The addition operator 
-    *
-    *    param: type value - value to add
-    *
-    *    ret:	CColor - added color
     ************************************************************************/
     CColor operator += ( float value )
     {
@@ -287,9 +234,7 @@ public:
         a += value;
 
         return *this;
-
-    }   // operator +=
-
+    }
 
     /********************************************************************************************                                                             
     *    DIVISION
@@ -297,10 +242,6 @@ public:
 
     /************************************************************************                                                             
     *    desc:  The division operator 
-    *
-    *    param: CColor & color - color to divide by
-    *
-    *    ret:	CColor - divided by color
     ************************************************************************/
     CColor operator / ( const CColor & color ) const
     {
@@ -311,15 +252,10 @@ public:
         tmp.a = a / color.a;
 
         return tmp;
-
-    }   // operator /
+    }
 
     /************************************************************************                                                             
     *    desc:  The addition operator 
-    *
-    *    param: type value - value to divide by
-    *
-    *    ret:	CColor - divided by color
     ************************************************************************/
     CColor operator / ( float value ) const
     {
@@ -330,15 +266,10 @@ public:
         tmp.a = a / value;
 
         return tmp;
-
-    }   // operator /
+    }
 
     /************************************************************************                                                             
     *    desc:  The division operator 
-    *
-    *    param: CColor & color / color to divide
-    *
-    *    ret:	CColor - divided color
     ************************************************************************/
     CColor operator /= ( const CColor & color )
     {
@@ -348,15 +279,10 @@ public:
         a /= color.a;
 
         return *this;
-
-    }   // operator *=
+    }
 
     /************************************************************************                                                             
     *    desc:  The division operator 
-    *
-    *    param: type value / value to divide
-    *
-    *    ret:	CColor - divided color
     ************************************************************************/
     CColor operator /= ( float value )
     {
@@ -366,9 +292,7 @@ public:
         a /= value;
 
         return *this;
-
-    }   // operator *=
-
+    }
 
     /********************************************************************************************                                                             
     *    MULTIPLICATION
@@ -376,10 +300,6 @@ public:
 
     /************************************************************************                                                             
     *    desc:  The multiplication operator 
-    *
-    *    param: CColor & color * color to multiply
-    *
-    *    ret:	CColor - multiplied color
     ************************************************************************/
     CColor operator * ( const CColor & color ) const
     {
@@ -390,15 +310,10 @@ public:
         tmp.a = a * color.a;
 
         return tmp;
-
-    }   // operator *
+    }
 
     /************************************************************************                                                             
     *    desc:  The multiplication operator 
-    *
-    *    param: type value - value to multiply
-    *
-    *    ret:	CColor - multiplied color
     ************************************************************************/
     CColor operator * ( float value ) const
     {
@@ -409,15 +324,10 @@ public:
         tmp.a = a * value;
 
         return tmp;
-
-    }   // operator *
+    }
 
     /************************************************************************                                                             
     *    desc:  The multiplication operator 
-    *
-    *    param: CColor & point - color to multiply
-    *
-    *    ret:	CColor - multiplied color
     ************************************************************************/
     CColor operator *= ( const CColor & color )
     {
@@ -427,15 +337,10 @@ public:
         a *= color.a;
 
         return *this;
-
-    }   // operator *=
+    }
 
     /************************************************************************                                                             
     *    desc:  The multiplication operator 
-    *
-    *    param: type value * value to multiply
-    *
-    *    ret:	CColor - multiplied color
     ************************************************************************/
     CColor operator *= ( float value )
     {
@@ -445,31 +350,21 @@ public:
         a *= value;
 
         return *this;
-
-    }   // operator *=
-
+    }
 
     /************************************************************************                                                             
     *    desc:  Set the point data
     ************************************************************************/
-    void Set( float _r, float _g, float _b, float _a )
+    void set( float _r, float _g, float _b, float _a )
     {
         r = _r;
         g = _g;
         b = _b;
         a = _a;
-
-    }   // Set
-
+    }
 
     /************************************************************************                                                             
     *    desc:  HSV transformation 
-    *
-    *    param: type hue - hue shift (in degrees)
-    *    param: type sat - saturation multiplier (scalar)
-    *    param: type val - value multiplier (scalar)
-    *
-    *    ret:	CColor - adjusted color
     ************************************************************************/
     /*CColor TransformHSV( float hue, float sat, float val )
     {
@@ -491,7 +386,7 @@ public:
         return ret;
     }*/
 
-    void TransformHSV( float hue, float sat, float val )
+    void transformHSV( float hue, float sat, float val )
     {
         float VSU = val * sat * cos(hue * defs_DEG_TO_RAD);
         float VSW = val * sat * sin(hue * defs_DEG_TO_RAD);
@@ -509,25 +404,17 @@ public:
           + (.114 * val + .886 * VSU -.203 * VSW) * _b;
     }
 
-
     /************************************************************************                                                             
     *    desc:  Get a string of the color's data
-    *
-    *	 ret:	string - string of the data
     ************************************************************************/
-    std::string Dump() const
+    std::string dump() const
     {
         std::string printout = "Color( " +
             std::to_string(r) + "r, " +
             std::to_string(g) + "g, " +
             std::to_string(b) + "b, " +
             std::to_string(a) + "a )";
-
         return printout;
-
-    }	// Dump
+    }
 
 };
-
-
-#endif  // __color_h__
