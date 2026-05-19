@@ -21,6 +21,7 @@
 #include <softwareRender/triangleslope.h>
 
 #include <system/iframebuffer.h>
+#include <utilities/settings.h>
 
 // Render a single triangle within a screen strip
 void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax );
@@ -602,11 +603,10 @@ void CSoftwareRender::ClearZBuffer()
 }
 
 /***************************************************************************
-*   desc:  Render 3D with perspective projection and z-buffer
-*
-*   Perspective Projection: ((vert.x / vert.z) * halfW) + halfW
-*                           ((vert.y / vert.z) * halfH) + halfH
-*   Stores 1/Z, U/Z, V/Z for perspective-correct texture mapping
+*   desc:  Render 3D with perspective projection, near-Z clipping, and z-buffer.
+*          Near-Z clipping uses the Sutherland-Hodgman algorithm against
+*          the near plane (W >= nearClip), following the legacy tri3D approach.
+*          Clipping is done in clip space before projection.
 ****************************************************************************/
 void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color )
 {
@@ -614,39 +614,40 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
     CVertex * pVert = (CVertex *)GetVBO( vboId );
     uint * pIBO = GetIBO( iboId );
 
-    CVertex * pTrans = new CVertex[vertCount];
+    // Temporary struct to hold transformed but unprojected vertex data
+    struct TransVert
+    {
+        CPoint<float> pos;  // Clip-space position (x, y, z from matrix transform)
+        float w;            // Clip-space W (represents -eye.z for PerspectiveFovRH)
+        float u, v;         // Raw UV (0-1)
+    };
+
+    TransVert * pTrans = new TransVert[vertCount];
 
     // Get raw matrix data for W computation
     const float * mat = matrix();
 
+    // Near clip distance — W must be >= this to be in front of the near plane.
+    // W equals -eye.z for PerspectiveFovRH, so this matches the frustum near plane.
+    const float nearClip = CSettings::Instance().GetMinZdist();
+
+    // Max clipped output verts from a triangle (clipping can add 1 vertex)
+    const int MAX_CLIP_VERTS = 4;
+
     for( uint i = 0; i < vertCount; ++i )
     {
         // Transform the verts (computes x, y, z but not w)
-        matrix.Transform( pTrans[i].vert, pVert[i].vert );
+        matrix.Transform( pTrans[i].pos, pVert[i].vert );
 
-        // Compute W from the projection matrix (row 3: m03, m13, m23, m33)
-        float w = ( pVert[i].vert.x * mat[m03] )
-                + ( pVert[i].vert.y * mat[m13] )
-                + ( pVert[i].vert.z * mat[m23] )
-                + mat[m33];
+        // Compute W from the projection matrix
+        pTrans[i].w = ( pVert[i].vert.x * mat[m03] )
+                    + ( pVert[i].vert.y * mat[m13] )
+                    + ( pVert[i].vert.z * mat[m23] )
+                    + mat[m33];
 
-        // Near clip: skip verts behind the camera
-        if( w <= 0.0f )
-            w = 0.001f;
-
-        // Calculate 1/W for perspective-correct interpolation and z-buffer
-        float oneOverW = 1.0f / w;
-
-        // Perspective divide and convert to screen coordinates
-        pTrans[i].vert.x = (pTrans[i].vert.x * oneOverW * m_halfScreen.w) + m_halfScreen.w;
-        pTrans[i].vert.y = (pTrans[i].vert.y * oneOverW * m_halfScreen.h) + m_halfScreen.h;
-
-        // Store 1/W in vert.z for z-buffer and perspective correction
-        pTrans[i].vert.z = oneOverW;
-
-        // Convert UV to U/W and V/W for perspective-correct mapping (raw 0-1 range)
-        pTrans[i].uv.u = pVert[i].uv.u * oneOverW;
-        pTrans[i].uv.v = pVert[i].uv.v * oneOverW;
+        // Store raw UVs for clipping interpolation
+        pTrans[i].u = pVert[i].uv.u;
+        pTrans[i].v = pVert[i].uv.v;
     }
 
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per mesh
@@ -666,15 +667,121 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
 
     for( int i = 0; i < triCount; ++i )
     {
-        CRender3d render3d( pText, &m_surfaceData, m_zBuffer.data(), cr, cg, cb, ca, applyColor );
-
-        // Copy over the verts for this triangle
+        // Get the three transformed (unprojected) verts for this triangle
+        TransVert triVerts[TRI];
         for( int j = 0; j < TRI; ++j )
-            render3d.m_vec[j] = pTrans[ pIBO[vIndex++] ];
+            triVerts[j] = pTrans[ pIBO[vIndex++] ];
 
-        // Only keep visible triangles
-        if( !render3d.Cull( m_surfaceData.w, m_surfaceData.h ) )
-            triList.push_back( render3d );
+        // Count how many verts are behind the near clip plane
+        int behindCount = 0;
+        for( int j = 0; j < TRI; ++j )
+            if( triVerts[j].w < nearClip )
+                ++behindCount;
+
+        // All verts behind near plane — skip entirely
+        if( behindCount == TRI )
+            continue;
+
+        // Clipped output verts
+        TransVert clipped[MAX_CLIP_VERTS];
+        int clipCount = 0;
+
+        if( behindCount == 0 )
+        {
+            // No clipping needed — all verts in front of the near plane
+            clipCount = TRI;
+            for( int j = 0; j < TRI; ++j )
+                clipped[j] = triVerts[j];
+        }
+        else
+        {
+            // Sutherland-Hodgman clip against near plane (W >= nearClip)
+            // Following the legacy tri3D ClipProjectXYZ approach
+            int startI = TRI - 1;
+
+            for( int endI = 0; endI < TRI; ++endI )
+            {
+                bool startInside = (triVerts[startI].w >= nearClip);
+                bool endInside   = (triVerts[endI].w >= nearClip);
+
+                if( startInside )
+                {
+                    if( endInside )
+                    {
+                        // Case 1: Both inside — output end vertex
+                        clipped[clipCount++] = triVerts[endI];
+                    }
+                    else
+                    {
+                        // Case 2: Leaving view volume — output intersection
+                        // p = (nearClip - startW) / (endW - startW)
+                        float deltaW = triVerts[endI].w - triVerts[startI].w;
+                        float p = (nearClip - triVerts[startI].w) / deltaW;
+
+                        clipped[clipCount].pos.x = triVerts[startI].pos.x + (triVerts[endI].pos.x - triVerts[startI].pos.x) * p;
+                        clipped[clipCount].pos.y = triVerts[startI].pos.y + (triVerts[endI].pos.y - triVerts[startI].pos.y) * p;
+                        clipped[clipCount].pos.z = triVerts[startI].pos.z + (triVerts[endI].pos.z - triVerts[startI].pos.z) * p;
+                        clipped[clipCount].w = nearClip;
+                        clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
+                        clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
+                        ++clipCount;
+                    }
+                }
+                else
+                {
+                    if( endInside )
+                    {
+                        // Case 3: Entering view volume — output intersection + end vertex
+                        float deltaW = triVerts[endI].w - triVerts[startI].w;
+                        float p = (nearClip - triVerts[startI].w) / deltaW;
+
+                        clipped[clipCount].pos.x = triVerts[startI].pos.x + (triVerts[endI].pos.x - triVerts[startI].pos.x) * p;
+                        clipped[clipCount].pos.y = triVerts[startI].pos.y + (triVerts[endI].pos.y - triVerts[startI].pos.y) * p;
+                        clipped[clipCount].pos.z = triVerts[startI].pos.z + (triVerts[endI].pos.z - triVerts[startI].pos.z) * p;
+                        clipped[clipCount].w = nearClip;
+                        clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
+                        clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
+                        ++clipCount;
+
+                        clipped[clipCount++] = triVerts[endI];
+                    }
+                    // Case 4: Both outside — output nothing
+                }
+
+                startI = endI;
+            }
+        }
+
+        // Skip degenerate results
+        if( clipCount < TRI )
+            continue;
+
+        // Project clipped verts to screen space
+        CVertex projected[MAX_CLIP_VERTS];
+        for( int j = 0; j < clipCount; ++j )
+        {
+            float oneOverW = 1.0f / clipped[j].w;
+
+            projected[j].vert.x = (clipped[j].pos.x * oneOverW * m_halfScreen.w) + m_halfScreen.w;
+            projected[j].vert.y = (clipped[j].pos.y * oneOverW * m_halfScreen.h) + m_halfScreen.h;
+            projected[j].vert.z = oneOverW;              // 1/W for z-buffer
+            projected[j].uv.u = clipped[j].u * oneOverW; // U/W
+            projected[j].uv.v = clipped[j].v * oneOverW; // V/W
+        }
+
+        // Fan-triangulate the clipped polygon (3 verts = 1 tri, 4 verts = 2 tris)
+        for( int j = 1; j < clipCount - 1; ++j )
+        {
+            CRender3d render3d( pText, &m_surfaceData, m_zBuffer.data(), cr, cg, cb, ca, applyColor );
+
+            render3d.m_vec[0] = projected[0];
+            render3d.m_vec[1] = projected[j];
+            render3d.m_vec[2] = projected[j + 1];
+
+            // Only keep visible triangles
+            if( !render3d.Cull( m_surfaceData.w, m_surfaceData.h ) )
+                triList.push_back( render3d );
+        }
     }
 
     // Dispatch strip-rendering jobs: each thread owns a horizontal
@@ -708,7 +815,7 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
         }
     }
 
-    NDelFunc::DeleteArray( pTrans );
+    delete[] pTrans;
 }
 
 /***************************************************************************

@@ -39,8 +39,8 @@ CTitleScreenState::CTitleScreenState()
     m_background2.SetPos( CPoint<float>( 300,-300,0) );
     m_background3.SetPos( CPoint<float>( 300,300,0) );
     m_enemy.SetPos( CPoint<float>( -200,0,0) );
-    m_logo.SetPos( CPoint<float>( 0, 0, -2) );
-    m_logo.SetScale( CPoint<float>(1,1, 1) );
+    m_logo.SetPos( CPoint<float>( 0, 0, -6) );
+    m_logo.SetScale( CPoint<float>(2,2, 2) );
 
     m_background.SetRot( CPoint<float>(180,0,0) );
 
@@ -68,10 +68,10 @@ void CTitleScreenState::Update()
 {
     CCommonState::Update();
 
-    //const float elapsed = CHighResTimer::Instance().GetElapsedTime();
+    const float elapsed = CHighResTimer::Instance().GetElapsedTime();
     //m_background.IncRot( CPoint<float>(0,0,0.2f * elapsed) );
 
-    //m_logo.IncRot( CPoint<float>(0, 0.1f * elapsed, 0) );
+    m_logo.IncRot( CPoint<float>(0, 0.1f * elapsed, 0) );
 
 }	// Update
 
@@ -99,11 +99,11 @@ void CTitleScreenState::PreRender()
 {
     CCommonState::PreRender();
 
-    /*const CMatrix & matrix = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_ORTHOGRAPHIC );
+    const CMatrix & matrix = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_ORTHOGRAPHIC );
     m_background.Render( matrix );
     m_background2.Render( matrix );
     m_background3.Render( matrix );
-    m_enemy.Render( matrix );*/
+    m_enemy.Render( matrix );
 
     const CMatrix & matrix3d = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_PERSPECTIVE );
     m_logo.Render( matrix3d );
