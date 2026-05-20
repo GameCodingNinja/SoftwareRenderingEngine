@@ -27,6 +27,7 @@
 #include <system/iframebuffer.h>
 #include <system/eventqueue.h>
 #include <softwareRender/softwareRender.h>
+#include <managers/cameramanager.h>
 
 // Game dependencies
 #include "../state/startupstate.h"
@@ -40,6 +41,12 @@ CGame::CGame()
       m_pFrameBuffer(nullptr),
       m_gameRunning(false)
 {
+    // Load the settings file
+    CSettings::Instance().loadFromXML("data/settings/settings.cfg");
+
+    // Load the camera data early because many objects init the default camera in their constructor
+    CCameraMgr::Instance().load( "data/objects/camera.lst" );
+
 }   // constructor
 
 
@@ -237,36 +244,13 @@ void CGame::Render()
     // Clear the z-buffer for 3D rendering
     CSoftwareRender::Instance().ClearZBuffer();
 
-    // Do the pre render
-    PreRender();
-
-    // Do the post render
-    PostRender();
+    // Render game content
+    spGameState->Render();
 
     // Do the back buffer swap
     m_pFrameBuffer->Flip();
 
 }   // Render
-
-
-/***************************************************************************
-*    decs:  3D/2D Render of game content
-****************************************************************************/
-void CGame::PreRender()
-{
-    spGameState->PreRender();
-
-}	// PreRender
-
-
-/***************************************************************************
-*    decs:  3D/2D Render of content after post process effects
-****************************************************************************/
-void CGame::PostRender()
-{
-    spGameState->PostRender();
-
-}	// PostRender
 
 
 /***************************************************************************

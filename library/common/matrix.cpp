@@ -65,10 +65,20 @@ void CMatrix::initilizeMatrix()
 void CMatrix::initIdentityMatrix( float mat[16] )
 {
     // Initializes a specific matrix to the identity matrix:
+#ifdef MATRIX_USE_SSE
+    alignas(16) static const float identity[16] = {
+        1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1
+    };
+    _mm_store_ps( mat,      _mm_load_ps( identity ) );
+    _mm_store_ps( mat + 4,  _mm_load_ps( identity + 4 ) );
+    _mm_store_ps( mat + 8,  _mm_load_ps( identity + 8 ) );
+    _mm_store_ps( mat + 12, _mm_load_ps( identity + 12 ) );
+#else
     mat[0]  = 1.0f;   mat[1] = 0.0f;   mat[2]  = 0.0f;   mat[3] = 0.0f;
     mat[4]  = 0.0f;   mat[5] = 1.0f;   mat[6]  = 0.0f;   mat[7] = 0.0f;
     mat[8]  = 0.0f;   mat[9] = 0.0f;   mat[10] = 1.0f;  mat[11] = 0.0f;
     mat[12] = 0.0f;  mat[13] = 0.0f;   mat[14] = 0.0f;  mat[15] = 1.0f;
+#endif
 }
 
 /************************************************************************
@@ -86,6 +96,27 @@ void CMatrix::clearTranlate()
 ************************************************************************/
 void CMatrix::mergeMatrix( const float mat[mMax] )
 {
+#ifdef MATRIX_USE_SSE
+    // Load all 4 rows of the right-hand matrix
+    __m128 rRow0 = _mm_loadu_ps( mat );
+    __m128 rRow1 = _mm_loadu_ps( mat + 4 );
+    __m128 rRow2 = _mm_loadu_ps( mat + 8 );
+    __m128 rRow3 = _mm_loadu_ps( mat + 12 );
+
+    for( int i = 0; i < 4; ++i )
+    {
+        __m128 e0 = _mm_set1_ps( matrix[i*4 + 0] );
+        __m128 e1 = _mm_set1_ps( matrix[i*4 + 1] );
+        __m128 e2 = _mm_set1_ps( matrix[i*4 + 2] );
+        __m128 e3 = _mm_set1_ps( matrix[i*4 + 3] );
+
+        __m128 result = _mm_add_ps(
+            _mm_add_ps( _mm_mul_ps( e0, rRow0 ), _mm_mul_ps( e1, rRow1 ) ),
+            _mm_add_ps( _mm_mul_ps( e2, rRow2 ), _mm_mul_ps( e3, rRow3 ) ) );
+
+        _mm_store_ps( matrix + i*4, result );
+    }
+#else
     float temp[mMax];
     
     // Converting to a two demensional array much faster for the 4 loops
@@ -106,6 +137,7 @@ void CMatrix::mergeMatrix( const float mat[mMax] )
 
     // Copy temp to master Matrix
     std::memcpy( matrix, temp, sizeof(temp) );
+#endif
 }
 
 void CMatrix::mergeMatrix( const CMatrix & obj )
@@ -121,6 +153,26 @@ void CMatrix::mergeMatrix( const CMatrix & obj )
 ************************************************************************/
 void CMatrix::mergeMatrices( float dest[mMax], const float source[mMax] )
 {
+#ifdef MATRIX_USE_SSE
+    __m128 dRow0 = _mm_loadu_ps( dest );
+    __m128 dRow1 = _mm_loadu_ps( dest + 4 );
+    __m128 dRow2 = _mm_loadu_ps( dest + 8 );
+    __m128 dRow3 = _mm_loadu_ps( dest + 12 );
+
+    for( int i = 0; i < 4; ++i )
+    {
+        __m128 e0 = _mm_set1_ps( source[i*4 + 0] );
+        __m128 e1 = _mm_set1_ps( source[i*4 + 1] );
+        __m128 e2 = _mm_set1_ps( source[i*4 + 2] );
+        __m128 e3 = _mm_set1_ps( source[i*4 + 3] );
+
+        __m128 result = _mm_add_ps(
+            _mm_add_ps( _mm_mul_ps( e0, dRow0 ), _mm_mul_ps( e1, dRow1 ) ),
+            _mm_add_ps( _mm_mul_ps( e2, dRow2 ), _mm_mul_ps( e3, dRow3 ) ) );
+
+        _mm_storeu_ps( dest + i*4, result );
+    }
+#else
     float temp[mMax];
     
     // Converting to a two demensional array much faster for the 4 loops
@@ -141,6 +193,7 @@ void CMatrix::mergeMatrices( float dest[mMax], const float source[mMax] )
 
     // Copy Temp to Dest
     std::memcpy( dest, temp, sizeof(temp) );
+#endif
 }
 
 /************************************************************************
@@ -222,7 +275,23 @@ void CMatrix::translate( const CSize<int16_t> & size )
 ************************************************************************/
 void CMatrix::transform( CPoint<float> & dest, const CPoint<float> & source ) const
 {
-    // Transform vertex by master matrix:
+#ifdef MATRIX_USE_SSE
+    __m128 vx = _mm_set1_ps( source.x );
+    __m128 vy = _mm_set1_ps( source.y );
+    __m128 vz = _mm_set1_ps( source.z );
+
+    __m128 result = _mm_add_ps(
+        _mm_add_ps( _mm_mul_ps( vx, _mm_load_ps( matrix ) ),
+                    _mm_mul_ps( vy, _mm_load_ps( matrix + 4 ) ) ),
+        _mm_add_ps( _mm_mul_ps( vz, _mm_load_ps( matrix + 8 ) ),
+                    _mm_load_ps( matrix + 12 ) ) );
+
+    alignas(16) float out[4];
+    _mm_store_ps( out, result );
+    dest.x = out[0];
+    dest.y = out[1];
+    dest.z = out[2];
+#else
     dest.x = ( source.x * matrix[ 0 ] )
            + ( source.y * matrix[ 4 ] )
            + ( source.z * matrix[ 8 ] )
@@ -237,6 +306,7 @@ void CMatrix::transform( CPoint<float> & dest, const CPoint<float> & source ) co
            + ( source.y * matrix[ 6 ] )
            + ( source.z * matrix[ 10 ] )
            + matrix[ 14 ];
+#endif
 }
 
 /************************************************************************
@@ -245,7 +315,23 @@ void CMatrix::transform( CPoint<float> & dest, const CPoint<float> & source ) co
 ************************************************************************/
 void CMatrix::transform( CPoint<float> * pDest, const CPoint<float> * pSource ) const
 {
-    // Transform vertex by master matrix:
+#ifdef MATRIX_USE_SSE
+    __m128 vx = _mm_set1_ps( pSource->x );
+    __m128 vy = _mm_set1_ps( pSource->y );
+    __m128 vz = _mm_set1_ps( pSource->z );
+
+    __m128 result = _mm_add_ps(
+        _mm_add_ps( _mm_mul_ps( vx, _mm_load_ps( matrix ) ),
+                    _mm_mul_ps( vy, _mm_load_ps( matrix + 4 ) ) ),
+        _mm_add_ps( _mm_mul_ps( vz, _mm_load_ps( matrix + 8 ) ),
+                    _mm_load_ps( matrix + 12 ) ) );
+
+    alignas(16) float out[4];
+    _mm_store_ps( out, result );
+    pDest->x = out[0];
+    pDest->y = out[1];
+    pDest->z = out[2];
+#else
     pDest->x = ( pSource->x * matrix[ 0 ] )
            + ( pSource->y * matrix[ 4 ] )
            + ( pSource->z * matrix[ 8 ] )
@@ -260,6 +346,7 @@ void CMatrix::transform( CPoint<float> * pDest, const CPoint<float> * pSource ) 
            + ( pSource->y * matrix[ 6 ] )
            + ( pSource->z * matrix[ 10 ] )
            + matrix[ 14 ];
+#endif
 }
 
 /************************************************************************
@@ -314,7 +401,22 @@ void CMatrix::transform( CNormal<float> & dest, const CNormal<float> & source ) 
 ************************************************************************/
 void CMatrix::transform3x3( CPoint<float> & dest, const CPoint<float> & source ) const
 {
-    // Transform vertex by master matrix:
+#ifdef MATRIX_USE_SSE
+    __m128 vx = _mm_set1_ps( source.x );
+    __m128 vy = _mm_set1_ps( source.y );
+    __m128 vz = _mm_set1_ps( source.z );
+
+    __m128 result = _mm_add_ps(
+        _mm_mul_ps( vx, _mm_load_ps( matrix ) ),
+        _mm_add_ps( _mm_mul_ps( vy, _mm_load_ps( matrix + 4 ) ),
+                    _mm_mul_ps( vz, _mm_load_ps( matrix + 8 ) ) ) );
+
+    alignas(16) float out[4];
+    _mm_store_ps( out, result );
+    dest.x = out[0];
+    dest.y = out[1];
+    dest.z = out[2];
+#else
     dest.x = ( source.x * matrix[ 0 ])
            + ( source.y * matrix[ 4 ])
            + ( source.z * matrix[ 8 ]);
@@ -326,7 +428,7 @@ void CMatrix::transform3x3( CPoint<float> & dest, const CPoint<float> & source )
     dest.z = ( source.x * matrix[ 2 ])
            + ( source.y * matrix[ 6 ])
            + ( source.z * matrix[ 10 ]);
-
+#endif
 }
 
 /************************************************************************
@@ -880,9 +982,33 @@ void CMatrix::perspectiveFovLH( float fovy, float aspect, float zn, float zf )
 ************************************************************************/
 void CMatrix::multiply3x3( const CMatrix & obj )
 {
+#ifdef MATRIX_USE_SSE
+    __m128 rRow0 = _mm_load_ps( obj.matrix );
+    __m128 rRow1 = _mm_load_ps( obj.matrix + 4 );
+    __m128 rRow2 = _mm_load_ps( obj.matrix + 8 );
+
+    // Process rows 0-2 (rotation/scale portion)
+    for( int i = 0; i < 3; ++i )
+    {
+        __m128 e0 = _mm_set1_ps( matrix[i*4 + 0] );
+        __m128 e1 = _mm_set1_ps( matrix[i*4 + 1] );
+        __m128 e2 = _mm_set1_ps( matrix[i*4 + 2] );
+
+        __m128 result = _mm_add_ps(
+            _mm_mul_ps( e0, rRow0 ),
+            _mm_add_ps( _mm_mul_ps( e1, rRow1 ),
+                        _mm_mul_ps( e2, rRow2 ) ) );
+
+        // Store first 3 elements, preserve the 4th (w column)
+        alignas(16) float out[4];
+        _mm_store_ps( out, result );
+        matrix[i*4 + 0] = out[0];
+        matrix[i*4 + 1] = out[1];
+        matrix[i*4 + 2] = out[2];
+    }
+#else
     float tmp[mMax];
 
-    // init the matrix
     initIdentityMatrix( tmp );
 
     for( int i = 0; i < 3; ++i )
@@ -895,8 +1021,8 @@ void CMatrix::multiply3x3( const CMatrix & obj )
         }
     }
 
-    // Copy the tmp matrix to the class's matrix
     std::memcpy( matrix, tmp, sizeof(matrix) );
+#endif
 }
 
 /************************************************************************
@@ -1049,8 +1175,26 @@ void CMatrix::setColumn( const int col, const float x, const float y, const floa
 ************************************************************************/
 CMatrix CMatrix::operator * ( const CMatrix & obj ) const
 {
-    float tmp[mMax];
+    alignas(16) float tmp[mMax];
 
+#ifdef MATRIX_USE_SSE
+    __m128 rRow0 = _mm_load_ps( obj.matrix );
+    __m128 rRow1 = _mm_load_ps( obj.matrix + 4 );
+    __m128 rRow2 = _mm_load_ps( obj.matrix + 8 );
+    __m128 rRow3 = _mm_load_ps( obj.matrix + 12 );
+
+    for( int i = 0; i < 4; ++i )
+    {
+        __m128 e0 = _mm_set1_ps( matrix[i*4 + 0] );
+        __m128 e1 = _mm_set1_ps( matrix[i*4 + 1] );
+        __m128 e2 = _mm_set1_ps( matrix[i*4 + 2] );
+        __m128 e3 = _mm_set1_ps( matrix[i*4 + 3] );
+
+        _mm_store_ps( tmp + i*4, _mm_add_ps(
+            _mm_add_ps( _mm_mul_ps( e0, rRow0 ), _mm_mul_ps( e1, rRow1 ) ),
+            _mm_add_ps( _mm_mul_ps( e2, rRow2 ), _mm_mul_ps( e3, rRow3 ) ) ) );
+    }
+#else
     for( int i = 0; i < 4; ++i )
     {
         for( int j = 0; j < 4; ++j )
@@ -1061,6 +1205,7 @@ CMatrix CMatrix::operator * ( const CMatrix & obj ) const
                            + (matrix[(i*4)+3] * obj[12+j]);
         }
     }
+#endif
 
     return CMatrix(tmp);
 }
@@ -1070,6 +1215,24 @@ CMatrix CMatrix::operator * ( const CMatrix & obj ) const
 ************************************************************************/
 CMatrix CMatrix::operator *= ( const CMatrix & obj )
 {
+#ifdef MATRIX_USE_SSE
+    __m128 rRow0 = _mm_load_ps( obj.matrix );
+    __m128 rRow1 = _mm_load_ps( obj.matrix + 4 );
+    __m128 rRow2 = _mm_load_ps( obj.matrix + 8 );
+    __m128 rRow3 = _mm_load_ps( obj.matrix + 12 );
+
+    for( int i = 0; i < 4; ++i )
+    {
+        __m128 e0 = _mm_set1_ps( matrix[i*4 + 0] );
+        __m128 e1 = _mm_set1_ps( matrix[i*4 + 1] );
+        __m128 e2 = _mm_set1_ps( matrix[i*4 + 2] );
+        __m128 e3 = _mm_set1_ps( matrix[i*4 + 3] );
+
+        _mm_store_ps( matrix + i*4, _mm_add_ps(
+            _mm_add_ps( _mm_mul_ps( e0, rRow0 ), _mm_mul_ps( e1, rRow1 ) ),
+            _mm_add_ps( _mm_mul_ps( e2, rRow2 ), _mm_mul_ps( e3, rRow3 ) ) ) );
+    }
+#else
     float tmp[mMax];
 
     for( int i = 0; i < 4; ++i )
@@ -1083,8 +1246,8 @@ CMatrix CMatrix::operator *= ( const CMatrix & obj )
         }
     }
 
-    // Copy the tmp matrix to the class matrix
     std::memcpy( matrix, tmp, sizeof(tmp) );
+#endif
 
     return *this;
 }

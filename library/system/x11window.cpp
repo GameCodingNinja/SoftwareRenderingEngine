@@ -188,7 +188,7 @@ void CX11Window::Create(int width, int height, const char* title)
     // Create the framebuffer with VSync setting
     m_upFrameBuffer = std::make_unique<CX11FrameBuffer>(
         m_pDisplay, m_window, m_gc, width, height,
-        CSettings::Instance().GetVSync());
+        CSettings::Instance().getVSync());
 
 }   // Create
 

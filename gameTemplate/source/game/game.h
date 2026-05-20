@@ -62,12 +62,6 @@ private:
     // Transform game objects
     void Transform();
 
-    // Render of game content
-    void PreRender();
-
-    // Post Render of game content
-    void PostRender();
-
     // Start the game
     void StartGame();
 

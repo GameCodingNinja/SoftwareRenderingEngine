@@ -17,6 +17,12 @@
 // Standard lib dependencies
 #include <cstdint>
 
+// SSE intrinsics for SIMD acceleration
+#if defined(__x86_64__) || defined(_M_X64) || defined(__SSE__)
+#define MATRIX_USE_SSE
+#include <xmmintrin.h>
+#endif
+
 // The 3D view matrix class:
 class CMatrix
 {
@@ -167,6 +173,7 @@ private:
     // Master matrix
     // a single dimension array (array[]) is much faster
     // then a multi-dimension array (array[][])
-    float matrix[mMax];
+    // 16-byte aligned for SSE operations
+    alignas(16) float matrix[mMax];
 
 };

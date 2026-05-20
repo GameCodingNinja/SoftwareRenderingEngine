@@ -5,8 +5,7 @@
 *    DESCRIPTION:     game settings class
 ************************************************************************/
 
-#ifndef __settings_h__
-#define __settings_h__
+#pragma once
 
 // Standard lib dependencies
 #include <string>
@@ -14,6 +13,7 @@
 // Game lib dependencies
 #include <utilities/xmlParser.h>
 #include <common/size.h>
+#include <common/defs.h>
 
 class CSettings
 {
@@ -27,43 +27,52 @@ public:
     }
 
     // Save the settings file
-    void SaveSettings();
+    void saveSettings();
 
     // Load settings data from xml file
-    void LoadFromXML( const std::string & filePath );
+    void loadFromXML( const std::string & filePath );
 
     // Get game window size
-    const CSize<float> & GetSize() const;
-    const CSize<float> & GetSizeHalf() const;
-    const CSize<float> & GetDefaultSize() const;
-    const CSize<float> & GetDefaultSizeHalf() const;
-    void SetSize( const CSize<float> & size );
+    const CSize<float> & getSize() const;
+    const CSize<float> & getSizeHalf() const;
+    const CSize<float> & getDefaultSize() const;
+    const CSize<float> & getDefaultSizeHalf() const;
+    void setSize( const CSize<float> & size );
 
     // Get the view angle
-    float GetViewAngle() const;
+    float getViewAngle() const;
 
     // Get the minimum z distance
-    float GetMinZdist() const;
+    float getMinZdist() const;
 
     // Get the maximum z distance
-    float GetMaxZdist() const;
+    float getMaxZdist() const;
+
+    // Get the projection type
+    NDefs::EProjectionType getProjectionType() const;
+
+    // Height and width screen ratio for orthographic objects
+    const CSize<float> & getOrthoAspectRatio() const;
+
+    // Height and width screen ratio for perspective projection
+    const CSize<float> & getScreenAspectRatio() const;
+
+    // Get the screen ratio (ortho aspect ratio)
+    const CSize<float> & getScreenRatio() const;
 
     // Get ratios
-    const CSize<float> & GetScreenRatio() const;
-
-    // Get ratios
-    float GetDeviceRatio() const;
+    float getDeviceRatio() const;
 
     // Get/Set VSync
-    bool GetVSync() const;
-    void SetVSync( bool value );
+    bool getVSync() const;
+    void setVSync( bool value );
 
     // Get/Set full screen
-    bool GetFullScreen() const;
-    void SetFullScreen( bool value );
+    bool getFullScreen() const;
+    void setFullScreen( bool value );
 
     // Calculate the ratio
-    void CalcRatio();
+    void calcRatio();
 
 private:
 
@@ -87,8 +96,11 @@ private:
     CSize<float> m_default_size;
     CSize<float> m_default_size_half;
 
-    // Height and width screen ratio for render objects
-    CSize<float> m_screenRatio;
+    // Height and width screen ratio for perspective projection
+    CSize<float> m_screenAspectRatio;
+
+    // Pre-calculated aspect ratios for orthographic projection
+    CSize<float> m_orthoAspectRatio;
 
     // Ratio for devices (mice) to correctly calculate movement
     // between the default height and actual height
@@ -109,6 +121,7 @@ private:
     // maximum Z distance
     float m_maxZdist;
 
-};
+    // The projection type
+    NDefs::EProjectionType m_projectionType;
 
-#endif  // __classtemplate_h__
+};

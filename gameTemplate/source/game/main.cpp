@@ -37,9 +37,6 @@ int main( int argc, char* args[] )
 
     try
     {
-        // Load the settings file
-        CSettings::Instance().LoadFromXML("data/settings/settings.cfg");
-
         // Create the game
         game.Create();
 

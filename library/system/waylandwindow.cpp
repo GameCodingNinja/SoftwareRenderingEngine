@@ -482,7 +482,7 @@ void CWaylandWindow::Create(int width, int height, const char* title)
     // Create the framebuffer with VSync setting
     m_upFrameBuffer = std::make_unique<CWaylandFrameBuffer>(
         m_pDisplay, m_pShm, m_pSurface, m_width, m_height,
-        CSettings::Instance().GetVSync());
+        CSettings::Instance().getVSync());
 
 }   // Create
 

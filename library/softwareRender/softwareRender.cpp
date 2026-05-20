@@ -629,7 +629,7 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
 
     // Near clip distance — W must be >= this to be in front of the near plane.
     // W equals -eye.z for PerspectiveFovRH, so this matches the frustum near plane.
-    const float nearClip = CSettings::Instance().GetMinZdist();
+    const float nearClip = CSettings::Instance().getMinZdist();
 
     // Max clipped output verts from a triangle (clipping can add 1 vertex)
     const int MAX_CLIP_VERTS = 4;

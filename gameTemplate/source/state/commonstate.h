@@ -31,7 +31,7 @@ public:
     virtual void Transform();
 
     // Do the rendering
-    virtual void PostRender();
+    virtual void Render();
 
 };
 

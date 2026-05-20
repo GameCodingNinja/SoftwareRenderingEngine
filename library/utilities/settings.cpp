@@ -10,41 +10,37 @@
 
 // Standard lib dependencies
 #include <string>
-
-// Game lib dependencies
-#include <common/defs.h>
+#include <cstring>
+#include <cmath>
 
 /************************************************************************
-*    desc:  Constructer                                                             
+*    DESC:  Constructor
 ************************************************************************/
-CSettings::CSettings()
-    : m_size(1024,768),
-      m_default_size(1280,768),
-      m_fullScreen(false),
-      m_vSync(true),
-      m_viewAngle(45.f),
-      m_minZdist(5.f),
-      m_maxZdist(1000.f)
+CSettings::CSettings() :
+    m_size(1024,768),
+    m_default_size(1280,768),
+    m_fullScreen(false),
+    m_vSync(true),
+    m_viewAngle(45.f),
+    m_minZdist(5.f),
+    m_maxZdist(1000.f),
+    m_projectionType(NDefs::EPT_PERSPECTIVE)
 {
-}   // constructor
+}
 
 
 /************************************************************************
-*    desc:  destructer                                                             
+*    DESC:  destructor
 ************************************************************************/
 CSettings::~CSettings()
 {
-}	// destructer
+}
 
 
 /************************************************************************
-*    desc:  Load settings data from xml file
-*  
-*    param: string & _filePath - path to file
-*
-*    ret: string - class name
+*    DESC:  Load settings data from xml file
 ************************************************************************/
-void CSettings::LoadFromXML( const std::string & filePath )
+void CSettings::loadFromXML( const std::string & filePath )
 {
     m_filePath = filePath;
 
@@ -53,205 +49,226 @@ void CSettings::LoadFromXML( const std::string & filePath )
 
     if( !m_mainNode.isEmpty() )
     {
-        XMLNode displayListNode = m_mainNode.getChildNode("display");
+        const XMLNode displayListNode = m_mainNode.getChildNode("display");
         if( !displayListNode.isEmpty() )
         {
             // Get the attributes from the "resolution" node
-            XMLNode resolutionNode = displayListNode.getChildNode("resolution");
-            m_size.w = std::stoi(resolutionNode.getAttribute("width"));
-            m_size.h = std::stoi(resolutionNode.getAttribute("height"));
+            const XMLNode resolutionNode = displayListNode.getChildNode("resolution");
+            if( !resolutionNode.isEmpty() )
+            {
+                m_size.w = std::atoi(resolutionNode.getAttribute("width"));
+                m_size.h = std::atoi(resolutionNode.getAttribute("height"));
 
-            m_fullScreen = ( resolutionNode.getAttribute("fullscreen") == std::string("true") );
+                if( resolutionNode.isAttributeSet("fullscreen") )
+                    m_fullScreen = ( std::strcmp( resolutionNode.getAttribute("fullscreen"), "true" ) == 0 );
+            }
 
             // Get the attributes from the "defaultHeight" node
-            XMLNode defResNode = displayListNode.getChildNode("defaultHeight");
-            m_default_size.h = std::stof(defResNode.getAttribute("height"));
-
-            CalcRatio();
+            const XMLNode defResNode = displayListNode.getChildNode("defaultHeight");
+            if( !defResNode.isEmpty() )
+            {
+                m_default_size.h = std::atof(defResNode.getAttribute("height"));
+            }
         }
 
-        XMLNode deviceNode = m_mainNode.getChildNode("device");
+        calcRatio();
+
+        const XMLNode deviceNode = m_mainNode.getChildNode("device");
         if( !deviceNode.isEmpty() )
         {
             // Get the projection info
-            XMLNode projectionNode = deviceNode.getChildNode("projection");
-            m_minZdist = std::atof(projectionNode.getAttribute("minZDist"));
-            m_maxZdist = std::atof(projectionNode.getAttribute("maxZDist"));
-            m_viewAngle = std::atof(projectionNode.getAttribute("view_angle")) * defs_DEG_TO_RAD;
+            const XMLNode projectionNode = deviceNode.getChildNode("projection");
+            if( !projectionNode.isEmpty() )
+            {
+                if( projectionNode.isAttributeSet("minZDist") )
+                    m_minZdist = std::atof(projectionNode.getAttribute("minZDist"));
+
+                if( projectionNode.isAttributeSet("maxZDist") )
+                    m_maxZdist = std::atof(projectionNode.getAttribute("maxZDist"));
+
+                if( projectionNode.isAttributeSet("view_angle") )
+                    m_viewAngle = std::atof(projectionNode.getAttribute("view_angle"));
+
+                if( projectionNode.isAttributeSet("projectType") &&
+                    std::strcmp( projectionNode.getAttribute("projectType"), "orthographic" ) == 0 )
+                    m_projectionType = NDefs::EPT_ORTHOGRAPHIC;
+            }
+
+            // Convert to radians
+            m_viewAngle *= (float)defs_DEG_TO_RAD;
 
             // Get the VSync setting from the backbuffer node
-            XMLNode backBufferNode = deviceNode.getChildNode("backbuffer");
+            const XMLNode backBufferNode = deviceNode.getChildNode("backbuffer");
             if( !backBufferNode.isEmpty() )
             {
                 if( backBufferNode.isAttributeSet("VSync") )
-                    m_vSync = (backBufferNode.getAttribute("VSync") == std::string("true"));
+                    m_vSync = ( std::strcmp( backBufferNode.getAttribute("VSync"), "true" ) == 0 );
             }
         }
     }
-
-}	// LoadFromXML
+}
 
 
 /************************************************************************
-*    desc:  Calculate the ratio
-*
-*    ret: string - class name
+*    DESC:  Calculate the ratios
 ************************************************************************/
-void CSettings::CalcRatio()
+void CSettings::calcRatio()
 {
-    // NOTE: the default width is based on the actual resolution
-    m_default_size.w = (m_size.w / m_size.h) * m_default_size.h;
+    // Height and width screen ratio for perspective projection
+    m_screenAspectRatio.w = m_size.w / m_size.h;
+    m_screenAspectRatio.h = m_size.h / m_size.w;
 
-    // Get half the size for use with screen boundries
+    // NOTE: The default width is based on the current aspect ratio
+    m_default_size.w = (float)(int)std::ceil((m_screenAspectRatio.w * m_default_size.h) + 0.5);
+
+    // Get half the size for use with screen boundaries
     m_default_size_half = m_default_size / 2.f;
 
+    // Screen size divided by two
     m_size_half = m_size / 2.f;
 
-    // Calculate the screen ratio because of the default height
-    m_screenRatio.w = m_size.w / m_default_size.w;
-    m_screenRatio.h = m_size.h / m_default_size.h;
+    // Pre-calculate the aspect ratios for orthographic projection
+    m_orthoAspectRatio.h = m_size.h / m_default_size.h;
+    m_orthoAspectRatio.w = m_size.w / m_default_size.w;
 
     // Ratio for devices (mice) to correctly calculate movement
     // between the default height and actual height
     m_deviceRatio = m_default_size.h / m_size.h;
-
-}   // CalcRatio
+}
 
 
 /************************************************************************
-*    desc:  Get/Set game window size
+*    DESC:  Get/Set game window size
 ************************************************************************/
-const CSize<float> & CSettings::GetSize() const
+const CSize<float> & CSettings::getSize() const
 {
     return m_size;
 }
 
-void CSettings::SetSize( const CSize<float> & size )
+void CSettings::setSize( const CSize<float> & size )
 {
     m_size = size;
 }
 
-
 /************************************************************************
-*    desc:  Get game window size / 2
-*
-*    ret: CSize - size of game window / 2
+*    DESC:  Get game window size / 2
 ************************************************************************/
-const CSize<float> & CSettings::GetSizeHalf() const
+const CSize<float> & CSettings::getSizeHalf() const
 {
     return m_size_half;
 }
 
-
 /************************************************************************
-*    desc:  Get the view angle
-*
-*    ret: float - view angle
+*    DESC:  Get the view angle
 ************************************************************************/
-float CSettings::GetViewAngle() const
+float CSettings::getViewAngle() const
 {
     return m_viewAngle;
 }
 
-
 /************************************************************************
-*    desc:  Get the minimum z distance
-*
-*    ret: float - minimum z distance
+*    DESC:  Get the minimum z distance
 ************************************************************************/
-float CSettings::GetMinZdist() const
+float CSettings::getMinZdist() const
 {
     return m_minZdist;
 }
 
-
 /************************************************************************
-*    desc:  Get the maximum z distance
-*
-*    ret: float - maximum z distance
+*    DESC:  Get the maximum z distance
 ************************************************************************/
-float CSettings::GetMaxZdist() const
+float CSettings::getMaxZdist() const
 {
     return m_maxZdist;
 }
 
-
 /************************************************************************
-*    desc:  Get 3d area size
-*
-*    ret: CSize - size of game window
+*    DESC:  Get the default size
 ************************************************************************/
-const CSize<float> & CSettings::GetDefaultSize() const
+const CSize<float> & CSettings::getDefaultSize() const
 {
     return m_default_size;
 }
 
-
 /************************************************************************
-*    desc:  Get 3d area size in half
-*
-*    ret: CSize - size of game window
+*    DESC:  Get the default size in half
 ************************************************************************/
-const CSize<float> & CSettings::GetDefaultSizeHalf() const
+const CSize<float> & CSettings::getDefaultSizeHalf() const
 {
     return m_default_size_half;
 }
 
-
 /************************************************************************
-*    desc:  Get the height and width ratios of the screen
-*
-*    ret: CSize - ratio of the screen
+*    DESC:  Height and width screen ratio for orthographic objects
+*           The difference between screen and the default size
 ************************************************************************/
-const CSize<float> & CSettings::GetScreenRatio() const
+const CSize<float> & CSettings::getOrthoAspectRatio() const
 {
-    return m_screenRatio;
+    return m_orthoAspectRatio;
 }
 
+/************************************************************************
+*    DESC:  Height and width screen ratio for perspective projection
+************************************************************************/
+const CSize<float> & CSettings::getScreenAspectRatio() const
+{
+    return m_screenAspectRatio;
+}
 
 /************************************************************************
-*    desc:  Get the height and width ratios of the screen
-*
-*    ret: CSize - ratio of the screen
+*    DESC:  Get the screen ratio (ortho aspect ratio - legacy alias)
 ************************************************************************/
-float CSettings::GetDeviceRatio() const
+const CSize<float> & CSettings::getScreenRatio() const
+{
+    return m_orthoAspectRatio;
+}
+
+/************************************************************************
+*    DESC:  Get the device ratio
+************************************************************************/
+float CSettings::getDeviceRatio() const
 {
     return m_deviceRatio;
 }
 
-
 /************************************************************************
-*    desc:  Get/Set VSync
+*    DESC:  Get/Set VSync
 ************************************************************************/
-bool CSettings::GetVSync() const
+bool CSettings::getVSync() const
 {
     return m_vSync;
 }
 
-void CSettings::SetVSync( bool value )
+void CSettings::setVSync( bool value )
 {
     m_vSync = value;
 }
 
-
 /************************************************************************
-*    desc:  Get/Set full screen
+*    DESC:  Get/Set full screen
 ************************************************************************/
-bool CSettings::GetFullScreen() const
+bool CSettings::getFullScreen() const
 {
     return m_fullScreen;
 }
 
-void CSettings::SetFullScreen( bool value )
+void CSettings::setFullScreen( bool value )
 {
     m_fullScreen = value;
 }
 
+/************************************************************************
+*    DESC:  Get the projection type
+************************************************************************/
+NDefs::EProjectionType CSettings::getProjectionType() const
+{
+    return m_projectionType;
+}
 
 /************************************************************************
-*    desc:  Save the settings file
+*    DESC:  Save the settings file
 ************************************************************************/
-void CSettings::SaveSettings()
+void CSettings::saveSettings()
 {
     if( !m_mainNode.isEmpty() )
     {
@@ -271,11 +288,7 @@ void CSettings::SaveSettings()
             }
 
             {
-                std::string tmpStr = "false";
-
-                if( m_fullScreen )
-                    tmpStr = "true";
-
+                std::string tmpStr = m_fullScreen ? "true" : "false";
                 resolutionNode.updateAttribute(tmpStr.c_str(), "fullscreen", "fullscreen");
             }
         }
@@ -294,5 +307,4 @@ void CSettings::SaveSettings()
         // Save the settings file
         m_mainNode.writeToFile(m_filePath.c_str(), "utf-8");
     }
-
-}	// SaveSettings
+}

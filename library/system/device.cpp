@@ -40,7 +40,7 @@ CDevice::~CDevice()
 void CDevice::Create()
 {
     // Get the window size
-    const CSize<int> size( CSettings::Instance().GetSize() );
+    const CSize<int> size( CSettings::Instance().getSize() );
 
     // Create the native window
     m_upWindow = CreateNativeWindow();
@@ -50,8 +50,8 @@ void CDevice::Create()
     CSoftwareRender::Instance().SetSurface( m_upWindow->GetFrameBuffer() );
 
     // Set the full screen
-    if( CSettings::Instance().GetFullScreen() )
-        SetFullScreen( CSettings::Instance().GetFullScreen() );
+    if( CSettings::Instance().getFullScreen() )
+        SetFullScreen( CSettings::Instance().getFullScreen() );
 
     // Create the projection matrixes
     CreateProjMatrix();
@@ -65,20 +65,20 @@ void CDevice::Create()
 void CDevice::CreateProjMatrix()
 {
     // Calc the aspect ratio
-    float aspectRatio = CSettings::Instance().GetSize().getW() / 
-                        CSettings::Instance().GetSize().getH();
+    float aspectRatio = CSettings::Instance().getSize().getW() / 
+                        CSettings::Instance().getSize().getH();
 
     m_perspectiveMatrix.perspectiveFovRH(
-        CSettings::Instance().GetViewAngle(),
+        CSettings::Instance().getViewAngle(),
         aspectRatio,
-        CSettings::Instance().GetMinZdist(),
-        CSettings::Instance().GetMaxZdist() );
+        CSettings::Instance().getMinZdist(),
+        CSettings::Instance().getMaxZdist() );
 
     m_orthographicMatrix.orthographicRH(
-        CSettings::Instance().GetDefaultSize().getW(),
-        CSettings::Instance().GetDefaultSize().getH(),
-        CSettings::Instance().GetMinZdist(),
-        CSettings::Instance().GetMaxZdist() );
+        CSettings::Instance().getDefaultSize().getW(),
+        CSettings::Instance().getDefaultSize().getH(),
+        CSettings::Instance().getMinZdist(),
+        CSettings::Instance().getMaxZdist() );
 
 }   // CreateProjMatrix
 

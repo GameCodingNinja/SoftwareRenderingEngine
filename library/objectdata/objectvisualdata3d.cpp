@@ -52,20 +52,7 @@ void CObjectVisualData3D::LoadFromNode( const XMLNode & objectNode )
         const XMLNode textureNode = visualNode.getChildNode("texture");
         if( !textureNode.isEmpty() )
         {
-            if( textureNode.isAttributeSet("count") )
-            {
-                const uint count = std::atoi( textureNode.getAttribute( "count" ) );
-                const std::string file( textureNode.getAttribute( "file" ) );
-
-                m_textureFileVec.reserve( count );
-
-                for( uint i = 0; i < count; ++i )
-                    m_textureFileVec.push_back( NGenFunc::FormatString(file.c_str(), i) );
-            }
-            else
-            {
-                m_textureFileVec.push_back( textureNode.getAttribute( "file" ) );
-            }
+            m_textureFileVec.push_back( textureNode.getAttribute( "file" ) );
         }
 
         // Get the mesh node
@@ -136,6 +123,15 @@ void CObjectVisualData3D::CreateFromData( const std::string & group, CSize<int> 
 
         m_vbo = CVertBufMgr::Instance().CreateQuadVBO( group, vboName, m_uv );
         m_ibo = CVertBufMgr::Instance().CreateIBO( group, "quad_0123", indexData, sizeof(indexData) );
+
+        // Scale the quad to match the texture's aspect ratio
+        // so it doesn't appear stretched
+        if( !rSize.isEmpty() )
+        {
+            float aspect = (float)rSize.w / (float)rSize.h;
+            m_vertexScale.x = aspect;
+            m_vertexScale.y = 1.0f;
+        }
 
         // A quad has 4 verts
         m_vertexCount = 4;

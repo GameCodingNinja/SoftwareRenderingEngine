@@ -86,8 +86,8 @@ void CTitleScreenState::Transform()
     m_background.transform();
     m_background2.transform();
     m_background3.transform();
-    m_enemy.transform();
-    m_logo.transform();
+    //m_enemy.transform();
+    //m_logo.transform();
 
 }	// Transform */
 
@@ -95,20 +95,22 @@ void CTitleScreenState::Transform()
 /***************************************************************************
 *    desc:  2D/3D Render of game content
 ****************************************************************************/
-void CTitleScreenState::PreRender()
+void CTitleScreenState::Render()
 {
-    CCommonState::PreRender();
+    // Render common content (menus, UI, etc.)
+    CCommonState::Render();
 
     const CMatrix & matrix = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_ORTHOGRAPHIC );
+
     m_background.Render( matrix );
     m_background2.Render( matrix );
     m_background3.Render( matrix );
-    m_enemy.Render( matrix );
+    //m_enemy.Render( matrix );
 
-    const CMatrix & matrix3d = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_PERSPECTIVE );
-    m_logo.Render( matrix3d );
+    //const CMatrix & matrix3d = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_PERSPECTIVE );
+    //m_logo.Render( matrix3d );
 
-}	// Render2D
+}	// Render
 
 
 /***************************************************************************

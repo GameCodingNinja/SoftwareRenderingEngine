@@ -25,11 +25,13 @@ set(LIBRARY_SOURCES
     managers/texturemanager.cpp
     managers/managerbase.cpp
     managers/vertexbuffermanager.cpp
+    managers/cameramanager.cpp
     sprite/sprite.cpp
     2d/visualcomponent2d.cpp
     3d/visualcomponent3d.cpp
     common/object.cpp
     common/matrix.cpp
+    common/camera.cpp
     common/bitmask.cpp
     soil/stb_image_aug.c
     soil/image_helper.c
