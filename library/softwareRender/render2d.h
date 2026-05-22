@@ -18,18 +18,12 @@ class CRender2d
 {
 public:
 
-    CRender2d( const CTexture * pText, CSurfaceData * pSurface, uint32_t colorR, uint32_t colorG, uint32_t colorB, uint32_t colorA, FragmentShaderFunc shader = nullptr ) :
+    CRender2d( const CTexture * pText, CSurfaceData * pSurface, const CColor<uint32_t> & color, FragmentShaderFunc shader = nullptr ) :
         m_pText(pText),
         m_pSurface(pSurface),
-        m_cr(colorR), m_cg(colorG), m_cb(colorB), m_ca(colorA),
+        m_color(color),
         m_shader(shader)
     {
-        // Set up the uniform block
-        m_uniforms.cr = colorR;
-        m_uniforms.cg = colorG;
-        m_uniforms.cb = colorB;
-        m_uniforms.ca = colorA;
-
         // If no custom shader was provided, use the default fallback
         if( m_shader == nullptr )
             m_shader = NShaderDefault::shaderDefault;
@@ -42,13 +36,10 @@ public:
     CSurfaceData * m_pSurface;
 
     // Color modulation (0-255 fixed-point, 255 = 1.0 = no change)
-    uint32_t m_cr, m_cg, m_cb, m_ca;
+    CColor<uint32_t> m_color;
 
     // The fragment shader function called per pixel
     FragmentShaderFunc m_shader;
-
-    // Uniform data passed to the shader
-    SShaderUniforms m_uniforms;
 
     // Three 2D vertexes
     CVertex m_vec[TRI];

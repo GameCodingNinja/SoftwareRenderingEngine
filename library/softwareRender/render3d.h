@@ -18,18 +18,13 @@ class CRender3d
 {
 public:
 
-    CRender3d( const CTexture * pText, CSurfaceData * pSurface, int32_t * pZBuffer, uint32_t colorR, uint32_t colorG, uint32_t colorB, uint32_t colorA, FragmentShaderFunc shader = nullptr ) :
+    CRender3d( const CTexture * pText, CSurfaceData * pSurface, int32_t * pZBuffer, const CColor<uint32_t> & color, FragmentShaderFunc shader = nullptr ) :
         m_pText(pText),
         m_pSurface(pSurface),
         m_pZBuffer(pZBuffer),
-        m_cr(colorR), m_cg(colorG), m_cb(colorB), m_ca(colorA),
+        m_color(color),
         m_shader(shader)
     {
-        m_uniforms.cr = colorR;
-        m_uniforms.cg = colorG;
-        m_uniforms.cb = colorB;
-        m_uniforms.ca = colorA;
-
         if( m_shader == nullptr )
             m_shader = NShaderDefault::shaderDefault;
     }
@@ -44,13 +39,10 @@ public:
     int32_t * m_pZBuffer;
 
     // Color modulation (0-255 fixed-point, 255 = 1.0 = no change)
-    uint32_t m_cr, m_cg, m_cb, m_ca;
+    CColor<uint32_t> m_color;
 
     // The fragment shader function called per pixel
     FragmentShaderFunc m_shader;
-
-    // Uniform data passed to the shader
-    SShaderUniforms m_uniforms;
 
     // Three vertexes (screen-projected with 1/Z, U/Z, V/Z)
     CVertex m_vec[TRI];

@@ -34,12 +34,12 @@ public:
     ************************************************************************/
     CColor():r(1),g(1),b(1),a(1){};
     CColor(type _r, type _g, type _b, type _a) : r(_r), g(_g), b(_b), a(_a)
-    { convert(); }
+    {}
 
     // Needs to be done like this to avoid recursion
     template <typename U>
     CColor( const CColor<U> & color ) : r(color.r), g(color.g), b(color.b), a(color.a)
-    { convert(); }
+    {}
 
     
     /************************************************************************                                                             

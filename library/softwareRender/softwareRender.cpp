@@ -69,7 +69,6 @@ void CSoftwareRender::setSurface( IFrameBuffer * pFrameBuffer )
 
     // Allocate z-buffer for 3D rendering
     m_zBuffer.resize( m_surfaceData.w * m_surfaceData.h, 0 );
-
 }
 
 /***************************************************************************
@@ -97,10 +96,7 @@ void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, co
     }
 
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per sprite
-    uint32_t cr = (uint32_t)(color.r * 255.0f);
-    uint32_t cg = (uint32_t)(color.g * 255.0f);
-    uint32_t cb = (uint32_t)(color.b * 255.0f);
-    uint32_t ca = (uint32_t)(color.a * 255.0f);
+    CColor<uint32_t> color32( (uint32_t)(color.r * 255.0f), (uint32_t)(color.g * 255.0f), (uint32_t)(color.b * 255.0f), (uint32_t)(color.a * 255.0f) );
 
     // Collect surviving triangles for strip-based rendering
     std::vector<CRender2d> triList;
@@ -109,7 +105,7 @@ void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, co
 
     for( int i = 0; i < triCount; ++i )
     {
-        CRender2d render2d( pText, &m_surfaceData, cr, cg, cb, ca, shader );
+        CRender2d render2d( pText, &m_surfaceData, color32, shader );
 
         // Copy over the verts for this triangle
         for( int j = 0; j < TRI; ++j )
@@ -152,7 +148,6 @@ void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, co
     }
 
     delete[] pTrans;
-
 }
 
 /***************************************************************************
@@ -328,26 +323,12 @@ void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax )
                     fixU = (int64_t)(((double)u + uOffset) * FIX_SCALE_UV);
                     fixV = (int64_t)(((double)v + vOffset) * FIX_SCALE_UV);
 
-                    // Unified shader-driven scanline loop
-                    SFragIn fragIn;
-                    SFragOut fragOut;
-
                     while( width-- > 0 )
                     {
                         uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
 
                         if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                        {
-                            fragIn.texel = *(pText + uvOffset);
-                            fragIn.dstColor = *pDBuffer;
-                            fragIn.texU = (uint)(fixU >> UV_SHIFT);
-                            fragIn.texV = (uint)(fixV >> UV_SHIFT);
-
-                            render.m_shader( fragIn, render.m_uniforms, fragOut );
-
-                            if( fragOut.write )
-                                *pDBuffer = fragOut.color;
-                        }
+                            render.m_shader( *(pText + uvOffset), pDBuffer, (uint)(fixU >> UV_SHIFT), (uint)(fixV >> UV_SHIFT), render.m_color );
 
                         ++pDBuffer;
                         fixU += fixStepU;
@@ -418,10 +399,7 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
     }
 
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per mesh
-    uint32_t cr = (uint32_t)(color.r * 255.0f);
-    uint32_t cg = (uint32_t)(color.g * 255.0f);
-    uint32_t cb = (uint32_t)(color.b * 255.0f);
-    uint32_t ca = (uint32_t)(color.a * 255.0f);
+    CColor<uint32_t> color32( (uint32_t)(color.r * 255.0f), (uint32_t)(color.g * 255.0f), (uint32_t)(color.b * 255.0f), (uint32_t)(color.a * 255.0f) );
 
     // Collect surviving triangles for strip-based rendering
     std::vector<CRender3d> triList;
@@ -535,7 +513,7 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
         // Fan-triangulate the clipped polygon (3 verts = 1 tri, 4 verts = 2 tris)
         for( int j = 1; j < clipCount - 1; ++j )
         {
-            CRender3d render3d( pText, &m_surfaceData, m_zBuffer.data(), cr, cg, cb, ca, shader );
+            CRender3d render3d( pText, &m_surfaceData, m_zBuffer.data(), color32, shader );
 
             render3d.m_vec[0] = projected[0];
             render3d.m_vec[1] = projected[j];
@@ -806,20 +784,8 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
                                 if( uvOffset < uvOffsetMax )
                                 {
-                                    SFragIn fragIn;
-                                    fragIn.texel = *(pText + uvOffset);
-                                    fragIn.dstColor = *pDBuffer;
-                                    fragIn.texU = texX;
-                                    fragIn.texV = texY;
-
-                                    SFragOut fragOut;
-                                    render.m_shader( fragIn, render.m_uniforms, fragOut );
-
-                                    if( fragOut.write )
-                                    {
-                                        *pDBuffer = fragOut.color;
+                                    if( render.m_shader( *(pText + uvOffset), pDBuffer, texX, texY, render.m_color ) )
                                         *pZBuffer = (int32_t)fixZ;
-                                    }
                                 }
                             }
 
@@ -877,20 +843,8 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
                                 if( uvOffset < uvOffsetMax )
                                 {
-                                    SFragIn fragIn;
-                                    fragIn.texel = *(pText + uvOffset);
-                                    fragIn.dstColor = *pDBuffer;
-                                    fragIn.texU = texX;
-                                    fragIn.texV = texY;
-
-                                    SFragOut fragOut;
-                                    render.m_shader( fragIn, render.m_uniforms, fragOut );
-
-                                    if( fragOut.write )
-                                    {
-                                        *pDBuffer = fragOut.color;
+                                    if( render.m_shader( *(pText + uvOffset), pDBuffer, texX, texY, render.m_color ) )
                                         *pZBuffer = (int32_t)fixZ;
-                                    }
                                 }
                             }
 

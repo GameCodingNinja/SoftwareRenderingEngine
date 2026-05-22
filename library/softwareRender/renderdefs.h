@@ -12,6 +12,7 @@
 
 // Game lib dependencies
 #include <common/vertex.h>
+#include <common/color.h>
 #include <common/defs.h>
 
 /************************************************************************
@@ -25,57 +26,19 @@ struct CSurfaceData
 };
 
 /************************************************************************
-*    Fragment shader input — what the rasterizer provides per pixel
-************************************************************************/
-struct SFragIn
-{
-    // Sampled texel from the bound texture (ARGB packed uint32)
-    uint32_t texel;
-
-    // Current destination pixel in the framebuffer (for blending)
-    uint32_t dstColor;
-
-    // Interpolated texture coordinates (pixel space, integer)
-    uint32_t texU;
-    uint32_t texV;
-};
-
-/************************************************************************
-*    Uniform block — constant data for the entire draw call.
-*    Set once per sprite, shared across all pixels.
-************************************************************************/
-struct SShaderUniforms
-{
-    // Color modulation (0-255 fixed-point, 255 = identity)
-    uint32_t cr, cg, cb, ca;
-};
-
-/************************************************************************
-*    Fragment shader output — what the shader produces per pixel
-************************************************************************/
-struct SFragOut
-{
-    // The final pixel color (ARGB packed uint32)
-    uint32_t color;
-
-    // Should the rasterizer write this pixel?
-    bool write;
-};
-
-/************************************************************************
 *    Fragment shader function signature.
 *    The rasterizer calls this once per pixel.
 ************************************************************************/
-typedef void (*FragmentShaderFunc)( const SFragIn & in, const SShaderUniforms & uniforms, SFragOut & out );
+typedef bool (*FragmentShaderFunc)( uint32_t texel, uint32_t * pDBuffer, uint32_t texU, uint32_t texV, const CColor<uint32_t> & color );
 
 /************************************************************************
 *    Default fallback shader (engine-side, no game dependency)
 ************************************************************************/
 namespace NShaderDefault
 {
-    inline void shaderDefault( const SFragIn & in, const SShaderUniforms & uniforms, SFragOut & out )
+    inline bool shaderDefault( uint32_t texel, uint32_t * pDBuffer, uint32_t texU, uint32_t texV, const CColor<uint32_t> & color )
     {
-        out.color = in.texel;
-        out.write = true;
+        *pDBuffer = texel;
+        return true;
     }
 }

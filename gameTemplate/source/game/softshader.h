@@ -16,93 +16,90 @@
 namespace NShader
 {
     // Default: write the texel as-is
-    inline void shaderDefault( const SFragIn & in, const SShaderUniforms & uniforms, SFragOut & out )
+    inline bool shaderDefault( uint32_t texel, uint32_t * pDBuffer, uint32_t texU, uint32_t texV, const CColor<uint32_t> & color )
     {
-        out.color = in.texel;
-        out.write = true;
+        *pDBuffer = texel;
+        return true;
     }
 
     // Color modulation: multiply each channel by the uniform color
-    inline void shaderColorMod( const SFragIn & in, const SShaderUniforms & uniforms, SFragOut & out )
+    inline bool shaderColorMod( uint32_t texel, uint32_t * pDBuffer, uint32_t texU, uint32_t texV, const CColor<uint32_t> & color )
     {
-        uint32_t r = ((in.texel >> 16) & 0xFF) * uniforms.cr / 255;
-        uint32_t g = ((in.texel >>  8) & 0xFF) * uniforms.cg / 255;
-        uint32_t b = ( in.texel        & 0xFF) * uniforms.cb / 255;
-        out.color = (255u << 24) | (r << 16) | (g << 8) | b;
-        out.write = true;
+        uint32_t r = ((texel >> 16) & 0xFF) * color.r / 255;
+        uint32_t g = ((texel >>  8) & 0xFF) * color.g / 255;
+        uint32_t b = ( texel        & 0xFF) * color.b / 255;
+        *pDBuffer = (255u << 24) | (r << 16) | (g << 8) | b;
+        return true;
     }
 
     // Alpha test: only write fully opaque texels
-    inline void shaderAlphaTest( const SFragIn & in, const SShaderUniforms & uniforms, SFragOut & out )
+    inline bool shaderAlphaTest( uint32_t texel, uint32_t * pDBuffer, uint32_t texU, uint32_t texV, const CColor<uint32_t> & color )
     {
-        out.color = in.texel;
-        out.write = ((in.texel >> 24) & 0xFF) == 255;
+        if( ((texel >> 24) & 0xFF) != 255 )
+            return false;
+
+        *pDBuffer = texel;
+        return true;
     }
 
     // Color modulation + alpha test
-    inline void shaderColorModAlpha( const SFragIn & in, const SShaderUniforms & uniforms, SFragOut & out )
+    inline bool shaderColorModAlpha( uint32_t texel, uint32_t * pDBuffer, uint32_t texU, uint32_t texV, const CColor<uint32_t> & color )
     {
-        if( ((in.texel >> 24) & 0xFF) != 255 )
-        {
-            out.write = false;
-            return;
-        }
+        if( ((texel >> 24) & 0xFF) != 255 )
+            return false;
 
-        uint32_t r = ((in.texel >> 16) & 0xFF) * uniforms.cr / 255;
-        uint32_t g = ((in.texel >>  8) & 0xFF) * uniforms.cg / 255;
-        uint32_t b = ( in.texel        & 0xFF) * uniforms.cb / 255;
-        out.color = (255u << 24) | (r << 16) | (g << 8) | b;
-        out.write = true;
+        uint32_t r = ((texel >> 16) & 0xFF) * color.r / 255;
+        uint32_t g = ((texel >>  8) & 0xFF) * color.g / 255;
+        uint32_t b = ( texel        & 0xFF) * color.b / 255;
+        *pDBuffer = (255u << 24) | (r << 16) | (g << 8) | b;
+        return true;
     }
 
     // Example custom shader: grayscale
-    inline void shaderGrayscale( const SFragIn & in, const SShaderUniforms & uniforms, SFragOut & out )
+    inline bool shaderGrayscale( uint32_t texel, uint32_t * pDBuffer, uint32_t texU, uint32_t texV, const CColor<uint32_t> & color )
     {
-        uint32_t r = (in.texel >> 16) & 0xFF;
-        uint32_t g = (in.texel >>  8) & 0xFF;
-        uint32_t b =  in.texel        & 0xFF;
-        uint32_t gray = (r * 77 + g * 150 + b * 29) >> 8;  // luminance weights
-        out.color = (255u << 24) | (gray << 16) | (gray << 8) | gray;
-        out.write = true;
+        uint32_t r = (texel >> 16) & 0xFF;
+        uint32_t g = (texel >>  8) & 0xFF;
+        uint32_t b =  texel        & 0xFF;
+        uint32_t gray = (r * 77 + g * 150 + b * 29) >> 8;
+        *pDBuffer = (255u << 24) | (gray << 16) | (gray << 8) | gray;
+        return true;
     }
 
     // Alpha blend: src * alpha + dst * (1 - alpha)
-    inline void shaderAlphaBlend( const SFragIn & in, const SShaderUniforms & uniforms, SFragOut & out )
+    inline bool shaderAlphaBlend( uint32_t texel, uint32_t * pDBuffer, uint32_t texU, uint32_t texV, const CColor<uint32_t> & color )
     {
-        uint32_t srcA = (in.texel >> 24) & 0xFF;
+        uint32_t srcA = (texel >> 24) & 0xFF;
 
         // Fully transparent — skip
         if( srcA == 0 )
-        {
-            out.write = false;
-            return;
-        }
+            return false;
 
         // Fully opaque — no blending needed
         if( srcA == 255 )
         {
-            out.color = in.texel;
-            out.write = true;
-            return;
+            *pDBuffer = texel;
+            return true;
         }
 
         // Blend: out = src * srcA/255 + dst * (255 - srcA)/255
         uint32_t invA = 255 - srcA;
+        uint32_t dstColor = *pDBuffer;
 
-        uint32_t srcR = (in.texel >> 16) & 0xFF;
-        uint32_t srcG = (in.texel >>  8) & 0xFF;
-        uint32_t srcB =  in.texel        & 0xFF;
+        uint32_t srcR = (texel >> 16) & 0xFF;
+        uint32_t srcG = (texel >>  8) & 0xFF;
+        uint32_t srcB =  texel        & 0xFF;
 
-        uint32_t dstR = (in.dstColor >> 16) & 0xFF;
-        uint32_t dstG = (in.dstColor >>  8) & 0xFF;
-        uint32_t dstB =  in.dstColor        & 0xFF;
+        uint32_t dstR = (dstColor >> 16) & 0xFF;
+        uint32_t dstG = (dstColor >>  8) & 0xFF;
+        uint32_t dstB =  dstColor        & 0xFF;
 
         uint32_t r = (srcR * srcA + dstR * invA) / 255;
         uint32_t g = (srcG * srcA + dstG * invA) / 255;
         uint32_t b = (srcB * srcA + dstB * invA) / 255;
 
-        out.color = (255u << 24) | (r << 16) | (g << 8) | b;
-        out.write = true;
+        *pDBuffer = (255u << 24) | (r << 16) | (g << 8) | b;
+        return true;
     }
 
 }  // namespace NShader
