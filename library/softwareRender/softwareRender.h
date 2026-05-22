@@ -10,7 +10,6 @@
 
 // Standard lib dependencies
 #include <string>
-#include <map>
 #include <vector>
 #include <future>
 
@@ -42,23 +41,11 @@ public:
     // Set the surface data from a framebuffer
     void setSurface( IFrameBuffer * pFrameBuffer );
 
-    // Create the VBO
-    uint createVBO( float * pData, uint count );
-
-    // Create the IBO
-    uint createIBO( uint * pData, uint sizeInBytes );
-
-    // Delete the VBO
-    void deleteVBO( uint Id );
-
-    // Delete the IBO
-    void deleteIBO( uint Id );
-
     // Render 2D (orthographic)
-    void render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, uint vboId, uint iboId, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
+    void render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, float * pVBO, uint * pIBO, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
 
     // Render 3D (perspective with z-buffer)
-    void render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, uint vboId, uint iboId, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
+    void render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, float * pVBO, uint * pIBO, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
 
     // Clear the z-buffer
     void clearZBuffer();
@@ -71,26 +58,10 @@ private:
     // Destructor
     ~CSoftwareRender();
 
-    // Get the VBO
-    float * getVBO( uint Id );
-
-    // Get the IBO
-    uint * getIBO( uint Id );
-
 private:
 
     // Surface data for the render target
     CSurfaceData m_surfaceData;
-
-    // ID inc
-    uint m_vboIdInc;
-    uint m_iboIdInc;
-
-    // map of allocated vbo
-    std::map<uint, float *> m_pVBOMap;
-
-    // map of allocated ibo
-    std::map<uint, uint *> m_pIBOMap;
 
     // Half size of view port
     CSize<float> m_halfScreen;

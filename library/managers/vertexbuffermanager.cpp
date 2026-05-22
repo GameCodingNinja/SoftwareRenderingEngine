@@ -8,19 +8,19 @@
 // Physical component dependency
 #include <managers/vertexbuffermanager.h>
 
+// Standard lib dependencies
+#include <cstring>
+
 // Game lib dependencies
 #include <common/quad2d.h>
 #include <common/scaledframe.h>
 #include <common/uv.h>
-#include <softwareRender/softwareRender.h>
 
 /************************************************************************
 *    desc:  Constructer
 ************************************************************************/
 CVertBufMgr::CVertBufMgr()
-    : m_currentVBOID(0),
-      m_currentIBOID(0),
-      currentMaxFontIndices(0)
+    : currentMaxFontIndices(0)
 {
 }
 
@@ -30,18 +30,25 @@ CVertBufMgr::CVertBufMgr()
 ************************************************************************/
 CVertBufMgr::~CVertBufMgr()
 {
+    for( auto & mapMapIter : m_vertexBufMapMap )
+        for( auto & mapIter : mapMapIter.second )
+            delete[] mapIter.second;
+
+    for( auto & mapMapIter : m_indexBufMapMap )
+        for( auto & mapIter : mapMapIter.second )
+            delete[] mapIter.second;
 }
 
 
 /************************************************************************
 *    desc:  Create a 2D quad VBO buffer
 ************************************************************************/
-uint CVertBufMgr::createQuadVBO( const std::string & group, const std::string & name, const CRect<float> & uv )
+float * CVertBufMgr::createQuadVBO( const std::string & group, const std::string & name, const CRect<float> & uv )
 {
     // Create the map group if it doesn't already exist
-    auto mapMapIter = m_vertexBuf2DMapMap.find( group );
-    if( mapMapIter == m_vertexBuf2DMapMap.end() )
-            mapMapIter = m_vertexBuf2DMapMap.insert( std::make_pair(group, std::map<const std::string, uint>()) ).first;
+    auto mapMapIter = m_vertexBufMapMap.find( group );
+    if( mapMapIter == m_vertexBufMapMap.end() )
+            mapMapIter = m_vertexBufMapMap.insert( std::make_pair(group, std::map<const std::string, float *>()) ).first;
 
     // See if this vertex buffer ID has already been loaded
     auto mapIter = mapMapIter->second.find( name );
@@ -60,26 +67,27 @@ uint CVertBufMgr::createQuadVBO( const std::string & group, const std::string & 
             -0.5f,  0.5f, 0.0,  uv.x1, uv.y2
         };
 
-        uint vboID = CSoftwareRender::Instance().createVBO( vertexData, sizeof(CQuad2D) );
+        uint size = sizeof(CQuad2D) / sizeof(float);
+        float * pVBO = new float[size];
+        std::memcpy( pVBO, vertexData, sizeof(CQuad2D) );
 
         // Insert the new vertex buffer info
-        mapIter = mapMapIter->second.insert( std::make_pair(name, vboID) ).first;
+        mapIter = mapMapIter->second.insert( std::make_pair(name, pVBO) ).first;
     }
 
     return mapIter->second;
-
 }
 
 
 /************************************************************************
 *    desc:  Create a IBO buffer
 ************************************************************************/
-uint CVertBufMgr::createIBO( const std::string & group, const std::string & name, uint indexData[], int sizeInBytes )
+uint * CVertBufMgr::createIBO( const std::string & group, const std::string & name, uint indexData[], int sizeInBytes )
 {
     // Create the map group if it doesn't already exist
-    auto mapMapIter = m_indexBuf2DMapMap.find( group );
-    if( mapMapIter == m_indexBuf2DMapMap.end() )
-            mapMapIter = m_indexBuf2DMapMap.insert( std::make_pair(group, std::map<const std::string, uint>()) ).first;
+    auto mapMapIter = m_indexBufMapMap.find( group );
+    if( mapMapIter == m_indexBufMapMap.end() )
+            mapMapIter = m_indexBufMapMap.insert( std::make_pair(group, std::map<const std::string, uint *>()) ).first;
 
     // See if this intex buffer ID has already been loaded
     auto mapIter = mapMapIter->second.find( name );
@@ -87,40 +95,40 @@ uint CVertBufMgr::createIBO( const std::string & group, const std::string & name
     // If it's not found, create the intex buffer and add it to the list
     if( mapIter == mapMapIter->second.end() )
     {
-        uint iboID = CSoftwareRender::Instance().createIBO( indexData, sizeInBytes );
+        uint size = sizeInBytes / sizeof(uint);
+        uint * pIBO = new uint[size];
+        std::memcpy( pIBO, indexData, sizeInBytes );
 
         // Insert the new intex buffer info
-        mapIter = mapMapIter->second.insert( std::make_pair(name, iboID) ).first;
+        mapIter = mapMapIter->second.insert( std::make_pair(name, pIBO) ).first;
     }
 
     return mapIter->second;
-
 }
 
 
 /************************************************************************
 *    desc:  Create a dynamic font IBO buffer
 ************************************************************************/
-uint CVertBufMgr::CreateDynamicFontIBO( const std::string & group, const std::string & name, unsigned short * pIndexData, int maxIndicies )
+uint * CVertBufMgr::CreateDynamicFontIBO( const std::string & group, const std::string & name, unsigned short * pIndexData, int maxIndicies )
 {
-    return 0;
-
+    return nullptr;
 }
 
 
 /************************************************************************
 *    desc:  Create a scaled frame
 ************************************************************************/
-uint CVertBufMgr::createScaledFrame( const std::string & group,
+float * CVertBufMgr::createScaledFrame( const std::string & group,
                                      const std::string & name,
                                      const CScaledFrame & scaledFrame,
                                      const CSize<int> & textSize,
                                      const CSize<int> & size )
 {
     // Create the map group if it doesn't already exist
-    auto mapMapIter = m_vertexBuf2DMapMap.find( group );
-    if( mapMapIter == m_vertexBuf2DMapMap.end() )
-            mapMapIter = m_vertexBuf2DMapMap.insert( std::make_pair(group, std::map<const std::string, uint>()) ).first;
+    auto mapMapIter = m_vertexBufMapMap.find( group );
+    if( mapMapIter == m_vertexBufMapMap.end() )
+            mapMapIter = m_vertexBufMapMap.insert( std::make_pair(group, std::map<const std::string, float *>()) ).first;
 
     // See if this vertex buffer ID has already been loaded
     auto mapIter = mapMapIter->second.find( name );
@@ -210,14 +218,15 @@ uint CVertBufMgr::createScaledFrame( const std::string & group,
         vertBuf[14] = quadBuf[6].vert[0];
         vertBuf[15] = quadBuf[7].vert[0];
 
-        uint vboID = CSoftwareRender::Instance().createVBO( (float*)vertBuf, sizeof(CVertex)*16 );
+        uint vboSize = sizeof(CVertex) * 16 / sizeof(float);
+        float * pVBO = new float[vboSize];
+        std::memcpy( pVBO, (float*)vertBuf, sizeof(CVertex) * 16 );
 
         // Insert the new vertex buffer info
-        mapIter = mapMapIter->second.insert( std::make_pair(name, vboID) ).first;
+        mapIter = mapMapIter->second.insert( std::make_pair(name, pVBO) ).first;
     }
 
     return mapIter->second;
-
 }
 
 
@@ -266,51 +275,33 @@ void CVertBufMgr::createQuad(
     quadBuf.vert[3].vert.y = vert.y + additionalOffsetY + vSize.h;
     quadBuf.vert[3].uv.u = (uv.u + uvSize.w) / textSize.w;
     quadBuf.vert[3].uv.v = (uv.v + uvSize.h) / textSize.h;
-
-}
-
-
-/************************************************************************
-*    desc:  Function call used to manage what buffer is currently bound.
-************************************************************************/
-void CVertBufMgr::BindBuffers( uint vboID, uint iboID )
-{
-}
-
-
-/************************************************************************
-*    desc:  Unbind the buffers and reset the flag
-************************************************************************/
-void CVertBufMgr::UnbindBuffers()
-{
 }
 
 
 /************************************************************************
 *    desc:  Delete buffer group
 ************************************************************************/
-void CVertBufMgr::deleteBufferGroupFor2D( const std::string & group )
+void CVertBufMgr::deleteBufferGroup( const std::string & group )
 {
     {
-        auto mapMapIter = m_vertexBuf2DMapMap.find( group );
-        if( mapMapIter != m_vertexBuf2DMapMap.end() )
+        auto mapMapIter = m_vertexBufMapMap.find( group );
+        if( mapMapIter != m_vertexBufMapMap.end() )
         {
             for( auto & mapIter : mapMapIter->second )
-                CSoftwareRender::Instance().deleteVBO( mapIter.second );
+                delete[] mapIter.second;
 
-            m_vertexBuf2DMapMap.erase( mapMapIter );
+            m_vertexBufMapMap.erase( mapMapIter );
         }
     }
 
     {
-        auto mapMapIter = m_indexBuf2DMapMap.find( group );
-        if( mapMapIter != m_indexBuf2DMapMap.end() )
+        auto mapMapIter = m_indexBufMapMap.find( group );
+        if( mapMapIter != m_indexBufMapMap.end() )
         {
             for( auto & mapIter : mapMapIter->second )
-                CSoftwareRender::Instance().deleteIBO( mapIter.second );
+                delete[] mapIter.second;
 
-            m_indexBuf2DMapMap.erase( mapMapIter );
+            m_indexBufMapMap.erase( mapMapIter );
         }
     }
-
 }

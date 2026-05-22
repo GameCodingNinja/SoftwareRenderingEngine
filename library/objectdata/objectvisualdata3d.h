@@ -52,10 +52,10 @@ public:
     const CPoint<float> & getVertexScale() const;
 
     // Get the VBO
-    uint getVBO() const;
+    float * getVBO() const;
 
     // Get the IBO
-    uint getIBO() const;
+    uint * getIBO() const;
 
     // Get the vertex count
     int getVertexCount() const;
@@ -72,10 +72,10 @@ private:
     std::vector<const CTexture *> m_textureVec;
 
     // VBO
-    uint m_vbo;
+    float * m_pVBO;
 
     // IBO
-    uint m_ibo;
+    uint * m_pIBO;
 
     // VBO/IBO generation type
     NDefs::EGenerationType m_genType;

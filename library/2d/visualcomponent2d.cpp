@@ -24,8 +24,8 @@ CVisualComponent2d::CVisualComponent2d( const CObjectData2D & objectData )
       m_uvOffset( sizeof(CPoint<float>) ),
       m_pTexture( m_visualData.getTexture() ),
       m_color( m_visualData.getColor() ),
-      m_vbo( m_visualData.getVBO() ),
-      m_ibo( m_visualData.getIBO() ),
+      m_pVBO( m_visualData.getVBO() ),
+      m_pIBO( m_visualData.getIBO() ),
       m_vertexCount( m_visualData.getVertexCount() ),
       m_IndexCount( m_visualData.getIndexCount() )
 {
@@ -58,7 +58,7 @@ void CVisualComponent2d::render( const CMatrix & matrix )
             finalMatrix.setScale( m_visualData.getVertexScale() );
             finalMatrix *= matrix;
 
-            CSoftwareRender::Instance().render2D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_vbo, m_ibo, m_color, m_visualData.getShader() );
+            CSoftwareRender::Instance().render2D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_visualData.getShader() );
         }
     }
 

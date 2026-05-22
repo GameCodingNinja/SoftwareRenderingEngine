@@ -62,10 +62,10 @@ private:
     CColor<float> m_color;
 
     // VBO
-    uint m_vbo;
+    float * m_pVBO;
 
     // IBO
-    uint m_ibo;
+    uint * m_pIBO;
 
     // Vertex count
     int m_vertexCount;

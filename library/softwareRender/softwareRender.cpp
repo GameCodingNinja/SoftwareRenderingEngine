@@ -16,7 +16,6 @@
 #include <utilities/threadpool.h>
 #include <utilities/genfunc.h>
 #include <utilities/exceptionhandling.h>
-#include <utilities/deletefuncs.h>
 #include <common/texture.h>
 #include <softwareRender/triangleslope.h>
 
@@ -38,9 +37,7 @@ void RenderStrip3d( const std::vector<CRender3d> * pTriList, int yMin, int yMax 
 /************************************************************************
 *    desc:  Constructor
 ************************************************************************/
-CSoftwareRender::CSoftwareRender() :
-    m_vboIdInc(0),
-    m_iboIdInc(0)
+CSoftwareRender::CSoftwareRender()
 {
     // Init the thread pool if not already active
     if( !CThreadPool::Instance().isActive() )
@@ -53,9 +50,6 @@ CSoftwareRender::CSoftwareRender() :
 ************************************************************************/
 CSoftwareRender::~CSoftwareRender()
 {
-    NDelFunc::DeleteMapArrayPointers(m_pVBOMap);
-    NDelFunc::DeleteMapArrayPointers(m_pIBOMap);
-
 }
 
 /***************************************************************************
@@ -79,117 +73,12 @@ void CSoftwareRender::setSurface( IFrameBuffer * pFrameBuffer )
 }
 
 /***************************************************************************
-*   desc:  Create the VBO
-****************************************************************************/
-uint CSoftwareRender::createVBO( float * pData, uint sizeInBytes )
-{
-    ++m_vboIdInc;
-
-    uint size = sizeInBytes / sizeof(float);
-    auto mapIter = m_pVBOMap.insert( std::make_pair(m_vboIdInc, new float[size]) ).first;
-
-    std::memcpy( mapIter->second, pData, sizeInBytes );
-
-    return m_vboIdInc;
-
-}
-
-/***************************************************************************
-*   desc:  Create the IBO
-****************************************************************************/
-uint CSoftwareRender::createIBO( uint * pData, uint sizeInBytes )
-{
-    ++m_iboIdInc;
-
-    uint size = sizeInBytes / sizeof(uint);
-    auto mapIter = m_pIBOMap.insert( std::make_pair(m_vboIdInc, new uint[size]) ).first;
-
-    std::memcpy( mapIter->second, pData, sizeInBytes );
-
-    return m_iboIdInc;
-
-}
-
-/***************************************************************************
-*   desc:  Delete the VBO
-****************************************************************************/
-void CSoftwareRender::deleteVBO( uint Id )
-{
-    // Delete the texture if it exists
-    auto mapIter = m_pVBOMap.find( Id );
-    if( mapIter != m_pVBOMap.end() )
-    {
-        NDelFunc::DeleteArray( mapIter->second );
-        m_pVBOMap.erase( mapIter );
-    }
-
-}
-
-/***************************************************************************
-*   desc:  Delete the IBO
-****************************************************************************/
-void CSoftwareRender::deleteIBO( uint Id )
-{
-    // Delete the texture if it exists
-    auto mapIter = m_pIBOMap.find( Id );
-    if( mapIter != m_pIBOMap.end() )
-    {
-        NDelFunc::DeleteArray( mapIter->second );
-        m_pIBOMap.erase( mapIter );
-    }
-
-}
-
-/***************************************************************************
-*   desc:  Get the VBO
-****************************************************************************/
-float * CSoftwareRender::getVBO( uint Id )
-{
-    // Delete the texture if it exists
-    auto mapIter = m_pVBOMap.find( Id );
-    if( mapIter != m_pVBOMap.end() )
-    {
-        return mapIter->second;
-    }
-    else
-    {
-        throw NExcept::CCriticalException("VBO Find Error!",
-            NGenFunc::FormatString("Unable to find VBO Id (%d).\n\n%s\nLine: %d", Id, __FUNCTION__, __LINE__));
-    }
-
-    return nullptr;
-
-}
-
-/***************************************************************************
-*   desc:  Get the IBO
-****************************************************************************/
-uint * CSoftwareRender::getIBO( uint Id )
-{
-    // Delete the texture if it exists
-    auto mapIter = m_pIBOMap.find( Id );
-    if( mapIter != m_pIBOMap.end() )
-    {
-        return mapIter->second;
-    }
-    else
-    {
-        throw NExcept::CCriticalException("IBO Find Error!",
-            NGenFunc::FormatString("Unable to find IBO Id (%d).\n\n%s\nLine: %d", Id, __FUNCTION__, __LINE__));
-    }
-
-    return nullptr;
-
-}
-
-/***************************************************************************
 *   Perspective Projection: ((trans.vert[0].vert.x / trans.vert[0].vert.z) * m_halfSize.w) + m_halfSize.w + 0.5f;
 *   Orthographic Projection: (trans.vert[0].vert.x * m_halfSize.w) + m_halfSize.w + 0.5f;
 ****************************************************************************/
-void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, uint vboId, uint iboId, const CColor<float> & color, FragmentShaderFunc shader )
+void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, float * pVBO, uint * pIBO, const CColor<float> & color, FragmentShaderFunc shader )
 {
-    CVertex * pVert = (CVertex *)getVBO( vboId );
-    uint * pIBO = getIBO( iboId );
+    CVertex * pVert = (CVertex *)pVBO;
 
     CVertex * pTrans = new CVertex[vertCount];
 
@@ -262,7 +151,7 @@ void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, co
         }
     }
 
-    NDelFunc::DeleteArray( pTrans );
+    delete[] pTrans;
 
 }
 
@@ -488,10 +377,9 @@ void CSoftwareRender::clearZBuffer()
 *          the near plane (W >= nearClip), following the legacy tri3D approach.
 *          Clipping is done in clip space before projection.
 ****************************************************************************/
-void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, uint vboId, uint iboId, const CColor<float> & color, FragmentShaderFunc shader )
+void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, float * pVBO, uint * pIBO, const CColor<float> & color, FragmentShaderFunc shader )
 {
-    CVertex * pVert = (CVertex *)getVBO( vboId );
-    uint * pIBO = getIBO( iboId );
+    CVertex * pVert = (CVertex *)pVBO;
 
     // Temporary struct to hold transformed but unprojected vertex data
     struct TransVert

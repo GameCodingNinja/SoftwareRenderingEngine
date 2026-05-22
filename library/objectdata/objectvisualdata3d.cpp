@@ -21,8 +21,8 @@
 *    desc:  Constructer
 ************************************************************************/
 CObjectVisualData3D::CObjectVisualData3D()
-    : m_vbo(0),
-      m_ibo(0),
+    : m_pVBO(nullptr),
+      m_pIBO(nullptr),
       m_genType(NDefs::EGT_NULL),
       m_vertexCount(0),
       m_indexCount(0),
@@ -126,8 +126,8 @@ void CObjectVisualData3D::createFromData( const std::string & group, CSize<int> 
 
         std::string vboName = NGenFunc::FormatString("quad_%g_%g_%g_%g", m_uv.x1, m_uv.y1, m_uv.x2, m_uv.y2);
 
-        m_vbo = CVertBufMgr::Instance().createQuadVBO( group, vboName, m_uv );
-        m_ibo = CVertBufMgr::Instance().createIBO( group, "quad_0123", indexData, sizeof(indexData) );
+        m_pVBO = CVertBufMgr::Instance().createQuadVBO( group, vboName, m_uv );
+        m_pIBO = CVertBufMgr::Instance().createIBO( group, "quad_0123", indexData, sizeof(indexData) );
 
         // Scale the quad to match the texture's aspect ratio
         // so it doesn't appear stretched
@@ -181,18 +181,18 @@ const CColor<float> & CObjectVisualData3D::getColor() const
 /************************************************************************
 *    desc:  Get the VBO
 ************************************************************************/
-uint CObjectVisualData3D::getVBO() const 
+float * CObjectVisualData3D::getVBO() const 
 {
-    return m_vbo;
+    return m_pVBO;
 }
 
 
 /************************************************************************
 *    desc:  Get the IBO
 ************************************************************************/
-uint CObjectVisualData3D::getIBO() const 
+uint * CObjectVisualData3D::getIBO() const 
 {
-    return m_ibo;
+    return m_pIBO;
 }
 
 

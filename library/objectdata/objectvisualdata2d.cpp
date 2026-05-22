@@ -21,8 +21,8 @@
 *    desc:  Constructer
 ************************************************************************/
 CObjectVisualData2D::CObjectVisualData2D()
-    : m_vbo(0),
-      m_ibo(0),
+    : m_pVBO(nullptr),
+      m_pIBO(nullptr),
       m_genType(NDefs::EGT_NULL),
       m_vertexCount(0),
       m_indexCount(0),
@@ -156,8 +156,8 @@ void CObjectVisualData2D::createFromData( const std::string & group, CSize<int> 
 
         std::string vboName = NGenFunc::FormatString("quad_%g_%g_%g_%g", m_uv.x1, m_uv.y1, m_uv.x2, m_uv.y2);
 
-        m_vbo = CVertBufMgr::Instance().createQuadVBO( group, vboName, m_uv );
-        m_ibo = CVertBufMgr::Instance().createIBO( group, "quad_0123", indexData, sizeof(indexData) );
+        m_pVBO = CVertBufMgr::Instance().createQuadVBO( group, vboName, m_uv );
+        m_pIBO = CVertBufMgr::Instance().createIBO( group, "quad_0123", indexData, sizeof(indexData) );
 
         // For this generation type, the image size is the default scale
         m_vertexScale.x = rSize.w;
@@ -174,7 +174,7 @@ void CObjectVisualData2D::createFromData( const std::string & group, CSize<int> 
         const CTexture * pLastTex = m_textureVec.back();
         std::string vboName = NGenFunc::FormatString("scaled_frame_%d_%d_%d_%d_%d_%d", (int)rSize.w, (int)rSize.h, (int)m_scaledFrame.m_frame.w, (int)m_scaledFrame.m_frame.h, (int)pLastTex->m_size.w, (int)pLastTex->m_size.h);
 
-        m_vbo = CVertBufMgr::Instance().createScaledFrame(
+        m_pVBO = CVertBufMgr::Instance().createScaledFrame(
             group, vboName,m_scaledFrame, pLastTex->getSize(), rSize );
 
         uint indexData[] = {0,1,2,     0,3,1,
@@ -188,7 +188,7 @@ void CObjectVisualData2D::createFromData( const std::string & group, CSize<int> 
                                3,7,1,     3,10,7};
 
         // Create the reusable IBO buffer
-        m_ibo = CVertBufMgr::Instance().createIBO( group, "scaled_frame", indexData, sizeof(indexData) );
+        m_pIBO = CVertBufMgr::Instance().createIBO( group, "scaled_frame", indexData, sizeof(indexData) );
 
         // Set the vert count depending on the number of quads being rendered
         // If the center quad is not used, just adjust the vertex count because
@@ -235,18 +235,18 @@ const CColor<float> & CObjectVisualData2D::getColor() const
 /************************************************************************
 *    desc:  Get the VBO
 ************************************************************************/
-uint CObjectVisualData2D::getVBO() const 
+float * CObjectVisualData2D::getVBO() const 
 {
-    return m_vbo;
+    return m_pVBO;
 }
 
 
 /************************************************************************
 *    desc:  Get the IBO
 ************************************************************************/
-uint CObjectVisualData2D::getIBO() const 
+uint * CObjectVisualData2D::getIBO() const 
 {
-    return m_ibo;
+    return m_pIBO;
 }
 
 

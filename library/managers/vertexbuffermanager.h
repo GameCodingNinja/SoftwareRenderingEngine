@@ -35,16 +35,16 @@ public:
     }
 
     // Create a quad VBO buffers
-    uint createQuadVBO( const std::string & group, const std::string & name, const CRect<float> & uv );
+    float * createQuadVBO( const std::string & group, const std::string & name, const CRect<float> & uv );
 
     // Create a IBO buffer
-    uint createIBO( const std::string & group, const std::string & name, uint indexData[], int sizeInBytes );
+    uint * createIBO( const std::string & group, const std::string & name, uint indexData[], int sizeInBytes );
 
     // Creates and manages the dynamic font indicies IBO
-    uint CreateDynamicFontIBO( const std::string & group, const std::string & name, unsigned short * pIndexData, int maxIndicies );
+    uint * CreateDynamicFontIBO( const std::string & group, const std::string & name, unsigned short * pIndexData, int maxIndicies );
 
     // Create a scaled frame
-    uint createScaledFrame( const std::string & group,
+    float * createScaledFrame( const std::string & group,
                               const std::string & name,
                               const CScaledFrame & scaledFrame,
                               const CSize<int> & textSize,
@@ -58,14 +58,8 @@ public:
                      const CSize<float> & size,
                      CQuad2D & quadBuf );
 
-    // Function call used to manage what buffer is currently bound.
-    void BindBuffers( uint vboID, uint iboID );
-
-    // Unbind the buffers and reset the flag
-    void UnbindBuffers();
-
     // Delete buffer group
-    void deleteBufferGroupFor2D( const std::string & group );
+    void deleteBufferGroup( const std::string & group );
 
 private:
 
@@ -78,16 +72,10 @@ private:
 private:
 
     // Map containing a group of VBO handles
-    std::map< const std::string, std::map< const std::string, uint > > m_vertexBuf2DMapMap;
+    std::map< const std::string, std::map< const std::string, float * > > m_vertexBufMapMap;
 
     // Map containing a group of IBO handles
-    std::map< const std::string, std::map< const std::string, uint > > m_indexBuf2DMapMap;
-
-    // Current vbo ID
-    uint m_currentVBOID;
-
-    // Current IBO ID
-    uint m_currentIBOID;
+    std::map< const std::string, std::map< const std::string, uint * > > m_indexBufMapMap;
 
     // Current dynamic font IBO indices size
     int currentMaxFontIndices;
@@ -95,5 +83,3 @@ private:
 };
 
 #endif
-
-
