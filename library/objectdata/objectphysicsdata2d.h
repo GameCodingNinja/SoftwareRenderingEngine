@@ -81,7 +81,7 @@ public:
     bool IsRotationFixed() const;
 
     // Get the color
-    const CColor & GetColor() const;
+    const CColor<float> & GetColor() const;
 
 private:
 
@@ -116,7 +116,7 @@ private:
     bool m_fixedRotation;
 
     // Color of the physics (this is only used for testing purposes)
-    CColor m_color;
+    CColor<float> m_color;
 
 };
 

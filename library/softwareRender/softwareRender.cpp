@@ -237,7 +237,7 @@ uint * CSoftwareRender::GetIBO( uint Id )
 *   Perspective Projection: ((trans.vert[0].vert.x / trans.vert[0].vert.z) * m_halfSize.w) + m_halfSize.w + 0.5f;
 *   Orthographic Projection: (trans.vert[0].vert.x * m_halfSize.w) + m_halfSize.w + 0.5f;
 ****************************************************************************/
-void CSoftwareRender::Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color, FragmentShaderFunc shader )
+void CSoftwareRender::Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor<float> & color, FragmentShaderFunc shader )
 {
     CSRTexture * pText = GetTexture( textId );
     CVertex * pVert = (CVertex *)GetVBO( vboId );
@@ -540,7 +540,7 @@ void CSoftwareRender::ClearZBuffer()
 *          the near plane (W >= nearClip), following the legacy tri3D approach.
 *          Clipping is done in clip space before projection.
 ****************************************************************************/
-void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color, FragmentShaderFunc shader )
+void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor<float> & color, FragmentShaderFunc shader )
 {
     CSRTexture * pText = GetTexture( textId );
     CVertex * pVert = (CVertex *)GetVBO( vboId );

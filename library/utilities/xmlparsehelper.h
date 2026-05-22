@@ -41,7 +41,7 @@ namespace NParseHelper
     CPoint<float> LoadScale( const XMLNode & node, bool & loaded );
 
     // Load the color
-    CColor LoadColor(const  XMLNode & node, const CColor & currentColor );
+    CColor<float> LoadColor(const  XMLNode & node, const CColor<float> & currentColor );
 
     // Load the size
     CSize<int> LoadSize( const XMLNode & node );

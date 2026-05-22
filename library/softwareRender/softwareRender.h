@@ -61,10 +61,10 @@ public:
     void DeleteIBO( uint Id );
 
     // Render 2D (orthographic)
-    void Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor(), FragmentShaderFunc shader = nullptr );
+    void Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
 
     // Render 3D (perspective with z-buffer)
-    void Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor(), FragmentShaderFunc shader = nullptr );
+    void Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
 
     // Clear the z-buffer
     void ClearZBuffer();

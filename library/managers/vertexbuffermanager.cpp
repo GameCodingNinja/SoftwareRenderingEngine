@@ -139,56 +139,56 @@ uint CVertBufMgr::CreateScaledFrame( const std::string & group,
         // Left frame
         CreateQuad( CPoint<float>(-center.x, center.y-scaledFrame.m_frame.h),
                     CSize<float>(scaledFrame.m_frame.w, -frameLgth.h),
-                    CUV(0, scaledFrame.m_frame.h),
+                    CUV<float>(0, scaledFrame.m_frame.h),
                     CSize<float>(scaledFrame.m_frame.w, uvLgth.h),
                     textSize, size, quadBuf[0] );
 
         // top left
         CreateQuad( CPoint<float>(-center.x, center.y),
                     CSize<float>(scaledFrame.m_frame.w, -scaledFrame.m_frame.h),
-                    CUV(0, 0),
+                    CUV<float>(0, 0),
                     CSize<float>(scaledFrame.m_frame.w, scaledFrame.m_frame.h),
                     textSize, size, quadBuf[1] );
 
         // top
         CreateQuad( CPoint<float>(-(center.x-scaledFrame.m_frame.w), center.y),
                     CSize<float>(frameLgth.w, -scaledFrame.m_frame.h),
-                    CUV(scaledFrame.m_frame.w, 0),
+                    CUV<float>(scaledFrame.m_frame.w, 0),
                     CSize<float>(uvLgth.w, scaledFrame.m_frame.h),
                     textSize, size, quadBuf[2] );
 
         // top right
         CreateQuad( CPoint<float>(center.x-scaledFrame.m_frame.w, center.y),
                     CSize<float>(scaledFrame.m_frame.w, -scaledFrame.m_frame.h),
-                    CUV(scaledFrame.m_frame.w + uvLgth.w,0),
+                    CUV<float>(scaledFrame.m_frame.w + uvLgth.w,0),
                     CSize<float>(scaledFrame.m_frame.w, scaledFrame.m_frame.h),
                     textSize, size, quadBuf[3] );
 
         // right frame
         CreateQuad( CPoint<float>(center.x-scaledFrame.m_frame.w, center.y-scaledFrame.m_frame.h),
                     CSize<float>(scaledFrame.m_frame.w, -frameLgth.h),
-                    CUV(scaledFrame.m_frame.w + uvLgth.w, scaledFrame.m_frame.h),
+                    CUV<float>(scaledFrame.m_frame.w + uvLgth.w, scaledFrame.m_frame.h),
                     CSize<float>(scaledFrame.m_frame.w, uvLgth.h),
                     textSize, size, quadBuf[4] );
 
         // bottom right
         CreateQuad( CPoint<float>(center.x-scaledFrame.m_frame.w, -(center.y-scaledFrame.m_frame.h)),
                     CSize<float>(scaledFrame.m_frame.w, -scaledFrame.m_frame.h),
-                    CUV(scaledFrame.m_frame.w + uvLgth.w, scaledFrame.m_frame.h + uvLgth.h),
+                    CUV<float>(scaledFrame.m_frame.w + uvLgth.w, scaledFrame.m_frame.h + uvLgth.h),
                     CSize<float>(scaledFrame.m_frame.w, scaledFrame.m_frame.h),
                     textSize, size, quadBuf[5] );
 
         // bottom frame
         CreateQuad( CPoint<float>(-(center.x-scaledFrame.m_frame.w), -(center.y-scaledFrame.m_frame.h)),
                     CSize<float>(frameLgth.w, -scaledFrame.m_frame.h),
-                    CUV(scaledFrame.m_frame.w, scaledFrame.m_frame.h + uvLgth.h),
+                    CUV<float>(scaledFrame.m_frame.w, scaledFrame.m_frame.h + uvLgth.h),
                     CSize<float>(uvLgth.w, scaledFrame.m_frame.h),
                     textSize, size, quadBuf[6] );
 
         // bottom left
         CreateQuad( CPoint<float>(-center.x, -(center.y-scaledFrame.m_frame.h)),
                     CSize<float>(scaledFrame.m_frame.w, -scaledFrame.m_frame.h),
-                    CUV(0, scaledFrame.m_frame.h + uvLgth.h),
+                    CUV<float>(0, scaledFrame.m_frame.h + uvLgth.h),
                     CSize<float>(scaledFrame.m_frame.w, scaledFrame.m_frame.h),
                     textSize, size, quadBuf[7] );
 
@@ -227,7 +227,7 @@ uint CVertBufMgr::CreateScaledFrame( const std::string & group,
 void CVertBufMgr::CreateQuad( 
     const CPoint<float> & vert,
     const CSize<float> & vSize,
-    const CUV & uv,
+    const CUV<float> & uv,
     const CSize<float> & uvSize,
     const CSize<float> & textSize,
     const CSize<float> & size,

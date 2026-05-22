@@ -287,7 +287,7 @@ bool CObjectPhysicsData2D::IsRotationFixed() const
 /************************************************************************
 *    desc:  Get the color
 ************************************************************************/
-const CColor & CObjectPhysicsData2D::GetColor() const 
+const CColor<float> & CObjectPhysicsData2D::GetColor() const 
 {
     return m_color;
 }

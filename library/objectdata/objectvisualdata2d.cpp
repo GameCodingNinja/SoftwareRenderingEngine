@@ -227,7 +227,7 @@ uint CObjectVisualData2D::GetTextureID( uint index ) const
 /************************************************************************
 *    desc:  Get the color
 ************************************************************************/
-const CColor & CObjectVisualData2D::GetColor() const 
+const CColor<float> & CObjectVisualData2D::GetColor() const 
 {
     return m_color;
 }

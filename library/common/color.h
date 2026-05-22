@@ -22,37 +22,39 @@
 *
 *	Description: Class for holding color values
 ************************************************************************/
+template <typename type>
 class CColor
 {
 public:
 
-    float r, g, b, a;
+    type r, g, b, a;
 
     /************************************************************************                                                             
     *    desc:  Constructor
     ************************************************************************/
     CColor():r(1),g(1),b(1),a(1){};
-    CColor(float _r, float _g, float _b, float _a) : r(_r), g(_g), b(_b), a(_a)
+    CColor(type _r, type _g, type _b, type _a) : r(_r), g(_g), b(_b), a(_a)
     { convert(); }
 
-    // Copy constructor
-    CColor( const CColor & color ) : r(color.r), g(color.g), b(color.b), a(color.a)
+    // Needs to be done like this to avoid recursion
+    template <typename U>
+    CColor( const CColor<U> & color ) : r(color.r), g(color.g), b(color.b), a(color.a)
     { convert(); }
 
     
     /************************************************************************                                                             
     *    desc:  Get functions
     ************************************************************************/
-    float getR() const
+    type getR() const
     { return r; }
 
-    float getG() const
+    type getG() const
     { return g; }
 
-    float getB() const
+    type getB() const
     { return b; }
 
-    float getA() const
+    type getA() const
     { return a; }
 
     /************************************************************************                                                             
@@ -141,7 +143,7 @@ public:
     /************************************************************************                                                             
     *    desc:  The subtraction operator 
     ************************************************************************/
-    CColor operator - ( float value ) const
+    CColor operator - ( type value ) const
     {
         CColor tmp;
         tmp.r = r - value;
@@ -168,7 +170,7 @@ public:
     /************************************************************************                                                             
     *    desc:  The addition operator 
     ************************************************************************/
-    CColor operator -= ( float value )
+    CColor operator -= ( type value )
     {
         r -= value;
         g -= value;
@@ -199,7 +201,7 @@ public:
     /************************************************************************                                                             
     *    desc:  The addition operator 
     ************************************************************************/
-    CColor operator + ( float value ) const
+    CColor operator + ( type value ) const
     {
         CColor tmp;
         tmp.r = r + value;
@@ -226,7 +228,7 @@ public:
     /************************************************************************                                                             
     *    desc:  The addition operator 
     ************************************************************************/
-    CColor operator += ( float value )
+    CColor operator += ( type value )
     {
         r += value;
         g += value;
@@ -257,7 +259,7 @@ public:
     /************************************************************************                                                             
     *    desc:  The addition operator 
     ************************************************************************/
-    CColor operator / ( float value ) const
+    CColor operator / ( type value ) const
     {
         CColor tmp;
         tmp.r = r / value;
@@ -284,7 +286,7 @@ public:
     /************************************************************************                                                             
     *    desc:  The division operator 
     ************************************************************************/
-    CColor operator /= ( float value )
+    CColor operator /= ( type value )
     {
         r /= value;
         g /= value;
@@ -315,7 +317,7 @@ public:
     /************************************************************************                                                             
     *    desc:  The multiplication operator 
     ************************************************************************/
-    CColor operator * ( float value ) const
+    CColor operator * ( type value ) const
     {
         CColor tmp;
         tmp.r = r * value;
@@ -342,7 +344,7 @@ public:
     /************************************************************************                                                             
     *    desc:  The multiplication operator 
     ************************************************************************/
-    CColor operator *= ( float value )
+    CColor operator *= ( type value )
     {
         r *= value;
         g *= value;
@@ -355,7 +357,7 @@ public:
     /************************************************************************                                                             
     *    desc:  Set the point data
     ************************************************************************/
-    void set( float _r, float _g, float _b, float _a )
+    void set( type _r, type _g, type _b, type _a )
     {
         r = _r;
         g = _g;

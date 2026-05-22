@@ -39,8 +39,8 @@ public:
     bool IsActive() override;
 
     // Set/Get the color
-    void SetColor( const CColor & color ) override;
-    const CColor & GetColor() const override;
+    void SetColor( const CColor<float> & color ) override;
+    const CColor<float> & GetColor() const override;
 
     // Set the texture ID from index
     void SetTextureID( uint index ) override;
@@ -58,7 +58,7 @@ private:
     uint m_textureID;
 
     // Color
-    CColor m_color;
+    CColor<float> m_color;
 
     // VBO
     uint m_vbo;

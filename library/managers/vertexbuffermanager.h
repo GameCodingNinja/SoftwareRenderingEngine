@@ -21,7 +21,7 @@
 // Forward declaration(s)
 class CScaledFrame;
 class CQuad2D;
-class CUV;
+template <typename type> class CUV;
 
 class CVertBufMgr
 {
@@ -52,7 +52,7 @@ public:
 
     void CreateQuad( const CPoint<float> & vert,
                      const CSize<float> & vSize,
-                     const CUV & uv,
+                     const CUV<float> & uv,
                      const CSize<float> & uvSize,
                      const CSize<float> & textSize,
                      const CSize<float> & size,

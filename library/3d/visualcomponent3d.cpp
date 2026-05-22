@@ -78,13 +78,13 @@ bool CVisualComponent3d::IsActive()
 /************************************************************************
 *    desc:  Set/Get the color 
 ************************************************************************/
-void CVisualComponent3d::SetColor( const CColor & color )
+void CVisualComponent3d::SetColor( const CColor<float> & color )
 {
     m_color = color;
 
 }   // SetColor
 
-const CColor & CVisualComponent3d::GetColor() const
+const CColor<float> & CVisualComponent3d::GetColor() const
 {
     return m_color;
 

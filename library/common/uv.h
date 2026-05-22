@@ -7,28 +7,28 @@
 #ifndef __uv_h__
 #define __uv_h__
 
+template <typename type>
 class CUV
 {
 public:
 
-    float u, v;
+    type u, v;
 
     CUV():u(0),v(0)
     {
     }
 
-    CUV( float _u, float _v )
+    CUV( type _u, type _v )
     {
             u = _u;
             v = _v;
     }
 
-    // Copy constructor
-    CUV( const CUV &obj )
+    // Needs to be done like this to avoid recursion
+    template <typename U>
+    CUV( const CUV<U> &obj ) : u(obj.u), v(obj.v)
     {
-        *this = obj;
     }
 };
 
 #endif  // __uv_h__
-

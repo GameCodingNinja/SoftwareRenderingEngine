@@ -174,7 +174,7 @@ uint CObjectVisualData3D::GetTextureID( uint index ) const
 /************************************************************************
 *    desc:  Get the color
 ************************************************************************/
-const CColor & CObjectVisualData3D::GetColor() const 
+const CColor<float> & CObjectVisualData3D::GetColor() const 
 {
     return m_color;
 }

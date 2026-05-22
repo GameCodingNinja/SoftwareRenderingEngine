@@ -166,9 +166,9 @@ namespace NParseHelper
     *
     *    param: node - passed in node
     ************************************************************************/
-    CColor LoadColor( const XMLNode & node, const CColor & currentColor )
+    CColor<float> LoadColor( const XMLNode & node, const CColor<float> & currentColor )
     {
-        CColor color( currentColor );
+        CColor<float> color( currentColor );
 
         XMLNode colorNode = node.getChildNode( "color" );
         if( !colorNode.isEmpty() )

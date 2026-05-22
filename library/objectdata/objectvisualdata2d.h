@@ -46,7 +46,7 @@ public:
     uint GetTextureID( uint index = 0 ) const;
 
     // Get the color
-    const CColor & GetColor() const;
+    const CColor<float> & GetColor() const;
 
     // Get the vertex scale
     const CPoint<float> & GetVertexScale() const;
@@ -84,7 +84,7 @@ private:
     NDefs::EGenerationType m_genType;
 
     // Initial color of the object
-    CColor m_color;
+    CColor<float> m_color;
 
     // texture file path vector
     std::vector<std::string> m_textureFileVec;

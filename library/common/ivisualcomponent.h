@@ -32,8 +32,8 @@ public:
     virtual bool IsActive() = 0;
 
     // Set/Get the color
-    virtual void SetColor( const CColor & color ) = 0;
-    virtual const CColor & GetColor() const = 0;
+    virtual void SetColor( const CColor<float> & color ) = 0;
+    virtual const CColor<float> & GetColor() const = 0;
 
     // Set the texture ID from index
     virtual void SetTextureID( uint index ) = 0;

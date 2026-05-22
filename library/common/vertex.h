@@ -19,7 +19,7 @@ public:
     CPoint<float> vert;
 
     // uv
-    CUV uv;
+    CUV<float> uv;
 };
 
 #endif  // __vertex_h__
