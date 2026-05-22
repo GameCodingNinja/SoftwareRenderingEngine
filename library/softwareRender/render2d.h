@@ -12,13 +12,13 @@
 #include <softwareRender/renderdefs.h>
 
 // Forward declaration(s)
-class CSRTexture;
+class CTexture;
 
 class CRender2d
 {
 public:
 
-    CRender2d( CSRTexture * pText, CSurfaceData * pSurface, uint32_t colorR, uint32_t colorG, uint32_t colorB, uint32_t colorA, FragmentShaderFunc shader = nullptr ) :
+    CRender2d( const CTexture * pText, CSurfaceData * pSurface, uint32_t colorR, uint32_t colorG, uint32_t colorB, uint32_t colorA, FragmentShaderFunc shader = nullptr ) :
         m_pText(pText),
         m_pSurface(pSurface),
         m_cr(colorR), m_cg(colorG), m_cb(colorB), m_ca(colorA),
@@ -36,7 +36,7 @@ public:
     }
 
     // Texture pointer
-    CSRTexture * m_pText;
+    const CTexture * m_pText;
 
     // Surface data pointer
     CSurfaceData * m_pSurface;

@@ -97,7 +97,7 @@ static EKeyCode TranslateKeysym(KeySym sym)
         default:              return KEY_UNKNOWN;
     }
 
-}   // TranslateKeysym
+}
 
 
 /************************************************************************
@@ -110,7 +110,7 @@ CX11Window::CX11Window() :
     m_wmDeleteMessage(0),
     m_fullscreen(false)
 {
-}   // Constructor
+}
 
 
 /************************************************************************
@@ -120,7 +120,7 @@ CX11Window::~CX11Window()
 {
     Destroy();
 
-}   // Destructor
+}
 
 
 /************************************************************************
@@ -190,7 +190,7 @@ void CX11Window::Create(int width, int height, const char* title)
         m_pDisplay, m_window, m_gc, width, height,
         CSettings::Instance().getVSync());
 
-}   // Create
+}
 
 
 /************************************************************************
@@ -219,7 +219,7 @@ void CX11Window::Destroy()
         m_pDisplay = nullptr;
     }
 
-}   // Destroy
+}
 
 
 /************************************************************************
@@ -241,7 +241,7 @@ void CX11Window::Show(bool visible)
         XFlush(m_pDisplay);
     }
 
-}   // Show
+}
 
 
 /************************************************************************
@@ -255,7 +255,7 @@ void CX11Window::SetTitle(const std::string& title)
     XStoreName(m_pDisplay, m_window, title.c_str());
     XFlush(m_pDisplay);
 
-}   // SetTitle
+}
 
 
 /************************************************************************
@@ -290,7 +290,7 @@ void CX11Window::SetFullScreen(bool fullscreen)
 
     XFlush(m_pDisplay);
 
-}   // SetFullScreen
+}
 
 
 /************************************************************************
@@ -418,7 +418,7 @@ void CX11Window::PollEvents()
         }
     }
 
-}   // PollEvents
+}
 
 
 /************************************************************************
@@ -428,6 +428,6 @@ IFrameBuffer* CX11Window::GetFrameBuffer()
 {
     return m_upFrameBuffer.get();
 
-}   // GetFrameBuffer
+}
 
-#endif  // __linux__
+#endif

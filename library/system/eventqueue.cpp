@@ -16,7 +16,7 @@ void CEventQueue::PushEvent(const CEvent& event)
     std::lock_guard<std::mutex> lock(m_mutex);
     m_eventQueue.push(event);
 
-}   // PushEvent
+}
 
 
 /************************************************************************
@@ -35,7 +35,7 @@ bool CEventQueue::PollEvent(CEvent& event)
 
     return true;
 
-}   // PollEvent
+}
 
 
 /************************************************************************
@@ -46,4 +46,4 @@ void CEventQueue::Clear()
     std::lock_guard<std::mutex> lock(m_mutex);
     m_eventQueue = std::queue<CEvent>();
 
-}   // Clear
+}

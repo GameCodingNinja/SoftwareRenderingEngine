@@ -29,37 +29,37 @@ namespace NParseHelper
     //CVertex LoadVertex2d( const XMLNode & node );
 
     // load position data
-    CPoint<float> LoadPosition( const XMLNode & node );
-    CPoint<float> LoadPosition( const XMLNode & node, bool & loaded );
+    CPoint<float> loadPosition( const XMLNode & node );
+    CPoint<float> loadPosition( const XMLNode & node, bool & loaded );
 
     // Load the rotation
-    CPoint<float> LoadRotation( const XMLNode & node );
-    CPoint<float> LoadRotation( const XMLNode & node, bool & loaded );
+    CPoint<float> loadRotation( const XMLNode & node );
+    CPoint<float> loadRotation( const XMLNode & node, bool & loaded );
 
     // Load the scale
-    CPoint<float> LoadScale( const XMLNode & node );
-    CPoint<float> LoadScale( const XMLNode & node, bool & loaded );
+    CPoint<float> loadScale( const XMLNode & node );
+    CPoint<float> loadScale( const XMLNode & node, bool & loaded );
 
     // Load the color
-    CColor<float> LoadColor(const  XMLNode & node, const CColor<float> & currentColor );
+    CColor<float> loadColor(const  XMLNode & node, const CColor<float> & currentColor );
 
     // Load the size
-    CSize<int> LoadSize( const XMLNode & node );
+    CSize<int> loadSize( const XMLNode & node );
 
     // Load the rect
-    CRect<int> LoadRect( const XMLNode & node );
+    CRect<int> loadRect( const XMLNode & node );
 
     // Load the divisions of a mesh
     //std::pair<int,int> LoadDivisions( const XMLNode & node );
 
     // Load the horizontal alignment
-    NDefs::EHorzAlignment LoadHorzAlignment( const XMLNode & node, NDefs::EHorzAlignment horzAlignment );
+    NDefs::EHorzAlignment loadHorzAlignment( const XMLNode & node, NDefs::EHorzAlignment horzAlignment );
 
     // Load the vertical alignment
-    NDefs::EVertAlignment LoadVertAlignment( const XMLNode & node, NDefs::EVertAlignment vertAlignment );
+    NDefs::EVertAlignment loadVertAlignment( const XMLNode & node, NDefs::EVertAlignment vertAlignment );
 
     // Load the dynamic offset
-    CDynamicOffset LoadDynamicOffset( const XMLNode & node );
+    CDynamicOffset loadDynamicOffset( const XMLNode & node );
 }
 
-#endif  // __xml_parse_helper_h__
+#endif

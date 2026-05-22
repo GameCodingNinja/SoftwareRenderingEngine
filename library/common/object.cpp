@@ -30,15 +30,15 @@ void CObject::loadTransFromNode( const XMLNode & node )
 {
     bool loadedFlag;
 
-    CPoint<float> pos = NParseHelper::LoadPosition( node, loadedFlag );
+    CPoint<float> pos = NParseHelper::loadPosition( node, loadedFlag );
     if( loadedFlag )
         setPos( pos );
 
-    CPoint<float> rot = NParseHelper::LoadRotation( node, loadedFlag );
+    CPoint<float> rot = NParseHelper::loadRotation( node, loadedFlag );
     if( loadedFlag )
         setRot( rot );
 
-    CPoint<float> scale = NParseHelper::LoadScale( node, loadedFlag );
+    CPoint<float> scale = NParseHelper::loadScale( node, loadedFlag );
     if( loadedFlag )
         setScale( scale );
 }

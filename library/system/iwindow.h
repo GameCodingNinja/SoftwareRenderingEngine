@@ -42,4 +42,4 @@ public:
     virtual IFrameBuffer* GetFrameBuffer() = 0;
 };
 
-#endif  // __iwindow_h__
+#endif

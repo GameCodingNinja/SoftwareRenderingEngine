@@ -29,7 +29,7 @@ CObjectVisualData2D::CObjectVisualData2D()
       m_vertexScale(1,1,1),
       m_shader(nullptr)
 {
-}   // constructor
+}
 
 
 /************************************************************************
@@ -38,13 +38,13 @@ CObjectVisualData2D::CObjectVisualData2D()
 CObjectVisualData2D::~CObjectVisualData2D()
 {
     // NOTE: Nothing should ever be deleted here
-}   // Destructer
+}
 
 
 /************************************************************************
 *    desc:  Load the object data from node
 ************************************************************************/
-void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
+void CObjectVisualData2D::loadFromNode( const XMLNode & objectNode )
 {
     const XMLNode visualNode = objectNode.getChildNode( "visual" );
 
@@ -119,7 +119,7 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
         }
 
         // Check for color
-        m_color = NParseHelper::LoadColor( visualNode, m_color );
+        m_color = NParseHelper::loadColor( visualNode, m_color );
 
         // Check for a named shader
         const XMLNode shaderNode = visualNode.getChildNode("shader");
@@ -129,27 +129,25 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
         }
     }
 
-}   // LoadFromNode
+}
 
 
 /************************************************************************
 *    desc:  Create the object from data
 ************************************************************************/
-void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> & rSize )
+void CObjectVisualData2D::createFromData( const std::string & group, CSize<int> & rSize )
 {
-    CTexture texture;
-
     if( !m_textureFileVec.empty() )
     {
         for( size_t i = 0; i < m_textureFileVec.size(); ++i )
         {
-            texture = CTextureMgr::Instance().load( group, m_textureFileVec[i] );
-            m_textureIDVec.push_back( texture.GetID() );
+            const CTexture & texture = CTextureMgr::Instance().load( group, m_textureFileVec[i] );
+            m_textureVec.push_back( &texture );
         }
 
         // If the passed in size reference is empty, set it to the texture size
         if( rSize.isEmpty() )
-            rSize = texture.GetSize();
+            rSize = m_textureVec.back()->getSize();
     }
 
     if( m_genType == NDefs::EGT_QUAD )
@@ -158,8 +156,8 @@ void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> 
 
         std::string vboName = NGenFunc::FormatString("quad_%g_%g_%g_%g", m_uv.x1, m_uv.y1, m_uv.x2, m_uv.y2);
 
-        m_vbo = CVertBufMgr::Instance().CreateQuadVBO( group, vboName, m_uv );
-        m_ibo = CVertBufMgr::Instance().CreateIBO( group, "quad_0123", indexData, sizeof(indexData) );
+        m_vbo = CVertBufMgr::Instance().createQuadVBO( group, vboName, m_uv );
+        m_ibo = CVertBufMgr::Instance().createIBO( group, "quad_0123", indexData, sizeof(indexData) );
 
         // For this generation type, the image size is the default scale
         m_vertexScale.x = rSize.w;
@@ -173,10 +171,11 @@ void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> 
     }
     else if( m_genType == NDefs::EGT_SCALED_FRAME )
     {
-        std::string vboName = NGenFunc::FormatString("scaled_frame_%d_%d_%d_%d_%d_%d", (int)rSize.w, (int)rSize.h, (int)m_scaledFrame.m_frame.w, (int)m_scaledFrame.m_frame.h, (int)texture.m_size.w, (int)texture.m_size.h);
+        const CTexture * pLastTex = m_textureVec.back();
+        std::string vboName = NGenFunc::FormatString("scaled_frame_%d_%d_%d_%d_%d_%d", (int)rSize.w, (int)rSize.h, (int)m_scaledFrame.m_frame.w, (int)m_scaledFrame.m_frame.h, (int)pLastTex->m_size.w, (int)pLastTex->m_size.h);
 
-        m_vbo = CVertBufMgr::Instance().CreateScaledFrame(
-            group, vboName,m_scaledFrame, texture.GetSize(), rSize );
+        m_vbo = CVertBufMgr::Instance().createScaledFrame(
+            group, vboName,m_scaledFrame, pLastTex->getSize(), rSize );
 
         uint indexData[] = {0,1,2,     0,3,1,
                                2,4,5,     2,1,4,
@@ -189,7 +188,7 @@ void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> 
                                3,7,1,     3,10,7};
 
         // Create the reusable IBO buffer
-        m_ibo = CVertBufMgr::Instance().CreateIBO( group, "scaled_frame", indexData, sizeof(indexData) );
+        m_ibo = CVertBufMgr::Instance().createIBO( group, "scaled_frame", indexData, sizeof(indexData) );
 
         // Set the vert count depending on the number of quads being rendered
         // If the center quad is not used, just adjust the vertex count because
@@ -200,13 +199,13 @@ void CObjectVisualData2D::CreateFromData( const std::string & group, CSize<int> 
             m_indexCount += 6;
     }
 
-}   // CreateFromData
+}
 
 
 /************************************************************************
 *    desc:  Get the gne type
 ************************************************************************/
-NDefs::EGenerationType CObjectVisualData2D::GetGenerationType() const 
+NDefs::EGenerationType CObjectVisualData2D::getGenerationType() const 
 {
     return m_genType;
 }
@@ -215,19 +214,19 @@ NDefs::EGenerationType CObjectVisualData2D::GetGenerationType() const
 /************************************************************************
 *    desc:  Get the texture ID
 ************************************************************************/
-uint CObjectVisualData2D::GetTextureID( uint index ) const 
+const CTexture * CObjectVisualData2D::getTexture( uint index ) const 
 {
-    if( m_textureIDVec.empty() )
-        return 0;
+    if( m_textureVec.empty() )
+        return nullptr;
     else
-        return m_textureIDVec[index];
+        return m_textureVec[index];
 }
 
 
 /************************************************************************
 *    desc:  Get the color
 ************************************************************************/
-const CColor<float> & CObjectVisualData2D::GetColor() const 
+const CColor<float> & CObjectVisualData2D::getColor() const 
 {
     return m_color;
 }
@@ -236,7 +235,7 @@ const CColor<float> & CObjectVisualData2D::GetColor() const
 /************************************************************************
 *    desc:  Get the VBO
 ************************************************************************/
-uint CObjectVisualData2D::GetVBO() const 
+uint CObjectVisualData2D::getVBO() const 
 {
     return m_vbo;
 }
@@ -245,7 +244,7 @@ uint CObjectVisualData2D::GetVBO() const
 /************************************************************************
 *    desc:  Get the IBO
 ************************************************************************/
-uint CObjectVisualData2D::GetIBO() const 
+uint CObjectVisualData2D::getIBO() const 
 {
     return m_ibo;
 }
@@ -254,7 +253,7 @@ uint CObjectVisualData2D::GetIBO() const
 /************************************************************************
 *    desc:  Get the vertex count
 ************************************************************************/
-int CObjectVisualData2D::GetVertexCount() const 
+int CObjectVisualData2D::getVertexCount() const 
 {
     return m_vertexCount;
 }
@@ -263,7 +262,7 @@ int CObjectVisualData2D::GetVertexCount() const
 /************************************************************************
 *    desc:  Get the index count
 ************************************************************************/
-int CObjectVisualData2D::GetIndexCount() const 
+int CObjectVisualData2D::getIndexCount() const 
 {
     return m_indexCount;
 }
@@ -272,16 +271,16 @@ int CObjectVisualData2D::GetIndexCount() const
 /************************************************************************
 *    desc:  Get the frame count
 ************************************************************************/
-uint CObjectVisualData2D::GetFrameCount() const 
+uint CObjectVisualData2D::getFrameCount() const 
 {
-    return m_textureIDVec.size();
+    return m_textureVec.size();
 }
 
 
 /************************************************************************
 *    desc:  Get the vertex scale
 ************************************************************************/
-const CPoint<float> & CObjectVisualData2D::GetVertexScale() const 
+const CPoint<float> & CObjectVisualData2D::getVertexScale() const 
 {
     return m_vertexScale;
 }
@@ -290,7 +289,7 @@ const CPoint<float> & CObjectVisualData2D::GetVertexScale() const
 /************************************************************************
 *    desc:  Get the shader function
 ************************************************************************/
-FragmentShaderFunc CObjectVisualData2D::GetShader() const
+FragmentShaderFunc CObjectVisualData2D::getShader() const
 {
     return m_shader;
 }

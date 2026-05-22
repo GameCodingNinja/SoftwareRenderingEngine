@@ -69,6 +69,6 @@ private:
 
 };
 
-#endif  // __triangle_slope_h__
+#endif
 
 

@@ -79,6 +79,6 @@ private:
     LONG m_savedStyle;
 };
 
-#endif  // _WIN32
+#endif
 
-#endif  // __windowswindow_h__
+#endif

@@ -127,6 +127,6 @@ private:
     int m_lastMouseY;
 };
 
-#endif  // __linux__
+#endif
 
-#endif  // __waylandwindow_h__
+#endif

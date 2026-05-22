@@ -30,7 +30,7 @@ CSprite::CSprite( const iObjectData & objectData )
         m_upVisualComponent.reset( new CVisualComponent3d( static_cast<const CObjectData3D &>(objectData) ) );
     }
 
-}   // constructor
+}
 
 
 /************************************************************************
@@ -38,7 +38,7 @@ CSprite::CSprite( const iObjectData & objectData )
 ************************************************************************/
 CSprite::~CSprite()
 {
-}	// destructer
+}
 
 
 /************************************************************************
@@ -46,18 +46,18 @@ CSprite::~CSprite()
 ************************************************************************/
 void CSprite::Update()
 {
-}   // Update
+}
 
 
 /************************************************************************
 *    desc:  do the render                                                            
 ************************************************************************/
-void CSprite::Render( const CMatrix & matrix )
+void CSprite::render( const CMatrix & matrix )
 {
     if( isVisible() )
-        m_upVisualComponent->Render( m_matrix * matrix );
+        m_upVisualComponent->render( m_matrix * matrix );
 
-}	// Render
+}
 
 
 /************************************************************************
@@ -67,7 +67,7 @@ iVisualComponent * CSprite::GetVisualComponent()
 {
     return m_upVisualComponent.get();
 
-}   // GetVisualComponent
+}
 
 
 /************************************************************************
@@ -77,4 +77,4 @@ const iObjectData & CSprite::GetObjectData() const
 {
     return m_objectData;
 
-}   // GetObjectData
+}

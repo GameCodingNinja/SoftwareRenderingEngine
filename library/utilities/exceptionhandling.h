@@ -37,4 +37,4 @@ namespace NExcept
     };
 }
 
-#endif  // __exception_handling_h__
+#endif

@@ -136,4 +136,4 @@ namespace NSmart
 }
 
 
-#endif // _smart_pointers_h_
+#endif

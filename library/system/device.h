@@ -71,4 +71,4 @@ private:
 
 };
 
-#endif  // __device_h__
+#endif

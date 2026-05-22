@@ -387,7 +387,7 @@ CWaylandWindow::CWaylandWindow() :
     m_lastMouseX(0),
     m_lastMouseY(0)
 {
-}   // Constructor
+}
 
 
 /************************************************************************
@@ -397,7 +397,7 @@ CWaylandWindow::~CWaylandWindow()
 {
     Destroy();
 
-}   // Destructor
+}
 
 
 /************************************************************************
@@ -484,7 +484,7 @@ void CWaylandWindow::Create(int width, int height, const char* title)
         m_pDisplay, m_pShm, m_pSurface, m_width, m_height,
         CSettings::Instance().getVSync());
 
-}   // Create
+}
 
 
 /************************************************************************
@@ -572,7 +572,7 @@ void CWaylandWindow::Destroy()
         m_pDisplay = nullptr;
     }
 
-}   // Destroy
+}
 
 
 /************************************************************************
@@ -604,7 +604,7 @@ void CWaylandWindow::Show(bool visible)
         wl_display_flush(m_pDisplay);
     }
 
-}   // Show
+}
 
 
 /************************************************************************
@@ -615,7 +615,7 @@ void CWaylandWindow::SetTitle(const std::string& title)
     if( m_pToplevel != nullptr )
         xdg_toplevel_set_title(m_pToplevel, title.c_str());
 
-}   // SetTitle
+}
 
 
 /************************************************************************
@@ -633,7 +633,7 @@ void CWaylandWindow::SetFullScreen(bool fullscreen)
     else
         xdg_toplevel_unset_fullscreen(m_pToplevel);
 
-}   // SetFullScreen
+}
 
 
 /************************************************************************
@@ -667,7 +667,7 @@ void CWaylandWindow::PollEvents()
 
     wl_display_dispatch_pending(m_pDisplay);
 
-}   // PollEvents
+}
 
 
 /************************************************************************
@@ -677,7 +677,7 @@ IFrameBuffer* CWaylandWindow::GetFrameBuffer()
 {
     return m_upFrameBuffer.get();
 
-}   // GetFrameBuffer
+}
 
 
 // ======================================================================
@@ -718,7 +718,7 @@ void CWaylandWindow::OnRegistryGlobal(struct wl_registry* registry,
             wl_registry_bind(registry, name, &zxdg_decoration_manager_v1_interface, 1));
     }
 
-}   // OnRegistryGlobal
+}
 
 
 /************************************************************************
@@ -728,7 +728,7 @@ void CWaylandWindow::OnWmBasePing(struct xdg_wm_base* wmBase, uint32_t serial)
 {
     xdg_wm_base_pong(wmBase, serial);
 
-}   // OnWmBasePing
+}
 
 
 /************************************************************************
@@ -739,7 +739,7 @@ void CWaylandWindow::OnXdgSurfaceConfigure(struct xdg_surface* surface, uint32_t
     xdg_surface_ack_configure(surface, serial);
     m_configured = true;
 
-}   // OnXdgSurfaceConfigure
+}
 
 
 /************************************************************************
@@ -755,7 +755,7 @@ void CWaylandWindow::OnToplevelConfigure(struct xdg_toplevel* /*toplevel*/,
         m_height = height;
     }
 
-}   // OnToplevelConfigure
+}
 
 
 /************************************************************************
@@ -768,7 +768,7 @@ void CWaylandWindow::OnToplevelClose(struct xdg_toplevel* /*toplevel*/)
     event.type = EVENT_QUIT;
     CEventQueue::Instance().PushEvent(event);
 
-}   // OnToplevelClose
+}
 
 
 /************************************************************************
@@ -788,7 +788,7 @@ void CWaylandWindow::OnKeyboardKey(struct wl_keyboard* /*keyboard*/,
 
     CEventQueue::Instance().PushEvent(event);
 
-}   // OnKeyboardKey
+}
 
 
 /************************************************************************
@@ -811,7 +811,7 @@ void CWaylandWindow::OnPointerMotion(struct wl_pointer* /*pointer*/,
 
     CEventQueue::Instance().PushEvent(event);
 
-}   // OnPointerMotion
+}
 
 
 /************************************************************************
@@ -844,6 +844,6 @@ void CWaylandWindow::OnPointerButton(struct wl_pointer* /*pointer*/,
 
     CEventQueue::Instance().PushEvent(event);
 
-}   // OnPointerButton
+}
 
-#endif  // __linux__
+#endif

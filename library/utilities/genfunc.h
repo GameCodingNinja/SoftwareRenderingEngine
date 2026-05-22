@@ -69,4 +69,4 @@ namespace NGenFunc
     }
 }
 
-#endif  // __genfunc_h__
+#endif

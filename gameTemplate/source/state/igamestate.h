@@ -107,7 +107,7 @@ public:
     virtual void Transform(){};
 
     // 2D/3D Render of game content
-    virtual void Render(){};
+    virtual void render(){};
 
     // Is the state done
     virtual bool DoStateChange()

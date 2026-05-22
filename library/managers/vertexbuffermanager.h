@@ -35,22 +35,22 @@ public:
     }
 
     // Create a quad VBO buffers
-    uint CreateQuadVBO( const std::string & group, const std::string & name, const CRect<float> & uv );
+    uint createQuadVBO( const std::string & group, const std::string & name, const CRect<float> & uv );
 
     // Create a IBO buffer
-    uint CreateIBO( const std::string & group, const std::string & name, uint indexData[], int sizeInBytes );
+    uint createIBO( const std::string & group, const std::string & name, uint indexData[], int sizeInBytes );
 
     // Creates and manages the dynamic font indicies IBO
     uint CreateDynamicFontIBO( const std::string & group, const std::string & name, unsigned short * pIndexData, int maxIndicies );
 
     // Create a scaled frame
-    uint CreateScaledFrame( const std::string & group,
+    uint createScaledFrame( const std::string & group,
                               const std::string & name,
                               const CScaledFrame & scaledFrame,
                               const CSize<int> & textSize,
                               const CSize<int> & size );
 
-    void CreateQuad( const CPoint<float> & vert,
+    void createQuad( const CPoint<float> & vert,
                      const CSize<float> & vSize,
                      const CUV<float> & uv,
                      const CSize<float> & uvSize,
@@ -65,7 +65,7 @@ public:
     void UnbindBuffers();
 
     // Delete buffer group
-    void DeleteBufferGroupFor2D( const std::string & group );
+    void deleteBufferGroupFor2D( const std::string & group );
 
 private:
 
@@ -94,6 +94,6 @@ private:
 
 };
 
-#endif  // __classtemplate_h__
+#endif
 
 

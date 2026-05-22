@@ -26,7 +26,7 @@
 ************************************************************************/
 CObjectDataMgr::CObjectDataMgr()
 {
-}   // Constructer
+}
 
 
 /************************************************************************
@@ -42,7 +42,7 @@ CObjectDataMgr::~CObjectDataMgr()
         NDelFunc::DeleteMapPointers(iter->second);
     }
 
-}   // Destructer
+}
 
 
 /************************************************************************
@@ -73,7 +73,7 @@ void CObjectDataMgr::LoadGroup( const std::string & group )
             NGenFunc::FormatString("Object data list group has alread been loaded (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
     }
 
-}   // LoadGroup
+}
 
 
 /************************************************************************
@@ -96,7 +96,7 @@ void CObjectDataMgr::LoadFromXML( const std::string & group, const std::string &
         Load3D( group, mainNode );
     }
 
-}   // LoadFromXML
+}
 
 
 /************************************************************************
@@ -122,7 +122,7 @@ void CObjectDataMgr::Load2D( const std::string & group, const XMLNode & mainNode
 
     // If there's no default node then we just use the defaults set in the data classes
     if( !defaultNode.isEmpty() )
-            defaultData.LoadFromNode( defaultNode, "", "" );
+            defaultData.loadFromNode( defaultNode, "", "" );
 
 
     //////////////////////////////////////////////
@@ -150,13 +150,13 @@ void CObjectDataMgr::Load2D( const std::string & group, const XMLNode & mainNode
         }
 
         // Load in the object data
-        static_cast<CObjectData2D *>(iter.first->second)->LoadFromNode( objectNode, group, name );
+        static_cast<CObjectData2D *>(iter.first->second)->loadFromNode( objectNode, group, name );
 
         // Create it from the data
-        static_cast<CObjectData2D *>(iter.first->second)->CreateFromData( group );
+        static_cast<CObjectData2D *>(iter.first->second)->createFromData( group );
     }
 
-}   // Load2D
+}
 
 
 /************************************************************************
@@ -182,7 +182,7 @@ void CObjectDataMgr::Load3D( const std::string & group, const XMLNode & mainNode
 
     // If there's no default node then we just use the defaults set in the data classes
     if( !defaultNode.isEmpty() )
-            defaultData.LoadFromNode( defaultNode, "", "" );
+            defaultData.loadFromNode( defaultNode, "", "" );
 
 
     //////////////////////////////////////////////
@@ -210,13 +210,13 @@ void CObjectDataMgr::Load3D( const std::string & group, const XMLNode & mainNode
         }
 
         // Load in the object data
-        static_cast<CObjectData3D *>(iter.first->second)->LoadFromNode( objectNode, group, name );
+        static_cast<CObjectData3D *>(iter.first->second)->loadFromNode( objectNode, group, name );
 
         // Create it from the data
-        static_cast<CObjectData3D *>(iter.first->second)->CreateFromData( group );
+        static_cast<CObjectData3D *>(iter.first->second)->createFromData( group );
     }
 
-}   // Load3D
+}
 
 
 /************************************************************************
@@ -237,14 +237,14 @@ void CObjectDataMgr::FreeGroup( const std::string & group )
     if( groupMapIter != m_pObjectDataMapMap.end() )
     {
         CTextureMgr::Instance().deleteTextureGroup( group );
-        CVertBufMgr::Instance().DeleteBufferGroupFor2D( group );
+        CVertBufMgr::Instance().deleteBufferGroupFor2D( group );
 
         // Unload the group data
         NDelFunc::DeleteMapPointers(groupMapIter->second);
         m_pObjectDataMapMap.erase( groupMapIter );
     }
 
-}   // FreeGroup
+}
 
 
 /************************************************************************
@@ -255,7 +255,7 @@ void CObjectDataMgr::FreeGroup( const std::string & group )
 *
 *	 ret:	iObjectData & - object data
 ************************************************************************/
-const iObjectData & CObjectDataMgr::GetData( const std::string & group, const std::string & name ) const
+const iObjectData & CObjectDataMgr::getData( const std::string & group, const std::string & name ) const
 {
     auto groupMapIter = m_pObjectDataMapMap.find( group );
     if( groupMapIter == m_pObjectDataMapMap.end() )
@@ -269,4 +269,4 @@ const iObjectData & CObjectDataMgr::GetData( const std::string & group, const st
 
     return *dataMapIter->second;
 
-}   // GetData
+}

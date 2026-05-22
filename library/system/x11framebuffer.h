@@ -32,11 +32,11 @@ public:
     ~CX11FrameBuffer();
 
     // Get the raw pixel buffer (returns the back buffer)
-    uint32_t* GetPixels() override;
+    uint32_t* getPixels() override;
 
     // Get framebuffer dimensions
-    int GetWidth() const override;
-    int GetHeight() const override;
+    int getWidth() const override;
+    int getHeight() const override;
 
     // Clear the pixel buffer to zero (black)
     void Clear() override;
@@ -80,6 +80,6 @@ private:
     int (*m_glXWaitVideoSyncSGI)(int, int, unsigned int*);
 };
 
-#endif  // __linux__
+#endif
 
-#endif  // __x11framebuffer_h__
+#endif

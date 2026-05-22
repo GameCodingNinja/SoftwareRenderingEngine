@@ -31,4 +31,4 @@ public:
     }
 };
 
-#endif  // __uv_h__
+#endif

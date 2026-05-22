@@ -11,26 +11,28 @@
 // Game lib dependencies
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
-#include <utilities/deletefuncs.h>
-#include <softwareRender/srtexture.h>
 #include <soil/stb_image_aug.h>
 
 /************************************************************************
 *    desc:  Constructer
 ************************************************************************/
-CTextureMgr::CTextureMgr() :
-    m_textIdInc(0)
+CTextureMgr::CTextureMgr()
 {
 }
+
 
 /************************************************************************
 *    desc:  destructer                                                             
 ************************************************************************/
 CTextureMgr::~CTextureMgr()
 {
-    NDelFunc::DeleteMapPointers(m_pTextureMap);
+    for( auto & mapMapIter : m_textureMapMap )
+        for( auto & mapIter : mapMapIter.second )
+            if( mapIter.second.m_pData != nullptr )
+                stbi_image_free( mapIter.second.m_pData );
 
 }
+
 
 /************************************************************************
 *    desc:  Load the texture from file path
@@ -40,7 +42,7 @@ const CTexture & CTextureMgr::load( const std::string & group, const std::string
     // Create the map group if it doesn't already exist
     auto mapMapIter = m_textureMapMap.find( group );
     if( mapMapIter == m_textureMapMap.end() )
-            mapMapIter = m_textureMapMap.insert( std::make_pair(group, std::map<const std::string, CTexture>()) ).first;
+        mapMapIter = m_textureMapMap.insert( std::make_pair(group, std::map<const std::string, CTexture>()) ).first;
 
     // See if this texture has already been loaded
     auto mapIter = mapMapIter->second.find( filePath );
@@ -67,39 +69,19 @@ const CTexture & CTextureMgr::load( const std::string & group, const std::string
             pData[idx + 2] = tmp;
         }
 
-        // Create the texture. The pointer is now owned by this class
-        texture.m_id = createTexture(
-            pData,
-            texture.m_size.w,
-            texture.m_size.h );
-
-        if( texture.GetID() == 0 )
-        {
-            throw NExcept::CCriticalException("Load Texture Error!", 
-                    NGenFunc::FormatString("Error loading texture (%s).\n\n%s\nLine: %d", filePath, __FUNCTION__, __LINE__));
-        }
+        texture.m_pData = pData;
 
         // Insert the new texture info
         mapIter = mapMapIter->second.insert( std::make_pair(filePath, texture) ).first;
     }
 
     return mapIter->second;
+
 }
 
-/***************************************************************************
-*   desc:  Create a texture. The pointer is now owned by this class
-****************************************************************************/
-uint CTextureMgr::createTexture( uchar * pData, int w, int h )
-{
-    ++m_textIdInc;
-
-    m_pTextureMap.insert( std::make_pair(m_textIdInc, new CSRTexture( w, h, pData )) );
-
-    return m_textIdInc;
-}
 
 /************************************************************************
-*    desc:  Delete a texture in a group
+*    desc:  Delete a texture group
 ************************************************************************/
 void CTextureMgr::deleteTextureGroup( const std::string & group )
 {
@@ -107,51 +89,13 @@ void CTextureMgr::deleteTextureGroup( const std::string & group )
     auto mapMapIter = m_textureMapMap.find( group );
     if( mapMapIter != m_textureMapMap.end() )
     {
-        // Delete all the textures in this group
-        for( auto mapIter = mapMapIter->second.begin();
-                 mapIter != mapMapIter->second.end();
-                 ++mapIter )
-        {
-            deleteTexture( mapIter->second.m_id );
-        }
+        // Free all the texture data in this group
+        for( auto & mapIter : mapMapIter->second )
+            if( mapIter.second.m_pData != nullptr )
+                stbi_image_free( mapIter.second.m_pData );
 
         // Erase this group
         m_textureMapMap.erase( mapMapIter );
     }
-
-}
-
-/***************************************************************************
-*   desc:  Delete the texture
-****************************************************************************/
-void CTextureMgr::deleteTexture( uint Id )
-{
-    // Delete the texture if it exists
-    auto mapIter = m_pTextureMap.find( Id );
-    if( mapIter != m_pTextureMap.end() )
-    {
-        NDelFunc::Delete( mapIter->second );
-        m_pTextureMap.erase( mapIter );
-    }
-}
-
-/***************************************************************************
-*   desc:  Get the texture
-****************************************************************************/
-CSRTexture * CTextureMgr::getTexture( uint Id )
-{
-    // Find the texture if it exists
-    auto mapIter = m_pTextureMap.find( Id );
-    if( mapIter != m_pTextureMap.end() )
-    {
-        return mapIter->second;
-    }
-    else
-    {
-        throw NExcept::CCriticalException("Texture Find Error!",
-            NGenFunc::FormatString("Unable to find texture Id (%d).\n\n%s\nLine: %d", Id, __FUNCTION__, __LINE__));
-    }
-
-    return nullptr;
 
 }

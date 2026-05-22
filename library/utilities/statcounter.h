@@ -31,7 +31,7 @@ public:
     void IncCycle( IWindow * pWindow );
 
     // Inc the display counter
-    void IncDisplayCounter( size_t i = 1 );
+    void incDisplayCounter( size_t i = 1 );
 
     // Inc the collision counter
     void IncCollisionCounter( size_t i = 1 );
@@ -77,4 +77,4 @@ private:
 
 };
 
-#endif  // __stat_counter_h__
+#endif

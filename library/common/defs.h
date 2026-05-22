@@ -100,4 +100,4 @@ namespace NDefs
     };
 }
 
-#endif // __defs_h__
+#endif

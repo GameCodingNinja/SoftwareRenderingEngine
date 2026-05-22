@@ -26,7 +26,7 @@ public:
     }
 
     // Get a specific object's data
-    const iObjectData & GetData( const std::string & group, const std::string & name ) const;
+    const iObjectData & getData( const std::string & group, const std::string & name ) const;
 
     // Load all of the meshes and materials of a specific data group
     void LoadGroup( const std::string & group );
@@ -55,4 +55,4 @@ private:
 
 };
 
-#endif  // __object_data_list_h__
+#endif

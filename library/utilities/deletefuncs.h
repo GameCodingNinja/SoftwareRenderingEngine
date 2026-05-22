@@ -282,4 +282,4 @@ namespace NDelFunc
     }
 }
 
-#endif // _deletefunc_h
+#endif

@@ -69,7 +69,7 @@ private:
     void StopGame();
 
     // Do the rendering
-    void Render();
+    void render();
 
     // Poll for game events
     void PollEvents();

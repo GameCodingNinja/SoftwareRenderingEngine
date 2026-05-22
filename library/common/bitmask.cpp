@@ -14,12 +14,12 @@
 CBitmask::CBitmask()
     : bitmask(0)
 {
-}   // constructor
+}
 
 CBitmask::CBitmask( const uint args )
     : bitmask(args)
 {
-}   // copy constructor
+}
 
 
 /************************************************************************
@@ -31,7 +31,7 @@ void CBitmask::Add( const uint args )
 {
     bitmask |= args;
 
-}   // Set
+}
 
 
 /************************************************************************
@@ -43,7 +43,7 @@ void CBitmask::Remove( const uint args )
 {
     bitmask &= args ^ -1;
 
-}   // Remove
+}
 
 
 /************************************************************************
@@ -55,7 +55,7 @@ void CBitmask::RemoveAllExcept( const uint args )
 {
     bitmask &= args;
 
-}   // RemoveAllExcept
+}
 
 
 /************************************************************************
@@ -65,7 +65,7 @@ void CBitmask::Clear()
 {
     bitmask = 0;
 
-}   // Clear
+}
 
 
 /************************************************************************
@@ -77,7 +77,7 @@ bool CBitmask::IsSet( const uint args ) const
 {
     return (bitmask & args) != 0;
 
-}   // IsSet
+}
 
 
 /************************************************************************
@@ -89,7 +89,7 @@ bool CBitmask::AreAllSet( const uint args ) const
 {
     return (bitmask & args) == args;
 
-}   // AreAllSet
+}
 
 
 /************************************************************************
@@ -101,7 +101,7 @@ const uint CBitmask::GetIncluding( const uint args ) const
 {
     return bitmask | args;
 
-}   // GetIncluding
+}
 
 
 /************************************************************************
@@ -113,7 +113,7 @@ const uint CBitmask::GetExcluding( const uint args ) const
 {
     return bitmask & (args ^ -1);
 
-}   // GetExcluding
+}
 
 
 /************************************************************************
@@ -125,5 +125,5 @@ void CBitmask::operator = ( const uint value )
 {
     bitmask = value;
 
-}   // operator =
+}
 

@@ -38,7 +38,7 @@ namespace NParseHelper
 
         return vert2D;
 
-    }*/	// LoadVertex2d
+    }*/
 
 
     /************************************************************************
@@ -46,7 +46,7 @@ namespace NParseHelper
     *
     *    param: node - passed in node
     ************************************************************************/
-    CPoint<float> LoadPosition( const XMLNode & node, bool & loaded )
+    CPoint<float> loadPosition( const XMLNode & node, bool & loaded )
     {
         CPoint<float> point;
 
@@ -70,12 +70,12 @@ namespace NParseHelper
 
         return point;
 
-    }	// LoadPosition
+    }
 
-    CPoint<float> LoadPosition( const XMLNode & node )
+    CPoint<float> loadPosition( const XMLNode & node )
     {
         bool dummy;
-        return LoadPosition( node, dummy );
+        return loadPosition( node, dummy );
     }
 
 
@@ -84,7 +84,7 @@ namespace NParseHelper
     *
     *    param: node - passed in node
     ************************************************************************/
-    CPoint<float> LoadRotation( const XMLNode & node, bool & loaded )
+    CPoint<float> loadRotation( const XMLNode & node, bool & loaded )
     {
         CPoint<float> point;
 
@@ -108,12 +108,12 @@ namespace NParseHelper
 
         return point;
 
-    }	// LoadPosition
+    }
 
-    CPoint<float> LoadRotation( const XMLNode & node )
+    CPoint<float> loadRotation( const XMLNode & node )
     {
         bool dummy;
-        return LoadRotation( node, dummy );
+        return loadRotation( node, dummy );
     }
 
 
@@ -122,7 +122,7 @@ namespace NParseHelper
     *
     *    param: node - passed in node
     ************************************************************************/
-    CPoint<float> LoadScale( const XMLNode & node, bool & loaded )
+    CPoint<float> loadScale( const XMLNode & node, bool & loaded )
     {
         CPoint<float> point(1,1,1);
 
@@ -151,14 +151,14 @@ namespace NParseHelper
 
         return point;
 
-    }	// LoadScale
+    }
 
-    CPoint<float> LoadScale( const XMLNode & node )
+    CPoint<float> loadScale( const XMLNode & node )
     {
         bool dummy;
-        return LoadScale( node, dummy );
+        return loadScale( node, dummy );
 
-    }   // LoadScale
+    }
 
 
     /************************************************************************
@@ -166,7 +166,7 @@ namespace NParseHelper
     *
     *    param: node - passed in node
     ************************************************************************/
-    CColor<float> LoadColor( const XMLNode & node, const CColor<float> & currentColor )
+    CColor<float> loadColor( const XMLNode & node, const CColor<float> & currentColor )
     {
         CColor<float> color( currentColor );
 
@@ -191,7 +191,7 @@ namespace NParseHelper
 
         return color;
 
-    }	// LoadScale
+    }
 
 
     /************************************************************************
@@ -199,7 +199,7 @@ namespace NParseHelper
     *
     *    param: node - passed in node
     ************************************************************************/
-    CSize<int> LoadSize( const XMLNode & node )
+    CSize<int> loadSize( const XMLNode & node )
     {
         CSize<int> size;
 
@@ -212,7 +212,7 @@ namespace NParseHelper
 
         return size;
 
-    }	// LoadSize
+    }
 
 
     /************************************************************************
@@ -220,7 +220,7 @@ namespace NParseHelper
     *
     *    param: node - passed in node
     ************************************************************************/
-    CRect<int> LoadRect( const XMLNode & node )
+    CRect<int> loadRect( const XMLNode & node )
     {
         CRect<int> rect;
 
@@ -239,7 +239,7 @@ namespace NParseHelper
 
         return rect;
 
-    }	// LoadRect
+    }
 
 
     /************************************************************************
@@ -259,7 +259,7 @@ namespace NParseHelper
 
         return divisions;
 
-    }*/	// LoadSize
+    }*/
 
 
     /************************************************************************
@@ -268,7 +268,7 @@ namespace NParseHelper
     *    param: node - passed in node
     *           horzAlignment - passed in default alignment
     ************************************************************************/
-    NDefs::EHorzAlignment LoadHorzAlignment( const XMLNode & node, NDefs::EHorzAlignment horzAlignment )
+    NDefs::EHorzAlignment loadHorzAlignment( const XMLNode & node, NDefs::EHorzAlignment horzAlignment )
     {
         NDefs::EHorzAlignment horzAlign = horzAlignment;
 
@@ -287,7 +287,7 @@ namespace NParseHelper
 
         return horzAlign;
 
-    }	// LoadHorzAlignment
+    }
 
 
     /************************************************************************
@@ -296,7 +296,7 @@ namespace NParseHelper
     *    param: node - passed in node
     *           horzAlignment - passed in default alignment
     ************************************************************************/
-    NDefs::EVertAlignment LoadVertAlignment( const XMLNode & node, NDefs::EVertAlignment vertAlignment )
+    NDefs::EVertAlignment loadVertAlignment( const XMLNode & node, NDefs::EVertAlignment vertAlignment )
     {
         NDefs::EVertAlignment vertAlign = vertAlignment;
 
@@ -315,7 +315,7 @@ namespace NParseHelper
 
         return vertAlign;
 
-    }	// LoadVertAlignment
+    }
 
 
     /************************************************************************
@@ -325,7 +325,7 @@ namespace NParseHelper
     *           dynamicOffset - bitmask to set
     *           dynamicOffsetPt - point to set
     ************************************************************************/
-    CDynamicOffset LoadDynamicOffset( const XMLNode & node )
+    CDynamicOffset loadDynamicOffset( const XMLNode & node )
     {
         CDynamicOffset dynamicOffset;
 
@@ -369,7 +369,7 @@ namespace NParseHelper
 
         return dynamicOffset;
 
-    }	// LoadDynamicOffset
+    }
 
-}	// NGenFunc
+}
 

@@ -20,7 +20,7 @@ CTriangleSlope::CTriangleSlope( const CVertex trans[], int vTop, ESlopeType slop
     m_vNext( vTop ),
     m_slopeType( slopeType )
 {
-}   // constructor
+}
 
 
 /************************************************************************
@@ -28,7 +28,7 @@ CTriangleSlope::CTriangleSlope( const CVertex trans[], int vTop, ESlopeType slop
 ************************************************************************/
 CTriangleSlope::~CTriangleSlope()
 {
-}	// destructor
+}
 
 
 /************************************************************************
@@ -88,7 +88,7 @@ bool CTriangleSlope::Init()
 
     return false;
 
-}	// Init
+}
 
 
 /************************************************************************
@@ -120,7 +120,7 @@ void CTriangleSlope::ClipTop()
         m_length -= step;
     }
 
-}   // ClipTop
+}
 
 
 /************************************************************************
@@ -137,6 +137,6 @@ void CTriangleSlope::Inc()
     --m_length;
     ++y;
 
-}   // Inc
+}
 
 

@@ -38,50 +38,50 @@ public:
     ~CObjectPhysicsData2D();
 
     // Load thes object data from node
-    void LoadFromNode( const XMLNode & objectNode );
+    void loadFromNode( const XMLNode & objectNode );
 
     // Get the file path
-    const std::string & GetFile() const;
+    const std::string & getFile() const;
 
     // Get the type of physics sprite
     //b2BodyType GetType() const;
 
     // Get the physics world name
-    const std::string & GetWorld() const;
+    const std::string & getWorld() const;
 
     // Set-Get the size
-    const CSize<float> & GetSize() const;
+    const CSize<float> & getSize() const;
 
     // Get the mesh top side mod
-    float GetTopMod() const;
+    float getTopMod() const;
 
     // Get the mesh bottom side mod
-    float GetBottomMod() const;
+    float getBottomMod() const;
 
     // Get the mesh left side mod
-    float GetLeftMod() const;
+    float getLeftMod() const;
 
     // Get the mesh right side mode
-    float GetRightMod() const;
+    float getRightMod() const;
 
     // Get the mesh generation type
-    EColGenType GetGenType() const;
+    EColGenType getGenType() const;
 
     // Get the density
-    float GetDensity() const;
+    float getDensity() const;
 
     // Get the restitution
-    float GetRestitution() const;
+    float getRestitution() const;
 
     // Get the damping
-    float GetDamping() const;
-    float GetAngDamping() const;
+    float getDamping() const;
+    float getAngDamping() const;
 
     // Is the rotation fixed
-    bool IsRotationFixed() const;
+    bool isRotationFixed() const;
 
     // Get the color
-    const CColor<float> & GetColor() const;
+    const CColor<float> & getColor() const;
 
 private:
 
@@ -120,4 +120,4 @@ private:
 
 };
 
-#endif  // __object_physics_data_2d_h__
+#endif

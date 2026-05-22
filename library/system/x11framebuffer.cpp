@@ -79,7 +79,7 @@ CX11FrameBuffer::CX11FrameBuffer(Display* pDisplay, Window window, GC gc, int wi
     if( m_vSync )
         InitGLXVSync();
 
-}   // Constructor
+}
 
 
 /************************************************************************
@@ -107,37 +107,37 @@ CX11FrameBuffer::~CX11FrameBuffer()
         }
     }
 
-}   // Destructor
+}
 
 
 /************************************************************************
 *    desc:  Get the raw pixel buffer (returns the back buffer)
 ************************************************************************/
-uint32_t* CX11FrameBuffer::GetPixels()
+uint32_t* CX11FrameBuffer::getPixels()
 {
     return m_pPixels[m_backIndex];
 
-}   // GetPixels
+}
 
 
 /************************************************************************
 *    desc:  Get framebuffer width
 ************************************************************************/
-int CX11FrameBuffer::GetWidth() const
+int CX11FrameBuffer::getWidth() const
 {
     return m_width;
 
-}   // GetWidth
+}
 
 
 /************************************************************************
 *    desc:  Get framebuffer height
 ************************************************************************/
-int CX11FrameBuffer::GetHeight() const
+int CX11FrameBuffer::getHeight() const
 {
     return m_height;
 
-}   // GetHeight
+}
 
 
 /************************************************************************
@@ -147,7 +147,7 @@ void CX11FrameBuffer::Clear()
 {
     std::memset(m_pPixels[m_backIndex], 0, m_width * m_height * sizeof(uint32_t));
 
-}   // Clear
+}
 
 
 /************************************************************************
@@ -203,7 +203,7 @@ void CX11FrameBuffer::Flip()
     // Swap to the other buffer
     m_backIndex = 1 - m_backIndex;
 
-}   // Flip
+}
 
 
 /************************************************************************
@@ -297,7 +297,7 @@ void CX11FrameBuffer::InitGLXVSync()
 
     NGenFunc::PostDebugMsg("VSync: GLX_SGI_video_sync initialized successfully.");
 
-}   // InitGLXVSync
+}
 
 
 /************************************************************************
@@ -330,6 +330,6 @@ void CX11FrameBuffer::CleanupGLX()
         m_pGLLib = nullptr;
     }
 
-}   // CleanupGLX
+}
 
-#endif  // __linux__
+#endif

@@ -62,7 +62,7 @@ CHighResTimer::CHighResTimer()
     // Init the lastTime variable for the first runthrough
     m_lastTime = GetPerformanceCounter();
 
-}   // Constructer
+}
 
 
 /************************************************************************
@@ -70,7 +70,7 @@ CHighResTimer::CHighResTimer()
 ************************************************************************/
 CHighResTimer::~CHighResTimer()
 {
-}   // Destructer
+}
 
 
 /***************************************************************************
@@ -96,7 +96,7 @@ void CHighResTimer::CalcElapsedTime()
     // Reset the last time
     m_lastTime = time;
         
-}  // GetPerformanceTime
+}
 
 
 /***************************************************************************
@@ -127,4 +127,4 @@ double CHighResTimer::GetTime()
 
     return (double)(time * m_inverseTimerFrequency);
 
-}   // GetTime
+}

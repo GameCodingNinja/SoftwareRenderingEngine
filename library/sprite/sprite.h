@@ -44,7 +44,7 @@ public:
     void Update();
 
     // do the render
-    void Render( const CMatrix & matrix );
+    void render( const CMatrix & matrix );
 
 private:
 
@@ -59,4 +59,4 @@ private:
 
 };
 
-#endif  // __sprite_h__
+#endif

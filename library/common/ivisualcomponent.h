@@ -26,17 +26,17 @@ public:
     virtual ~iVisualComponent(){}
 
     // do the render
-    virtual void Render( const CMatrix & matrix ) = 0;
+    virtual void render( const CMatrix & matrix ) = 0;
 
     // Is this component active?
-    virtual bool IsActive() = 0;
+    virtual bool isActive() = 0;
 
     // Set/Get the color
-    virtual void SetColor( const CColor<float> & color ) = 0;
-    virtual const CColor<float> & GetColor() const = 0;
+    virtual void setColor( const CColor<float> & color ) = 0;
+    virtual const CColor<float> & getColor() const = 0;
 
-    // Set the texture ID from index
-    virtual void SetTextureID( uint index ) = 0;
+    // Set the texture from index
+    virtual void setTexture( uint index ) = 0;
 };
 
-#endif  // __ivisual_component_h__
+#endif

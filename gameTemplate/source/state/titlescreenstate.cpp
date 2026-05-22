@@ -19,11 +19,11 @@
 *    desc:  Constructer                                                             
 ************************************************************************/
 CTitleScreenState::CTitleScreenState()
-    : m_background( CObjectDataMgr::Instance().GetData( "(title_screen)", "background" ) ),
-      m_background2( CObjectDataMgr::Instance().GetData( "(title_screen)", "background2" ) ),
-      m_background3( CObjectDataMgr::Instance().GetData( "(title_screen)", "background2" ) ),
-      m_enemy( CObjectDataMgr::Instance().GetData( "(title_screen)", "enemy" ) ),
-      m_logo( CObjectDataMgr::Instance().GetData( "(logo)", "logo" ) ),
+    : m_background( CObjectDataMgr::Instance().getData( "(title_screen)", "background" ) ),
+      m_background2( CObjectDataMgr::Instance().getData( "(title_screen)", "background2" ) ),
+      m_background3( CObjectDataMgr::Instance().getData( "(title_screen)", "background2" ) ),
+      m_enemy( CObjectDataMgr::Instance().getData( "(title_screen)", "enemy" ) ),
+      m_logo( CObjectDataMgr::Instance().getData( "(logo)", "logo" ) ),
       m_allowStateChange(false)
 {
     // Set the game states for this object
@@ -95,20 +95,20 @@ void CTitleScreenState::Transform()
 /***************************************************************************
 *    desc:  2D/3D Render of game content
 ****************************************************************************/
-void CTitleScreenState::Render()
+void CTitleScreenState::render()
 {
     // Render common content (menus, UI, etc.)
-    CCommonState::Render();
+    CCommonState::render();
 
     const CMatrix & matrix = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_ORTHOGRAPHIC );
 
-    m_background.Render( matrix );
-    m_background2.Render( matrix );
-    m_background3.Render( matrix );
-    m_enemy.Render( matrix );
+    m_background.render( matrix );
+    m_background2.render( matrix );
+    m_background3.render( matrix );
+    m_enemy.render( matrix );
 
     const CMatrix & matrix3d = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_PERSPECTIVE );
-    m_logo.Render( matrix3d );
+    m_logo.render( matrix3d );
 
 }	// Render
 

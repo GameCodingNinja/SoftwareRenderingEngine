@@ -35,4 +35,4 @@ protected:
 
 };
 
-#endif  // __manager_base_h__
+#endif

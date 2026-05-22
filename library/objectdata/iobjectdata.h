@@ -27,4 +27,4 @@ public:
     { return false; }
 };
 
-#endif  // __iobject_data_h__
+#endif

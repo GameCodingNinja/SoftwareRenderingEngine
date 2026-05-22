@@ -26,6 +26,6 @@ public:
     bool m_centerQuad;
 };
 
-#endif  // __scaled_frame_h__
+#endif
 
 

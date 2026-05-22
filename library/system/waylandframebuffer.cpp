@@ -132,7 +132,7 @@ CWaylandFrameBuffer::CWaylandFrameBuffer(
     m_pBuffer[0] = CreateBuffer(pShm, m_pPixels[0]);
     m_pBuffer[1] = CreateBuffer(pShm, m_pPixels[1]);
 
-}   // Constructor
+}
 
 
 /************************************************************************
@@ -161,37 +161,37 @@ CWaylandFrameBuffer::~CWaylandFrameBuffer()
         }
     }
 
-}   // Destructor
+}
 
 
 /************************************************************************
 *    desc:  Get the raw pixel buffer (returns the back buffer)
 ************************************************************************/
-uint32_t* CWaylandFrameBuffer::GetPixels()
+uint32_t* CWaylandFrameBuffer::getPixels()
 {
     return m_pPixels[m_backIndex];
 
-}   // GetPixels
+}
 
 
 /************************************************************************
 *    desc:  Get framebuffer width
 ************************************************************************/
-int CWaylandFrameBuffer::GetWidth() const
+int CWaylandFrameBuffer::getWidth() const
 {
     return m_width;
 
-}   // GetWidth
+}
 
 
 /************************************************************************
 *    desc:  Get framebuffer height
 ************************************************************************/
-int CWaylandFrameBuffer::GetHeight() const
+int CWaylandFrameBuffer::getHeight() const
 {
     return m_height;
 
-}   // GetHeight
+}
 
 
 /************************************************************************
@@ -201,7 +201,7 @@ void CWaylandFrameBuffer::Clear()
 {
     std::memset(m_pPixels[m_backIndex], 0, m_shmSize);
 
-}   // Clear
+}
 
 
 /************************************************************************
@@ -247,7 +247,7 @@ void CWaylandFrameBuffer::Flip()
         wl_display_dispatch(m_pDisplay);
     }
 
-}   // Flip
+}
 
 
 /************************************************************************
@@ -265,7 +265,7 @@ void CWaylandFrameBuffer::OnBufferRelease(struct wl_buffer* buffer)
         }
     }
 
-}   // OnBufferRelease
+}
 
 
 /************************************************************************
@@ -276,6 +276,6 @@ void CWaylandFrameBuffer::OnFrameDone()
     m_pFrameCallback = nullptr;
     m_frameReady.store(true);
 
-}   // OnFrameDone
+}
 
-#endif  // __linux__
+#endif

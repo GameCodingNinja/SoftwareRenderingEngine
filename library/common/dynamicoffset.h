@@ -106,5 +106,5 @@ private:
 
 };
 
-#endif  // __dynamic_offset_h__
+#endif
 

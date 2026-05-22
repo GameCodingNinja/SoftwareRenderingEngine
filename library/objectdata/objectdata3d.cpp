@@ -23,7 +23,7 @@ CObjectData3D::CObjectData3D()
       m_radius(0),
       m_radiusSquared(0)
 {
-}   // constructor
+}
 
 
 /************************************************************************
@@ -33,7 +33,7 @@ CObjectData3D::CObjectData3D( const CObjectData3D & obj )
 {
     *this = obj;
 
-}   // constructor
+}
 
 
 /************************************************************************
@@ -42,52 +42,52 @@ CObjectData3D::CObjectData3D( const CObjectData3D & obj )
 CObjectData3D::~CObjectData3D()
 {
     // NOTE: Nothing should ever be deleted here
-}   // destructer
+}
 
 
 /************************************************************************
 *    desc:  Load the object data from the passed in node
 ************************************************************************/
-void CObjectData3D::LoadFromNode( const XMLNode & node, const std::string & group, const std::string & name )
+void CObjectData3D::loadFromNode( const XMLNode & node, const std::string & group, const std::string & name )
 {
     m_name = name;
     m_group = group;
 
     // Load the scale
-    m_scale = NParseHelper::LoadScale( node );
+    m_scale = NParseHelper::loadScale( node );
 
     // Load the size
-    m_size = NParseHelper::LoadSize( node );
+    m_size = NParseHelper::loadSize( node );
 
     // Load the visual data
-    m_visualData.LoadFromNode( node );
+    m_visualData.loadFromNode( node );
 
-}   // LoadObjectFromNode
+}
 
 
 /************************************************************************
 *    desc:  Create the objects from data
 ************************************************************************/
-void CObjectData3D::CreateFromData( const std::string & group )
+void CObjectData3D::createFromData( const std::string & group )
 {
     // Create the visuales
-    m_visualData.CreateFromData( group, m_size );
+    m_visualData.createFromData( group, m_size );
 
     // Calculate the radii
     m_radiusSquared = pow((float)m_size.w / 2, 2) + pow((float)m_size.h / 2, 2);
     m_radius = sqrt( m_radiusSquared );
 
-}   // CreateFromData
+}
 
 
 /************************************************************************
 *    desc:  Access functions for the visual data
 ************************************************************************/
-const CObjectVisualData3D & CObjectData3D::GetVisualData() const 
+const CObjectVisualData3D & CObjectData3D::getVisualData() const 
 {
     return m_visualData;
 
-}   // GetVisualData
+}
 
 
 /************************************************************************
@@ -97,7 +97,7 @@ const std::string & CObjectData3D::GetName() const
 {
     return m_name;
 
-}   // GetName
+}
 
 
 /************************************************************************
@@ -107,17 +107,17 @@ const std::string & CObjectData3D::GetGroup() const
 {
     return m_group;
 
-}   // GetGroup
+}
 
 
 /************************************************************************
 *    desc:  Access functions for the size
 ************************************************************************/
-const CSize<int> & CObjectData3D::GetSize() const 
+const CSize<int> & CObjectData3D::getSize() const 
 {
     return m_size;
 
-}   // GetSize
+}
 
 
 /************************************************************************
@@ -127,7 +127,7 @@ const CPoint<float> & CObjectData3D::GetScale() const
 {
     return m_scale;
 
-}   // GetScale
+}
 
 
 /************************************************************************
@@ -137,7 +137,7 @@ float CObjectData3D::GetRadius() const
 {
     return m_radius;
 
-}   // GetRadius
+}
 
 
 /************************************************************************
@@ -147,4 +147,4 @@ float CObjectData3D::GetRadiusSquared() const
 {
     return m_radiusSquared;
 
-}   // GetRadiusSquared
+}

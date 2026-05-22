@@ -2,7 +2,9 @@
 /************************************************************************
 *    FILE NAME:       texture.h
 *
-*    DESCRIPTION:     Class for holding texture data
+*    DESCRIPTION:     Class for holding texture data.
+*                     Non-owning wrapper around stb image memory.
+*                     Pixel memory is freed by CTextureMgr::deleteTextureGroup().
 ************************************************************************/
 
 #ifndef __texture_h__
@@ -16,15 +18,13 @@ class CTexture
 {
 public:
 
-    // Constructor/Destructor
-    CTexture():m_id(0){};
-    ~CTexture(){};
-
-    uint m_id;
+    // Texture size
     CSize<int> m_size;
 
-    uint GetID() const {return m_id;}
-    const CSize<int> & GetSize() const {return m_size;}
+    // Pointer to texture data (non-owning, freed by CTextureMgr)
+    uchar * m_pData = nullptr;
+
+    const CSize<int> & getSize() const { return m_size; }
 };
 
 #endif

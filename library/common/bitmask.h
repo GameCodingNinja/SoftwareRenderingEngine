@@ -58,6 +58,6 @@ private:
 
 };
 
-#endif  // __bit_mask_h__
+#endif
 
 

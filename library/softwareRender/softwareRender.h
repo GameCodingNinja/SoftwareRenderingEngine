@@ -24,6 +24,7 @@
 #include <softwareRender/render3d.h>
 
 // Forward declaration(s)
+class CTexture;
 class CMatrix;
 class IFrameBuffer;
 
@@ -39,28 +40,28 @@ public:
     }
 
     // Set the surface data from a framebuffer
-    void SetSurface( IFrameBuffer * pFrameBuffer );
+    void setSurface( IFrameBuffer * pFrameBuffer );
 
     // Create the VBO
-    uint CreateVBO( float * pData, uint count );
+    uint createVBO( float * pData, uint count );
 
     // Create the IBO
-    uint CreateIBO( uint * pData, uint sizeInBytes );
+    uint createIBO( uint * pData, uint sizeInBytes );
 
     // Delete the VBO
-    void DeleteVBO( uint Id );
+    void deleteVBO( uint Id );
 
     // Delete the IBO
-    void DeleteIBO( uint Id );
+    void deleteIBO( uint Id );
 
     // Render 2D (orthographic)
-    void Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
+    void render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, uint vboId, uint iboId, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
 
     // Render 3D (perspective with z-buffer)
-    void Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
+    void render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, uint vboId, uint iboId, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
 
     // Clear the z-buffer
-    void ClearZBuffer();
+    void clearZBuffer();
 
 private:
 
@@ -71,10 +72,10 @@ private:
     ~CSoftwareRender();
 
     // Get the VBO
-    float * GetVBO( uint Id );
+    float * getVBO( uint Id );
 
     // Get the IBO
-    uint * GetIBO( uint Id );
+    uint * getIBO( uint Id );
 
 private:
 
@@ -99,4 +100,4 @@ private:
 
 };
 
-#endif  // __software_render_h__
+#endif

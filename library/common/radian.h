@@ -44,5 +44,5 @@ public:
 
 };
 
-#endif  // __radian_h__
+#endif
 

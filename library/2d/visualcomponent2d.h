@@ -19,6 +19,7 @@
 #include <common/defs.h>
 
 // Forward declaration(s)
+class CTexture;
 class CObjectData2D;
 class CObjectVisualData2D;
 
@@ -33,17 +34,17 @@ public:
     virtual ~CVisualComponent2d();
 
     // do the render
-    void Render( const CMatrix & matrix ) override;
+    void render( const CMatrix & matrix ) override;
 
     // Is this component active?
-    bool IsActive() override;
+    bool isActive() override;
 
     // Set/Get the color
-    void SetColor( const CColor<float> & color ) override;
-    const CColor<float> & GetColor() const override;
+    void setColor( const CColor<float> & color ) override;
+    const CColor<float> & getColor() const override;
 
-    // Set the texture ID from index
-    void SetTextureID( uint index ) override;
+    // Set the texture from index
+    void setTexture( uint index ) override;
 
 private:
 
@@ -55,7 +56,7 @@ private:
     const int m_uvOffset;
 
     // Loaded texture data
-    uint m_textureID;
+    const CTexture * m_pTexture;
 
     // Color
     CColor<float> m_color;
@@ -73,4 +74,4 @@ private:
     int m_IndexCount;
 };
 
-#endif  // __visual_component_2d_h__
+#endif

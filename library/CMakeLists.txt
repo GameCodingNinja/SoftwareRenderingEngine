@@ -8,7 +8,6 @@ set(LIBRARY_SOURCES
     objectdata/objectvisualdata2d.cpp
     objectdata/objectvisualdata3d.cpp
     softwareRender/softwareRender.cpp
-    softwareRender/srtexture.cpp
     softwareRender/triangleslope.cpp
     system/device.cpp
     system/eventqueue.cpp

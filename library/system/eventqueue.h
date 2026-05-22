@@ -54,4 +54,4 @@ private:
     std::mutex m_mutex;
 };
 
-#endif  // __eventqueue_h__
+#endif

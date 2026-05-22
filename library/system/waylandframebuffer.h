@@ -35,11 +35,11 @@ public:
     ~CWaylandFrameBuffer();
 
     // Get the raw pixel buffer (returns the back buffer)
-    uint32_t* GetPixels() override;
+    uint32_t* getPixels() override;
 
     // Get framebuffer dimensions
-    int GetWidth() const override;
-    int GetHeight() const override;
+    int getWidth() const override;
+    int getHeight() const override;
 
     // Clear the pixel buffer to zero (black)
     void Clear() override;
@@ -87,6 +87,6 @@ private:
     bool m_vSync;
 };
 
-#endif  // __linux__
+#endif
 
-#endif  // __waylandframebuffer_h__
+#endif

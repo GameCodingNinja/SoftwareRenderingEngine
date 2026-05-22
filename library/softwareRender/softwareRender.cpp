@@ -17,9 +17,8 @@
 #include <utilities/genfunc.h>
 #include <utilities/exceptionhandling.h>
 #include <utilities/deletefuncs.h>
-#include <softwareRender/srtexture.h>
+#include <common/texture.h>
 #include <softwareRender/triangleslope.h>
-#include <managers/texturemanager.h>
 
 #include <system/iframebuffer.h>
 #include <utilities/settings.h>
@@ -62,15 +61,15 @@ CSoftwareRender::~CSoftwareRender()
 /***************************************************************************
 *   desc:  Set the surface data from a framebuffer
 ****************************************************************************/
-void CSoftwareRender::SetSurface( IFrameBuffer * pFrameBuffer )
+void CSoftwareRender::setSurface( IFrameBuffer * pFrameBuffer )
 {
     if( pFrameBuffer == nullptr )
-        throw NExcept::CCriticalException("SetSurface Error!",
+        throw NExcept::CCriticalException("setSurface Error!",
             "Framebuffer pointer is null.");
 
-    m_surfaceData.pixels = pFrameBuffer->GetPixels();
-    m_surfaceData.w = pFrameBuffer->GetWidth();
-    m_surfaceData.h = pFrameBuffer->GetHeight();
+    m_surfaceData.pixels = pFrameBuffer->getPixels();
+    m_surfaceData.w = pFrameBuffer->getWidth();
+    m_surfaceData.h = pFrameBuffer->getHeight();
     m_halfScreen.w = m_surfaceData.w / 2;
     m_halfScreen.h = m_surfaceData.h / 2;
 
@@ -82,7 +81,7 @@ void CSoftwareRender::SetSurface( IFrameBuffer * pFrameBuffer )
 /***************************************************************************
 *   desc:  Create the VBO
 ****************************************************************************/
-uint CSoftwareRender::CreateVBO( float * pData, uint sizeInBytes )
+uint CSoftwareRender::createVBO( float * pData, uint sizeInBytes )
 {
     ++m_vboIdInc;
 
@@ -98,7 +97,7 @@ uint CSoftwareRender::CreateVBO( float * pData, uint sizeInBytes )
 /***************************************************************************
 *   desc:  Create the IBO
 ****************************************************************************/
-uint CSoftwareRender::CreateIBO( uint * pData, uint sizeInBytes )
+uint CSoftwareRender::createIBO( uint * pData, uint sizeInBytes )
 {
     ++m_iboIdInc;
 
@@ -114,7 +113,7 @@ uint CSoftwareRender::CreateIBO( uint * pData, uint sizeInBytes )
 /***************************************************************************
 *   desc:  Delete the VBO
 ****************************************************************************/
-void CSoftwareRender::DeleteVBO( uint Id )
+void CSoftwareRender::deleteVBO( uint Id )
 {
     // Delete the texture if it exists
     auto mapIter = m_pVBOMap.find( Id );
@@ -129,7 +128,7 @@ void CSoftwareRender::DeleteVBO( uint Id )
 /***************************************************************************
 *   desc:  Delete the IBO
 ****************************************************************************/
-void CSoftwareRender::DeleteIBO( uint Id )
+void CSoftwareRender::deleteIBO( uint Id )
 {
     // Delete the texture if it exists
     auto mapIter = m_pIBOMap.find( Id );
@@ -144,7 +143,7 @@ void CSoftwareRender::DeleteIBO( uint Id )
 /***************************************************************************
 *   desc:  Get the VBO
 ****************************************************************************/
-float * CSoftwareRender::GetVBO( uint Id )
+float * CSoftwareRender::getVBO( uint Id )
 {
     // Delete the texture if it exists
     auto mapIter = m_pVBOMap.find( Id );
@@ -165,7 +164,7 @@ float * CSoftwareRender::GetVBO( uint Id )
 /***************************************************************************
 *   desc:  Get the IBO
 ****************************************************************************/
-uint * CSoftwareRender::GetIBO( uint Id )
+uint * CSoftwareRender::getIBO( uint Id )
 {
     // Delete the texture if it exists
     auto mapIter = m_pIBOMap.find( Id );
@@ -187,11 +186,10 @@ uint * CSoftwareRender::GetIBO( uint Id )
 *   Perspective Projection: ((trans.vert[0].vert.x / trans.vert[0].vert.z) * m_halfSize.w) + m_halfSize.w + 0.5f;
 *   Orthographic Projection: (trans.vert[0].vert.x * m_halfSize.w) + m_halfSize.w + 0.5f;
 ****************************************************************************/
-void CSoftwareRender::Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor<float> & color, FragmentShaderFunc shader )
+void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, uint vboId, uint iboId, const CColor<float> & color, FragmentShaderFunc shader )
 {
-    CSRTexture * pText = CTextureMgr::Instance().getTexture( textId );
-    CVertex * pVert = (CVertex *)GetVBO( vboId );
-    uint * pIBO = GetIBO( iboId );
+    CVertex * pVert = (CVertex *)getVBO( vboId );
+    uint * pIBO = getIBO( iboId );
 
     CVertex * pTrans = new CVertex[vertCount];
 
@@ -479,7 +477,7 @@ void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax )
 /***************************************************************************
 *   desc:  Clear the z-buffer for a new frame
 ****************************************************************************/
-void CSoftwareRender::ClearZBuffer()
+void CSoftwareRender::clearZBuffer()
 {
     std::memset( m_zBuffer.data(), 0, m_zBuffer.size() * sizeof(int32_t) );
 }
@@ -490,11 +488,10 @@ void CSoftwareRender::ClearZBuffer()
 *          the near plane (W >= nearClip), following the legacy tri3D approach.
 *          Clipping is done in clip space before projection.
 ****************************************************************************/
-void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor<float> & color, FragmentShaderFunc shader )
+void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, uint vboId, uint iboId, const CColor<float> & color, FragmentShaderFunc shader )
 {
-    CSRTexture * pText = CTextureMgr::Instance().getTexture( textId );
-    CVertex * pVert = (CVertex *)GetVBO( vboId );
-    uint * pIBO = GetIBO( iboId );
+    CVertex * pVert = (CVertex *)getVBO( vboId );
+    uint * pIBO = getIBO( iboId );
 
     // Temporary struct to hold transformed but unprojected vertex data
     struct TransVert

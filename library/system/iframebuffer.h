@@ -18,11 +18,11 @@ public:
     virtual ~IFrameBuffer() = default;
 
     // Get the raw pixel buffer (XRGB 32-bit)
-    virtual uint32_t* GetPixels() = 0;
+    virtual uint32_t* getPixels() = 0;
 
     // Get framebuffer dimensions
-    virtual int GetWidth() const = 0;
-    virtual int GetHeight() const = 0;
+    virtual int getWidth() const = 0;
+    virtual int getHeight() const = 0;
 
     // Clear the pixel buffer to zero (black)
     virtual void Clear() = 0;
@@ -31,4 +31,4 @@ public:
     virtual void Flip() = 0;
 };
 
-#endif  // __iframebuffer_h__
+#endif

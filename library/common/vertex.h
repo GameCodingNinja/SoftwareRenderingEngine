@@ -22,4 +22,4 @@ public:
     CUV<float> uv;
 };
 
-#endif  // __vertex_h__
+#endif

@@ -55,7 +55,7 @@ namespace NGenFunc
 
         return result;
 
-    }	// CountStrOccurrence
+    }
 
 
     /************************************************************************
@@ -90,7 +90,7 @@ namespace NGenFunc
 
         return spChar;
 
-    }	// FileToBuf
+    }
 
     std::shared_ptr<char[]> FileToBuf( const std::string & file )
     {
@@ -115,7 +115,7 @@ namespace NGenFunc
         CEventQueue::Instance().PushEvent(event);
         return 0;
 
-    }   // DispatchEvent
+    }
 
 
     /************************************************************************
@@ -130,6 +130,6 @@ namespace NGenFunc
         std::cout << msg << std::endl;
     #endif
 
-    }   // PostDebugMsg
+    }
 
-}	// NGenFunc
+}

@@ -32,20 +32,20 @@ public:
     ~CObjectData2D();
 
     // Load the object data from the passed in node
-    void LoadFromNode( const XMLNode & node, const std::string & group, const std::string & name );
+    void loadFromNode( const XMLNode & node, const std::string & group, const std::string & name );
 
     // Create the objects from data
-    void CreateFromData( const std::string & group );
+    void createFromData( const std::string & group );
 
     // Access functions for the visual data
-    const CObjectVisualData2D & GetVisualData() const;
+    const CObjectVisualData2D & getVisualData() const;
 
     // Is this 2D data?
     bool Is2D() const override
     { return true; }
 
     // Access functions for the physics data
-    const CObjectPhysicsData2D & GetPhysicsData() const;
+    const CObjectPhysicsData2D & getPhysicsData() const;
 
     // Access functions for the data name
     const std::string & GetName() const;
@@ -54,7 +54,7 @@ public:
     const std::string & GetGroup() const;
 
     // Access functions for the size
-    const CSize<int> & GetSize() const;
+    const CSize<int> & getSize() const;
     
     // Access functions for the scale
     const CPoint<float> & GetScale() const;
@@ -93,4 +93,4 @@ private:
     float m_radiusSquared;
 };
 
-#endif  // __object_data_2d_h__
+#endif

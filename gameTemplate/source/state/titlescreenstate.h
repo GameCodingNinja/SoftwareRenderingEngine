@@ -31,7 +31,7 @@ public:
     void Update();
 
     // 2D/3D Render of game content
-    void Render();
+    void render();
 
     // Is the state done
     bool DoStateChange();

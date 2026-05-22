@@ -14,10 +14,6 @@
 
 // Game lib dependencies
 #include <common/texture.h>
-#include <common/defs.h>
-
-// Forward declaration(s)
-class CSRTexture;
 
 class CTextureMgr
 {
@@ -33,17 +29,8 @@ public:
     // Load the texture from file path
     const CTexture & load( const std::string & group, const std::string & filePath );
 
-    // Texture deleting
+    // Delete a texture group
     void deleteTextureGroup( const std::string & group );
-
-    // Create a texture from raw pixel data. The pointer is now owned by this class
-    uint createTexture( uchar * pData, int w, int h );
-
-    // Delete a texture by ID
-    void deleteTexture( uint Id );
-
-    // Get the texture by ID
-    CSRTexture * getTexture( uint Id );
 
 private:
 
@@ -55,15 +42,9 @@ private:
 
 private:
 
-    // Map containing a group of texture handles
+    // Map containing a group of textures keyed by file path
     std::map< const std::string, std::map< const std::string, CTexture > > m_textureMapMap;
-
-    // map of allocated textures
-    std::map<uint, CSRTexture *> m_pTextureMap;
-
-    // Texture ID incrementor
-    uint m_textIdInc;
 
 };
 
-#endif  // __texture_manager_h__
+#endif

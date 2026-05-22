@@ -29,5 +29,5 @@ public:
 
 };
 
-#endif  // __normal_h__
+#endif
 

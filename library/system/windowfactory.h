@@ -21,4 +21,4 @@ class IWindow;
 // Windows: creates a Win32 window
 std::unique_ptr<IWindow> CreateNativeWindow();
 
-#endif  // __windowfactory_h__
+#endif

@@ -32,13 +32,13 @@ public:
     ~CObjectData3D();
 
     // Load the object data from the passed in node
-    void LoadFromNode( const XMLNode & node, const std::string & group, const std::string & name );
+    void loadFromNode( const XMLNode & node, const std::string & group, const std::string & name );
 
     // Create the objects from data
-    void CreateFromData( const std::string & group );
+    void createFromData( const std::string & group );
 
     // Access functions for the visual data
-    const CObjectVisualData3D & GetVisualData() const;
+    const CObjectVisualData3D & getVisualData() const;
 
     // Is this 3D data?
     bool Is3D() const override
@@ -51,7 +51,7 @@ public:
     const std::string & GetGroup() const;
 
     // Access functions for the size
-    const CSize<int> & GetSize() const;
+    const CSize<int> & getSize() const;
     
     // Access functions for the scale
     const CPoint<float> & GetScale() const;
@@ -84,4 +84,4 @@ private:
     float m_radiusSquared;
 };
 
-#endif  // __object_data_3d_h__
+#endif

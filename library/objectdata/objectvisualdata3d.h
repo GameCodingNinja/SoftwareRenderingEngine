@@ -22,6 +22,7 @@
 #include <softwareRender/renderdefs.h>
 
 // Forward Declarations
+class CTexture;
 struct XMLNode;
 
 class CObjectVisualData3D
@@ -33,42 +34,42 @@ public:
     ~CObjectVisualData3D();
 
     // Load thes object data from node
-    void LoadFromNode( const XMLNode & objectNode );
+    void loadFromNode( const XMLNode & objectNode );
 
     // Create the object from data
-    void CreateFromData( const std::string & group, CSize<int> & rSize );
+    void createFromData( const std::string & group, CSize<int> & rSize );
 
     // Get the gne type
-    NDefs::EGenerationType GetGenerationType() const;
+    NDefs::EGenerationType getGenerationType() const;
 
-    // Get the texture ID
-    uint GetTextureID( uint index = 0 ) const;
+    // Get the texture
+    const CTexture * getTexture( uint index = 0 ) const;
 
     // Get the color
-    const CColor<float> & GetColor() const;
+    const CColor<float> & getColor() const;
 
     // Get the vertex scale
-    const CPoint<float> & GetVertexScale() const;
+    const CPoint<float> & getVertexScale() const;
 
     // Get the VBO
-    uint GetVBO() const;
+    uint getVBO() const;
 
     // Get the IBO
-    uint GetIBO() const;
+    uint getIBO() const;
 
     // Get the vertex count
-    int GetVertexCount() const;
+    int getVertexCount() const;
 
     // Get Index count
-    int GetIndexCount() const;
+    int getIndexCount() const;
 
     // Get the shader function (nullptr = use default)
-    FragmentShaderFunc GetShader() const;
+    FragmentShaderFunc getShader() const;
 
 private:
 
     // Loaded texture data
-    std::vector<uint> m_textureIDVec;
+    std::vector<const CTexture *> m_textureVec;
 
     // VBO
     uint m_vbo;
@@ -104,4 +105,4 @@ private:
     FragmentShaderFunc m_shader;
 };
 
-#endif  // __object_visual_data_3d_h__
+#endif

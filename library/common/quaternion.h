@@ -105,7 +105,7 @@ public:
 
         Normalize();
 
-    }	// SetRotation
+    }
 
     /************************************************************************                                                             
     *    desc:  Set a rotation point - Assuming the angles are in degrees
@@ -118,7 +118,7 @@ public:
         SetRotation( CRadian<float>( point.x * defs_DEG_TO_RAD,
                                      point.y * defs_DEG_TO_RAD,
                                      point.z * defs_DEG_TO_RAD) );
-    }	// SetRotation
+    }
 
     /************************************************************************                                                             
     *    desc:  Get the Euler angles from the quad
@@ -171,7 +171,7 @@ public:
 
         return tmp;
 
-    }   // GetRotation
+    }
 
     /************************************************************************                                                             
     *    desc:  The equality operator 
@@ -187,7 +187,7 @@ public:
 
         return false;
 
-    }   // operator ==
+    }
 
     /************************************************************************                                                             
     *    desc:  The inequality operator 
@@ -203,7 +203,7 @@ public:
 
         return false;
 
-    }   // operator !=
+    }
 
     /************************************************************************                                                             
     *    desc:  The multiplication operator 
@@ -223,7 +223,7 @@ public:
 
         return tmp;
 
-    }   // operator *
+    }
 
     /************************************************************************                                                             
     *    desc:  The multiplication operator 
@@ -241,7 +241,7 @@ public:
 
         return *this;
 
-    }   // operator *
+    }
 
     /************************************************************************                                                             
     *    desc:  The addition operator 
@@ -260,7 +260,7 @@ public:
 
         return tmp;
 
-    }   // operator +
+    }
 
     /************************************************************************                                                             
     *    desc:  The addition operator 
@@ -278,7 +278,7 @@ public:
 
         return *this;
 
-    }   // operator +=
+    }
 
     /************************************************************************                                                             
     *    desc:  The subtraction operator 
@@ -297,7 +297,7 @@ public:
 
         return tmp;
 
-    }   // operator -
+    }
 
     /************************************************************************                                                             
     *    desc:  The subtraction operator 
@@ -315,7 +315,7 @@ public:
 
         return *this;
 
-    }   // operator -=
+    }
 
     /************************************************************************                                                             
     *    desc:  Set the quaternion data
@@ -328,7 +328,7 @@ public:
 
         Normalize();
 
-    }   // Set
+    }
 
     /************************************************************************                                                             
     *    desc:  Set the quaternion data
@@ -342,7 +342,7 @@ public:
 
         Normalize();
 
-    }   // Set
+    }
 
     /************************************************************************                                                             
     *    desc:  Invert the values of this quaternion
@@ -357,7 +357,7 @@ public:
 
         return tmp;
 
-    }   // GetConjugate
+    }
 
     /************************************************************************                                                             
     *    desc:  Invert the values of this quaternion
@@ -375,7 +375,7 @@ public:
 
         return tmp;
 
-    }   // GetInverse
+    }
 
     /************************************************************************                                                             
     *    desc:  Get the length of the quaternion 
@@ -386,7 +386,7 @@ public:
     {
         return (x * x) +  (y * y) + (z * z) + (w * w);
 
-    }   // GetLengthSquared
+    }
 
     /************************************************************************                                                             
     *    desc:  Get the point 
@@ -403,7 +403,7 @@ public:
 
         return tmp;
 
-    }   // GetPoint
+    }
 
     /************************************************************************                                                             
     *    desc:  normalize this quaternion
@@ -420,8 +420,8 @@ public:
             w /= length;
         }
 
-    }	// Normalize
+    }
 };
 
-#endif  // __quaternion_h__
+#endif
 

@@ -64,10 +64,10 @@ void CCommonState::Transform()
 /***************************************************************************
 *    desc:  Update objects that require them
 ****************************************************************************/
-void CCommonState::Render()
+void CCommonState::render()
 {
     //const CMatrix & matrix = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_ORTHOGRAPHIC );
-    //CMenuManager::Instance().Render( matrix );
+    //CMenuManager::Instance().render( matrix );
 
 }	// Render
 

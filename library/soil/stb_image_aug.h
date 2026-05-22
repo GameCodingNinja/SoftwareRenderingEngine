@@ -210,7 +210,7 @@ extern void   stbi_hdr_to_ldr_scale(float scale);
 extern void   stbi_ldr_to_hdr_gamma(float gamma);
 extern void   stbi_ldr_to_hdr_scale(float scale);
 
-#endif // STBI_NO_HDR
+#endif
 
 // get a VERY brief reason for failure
 // NOT THREADSAFE
@@ -342,7 +342,7 @@ typedef void (*stbi_YCbCr_to_RGB_run)(uint8 *output, uint8 const *y, uint8 const
 
 extern void stbi_install_idct(stbi_idct_8x8 func);
 extern void stbi_install_YCbCr_to_RGB(stbi_YCbCr_to_RGB_run func);
-#endif // STBI_SIMD
+#endif
 
 #ifdef __cplusplus
 }
@@ -351,4 +351,4 @@ extern void stbi_install_YCbCr_to_RGB(stbi_YCbCr_to_RGB_run func);
 //
 //
 ////   end header file   /////////////////////////////////////////////////////
-#endif // STBI_INCLUDE_STB_IMAGE_H
+#endif

@@ -54,4 +54,4 @@ private:
 
 };
 
-#endif  // __classtemplate_h__
+#endif

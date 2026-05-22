@@ -24,7 +24,7 @@ CStatCounter::CStatCounter()
 {
     ResetCounters();
 
-}   // Constructer
+}
 
 
 /************************************************************************
@@ -33,7 +33,7 @@ CStatCounter::CStatCounter()
 CStatCounter::~CStatCounter()
 {
 
-}   // Destructer
+}
 
 
 /************************************************************************
@@ -60,7 +60,7 @@ void CStatCounter::IncCycle( IWindow * pWindow )
         ResetCounters();
     }
 
-}   // HasCycleCompleted
+}
 
 
 /************************************************************************
@@ -74,7 +74,7 @@ void CStatCounter::ResetCounters()
     m_cycleCounter = 0;
     m_activeContexCounter = 0;
 
-}   // ResetCounters
+}
 
 
 /************************************************************************
@@ -95,17 +95,17 @@ const std::string & CStatCounter::GetStatString()
 
     return m_statStr;
 
-}   // GetStatString
+}
 
 
 /************************************************************************
 *    desc:  Inc the display counter                                                             
 ************************************************************************/
-void CStatCounter::IncDisplayCounter( size_t i )
+void CStatCounter::incDisplayCounter( size_t i )
 {
     m_vObjCounter += i;
 
-}   // IncDisplayCounter
+}
 
 
 /************************************************************************
@@ -115,7 +115,7 @@ void CStatCounter::IncCollisionCounter( size_t i )
 {
     m_cObjCounter += i;
 
-}   // IncCollisionCounter
+}
 
 
 /************************************************************************
@@ -125,7 +125,7 @@ void CStatCounter::IncScriptContexCounter()
 {
     ++m_scriptContexCounter;
 
-}   // IncScriptContexCounter
+}
 
 
 /************************************************************************
@@ -135,4 +135,4 @@ void CStatCounter::IncActiveScriptContexCounter()
 {
     ++m_activeContexCounter;
 
-}   // IncScriptContexCounter
+}

@@ -145,7 +145,7 @@ static EKeyCode TranslateVirtualKey(WPARAM vk)
         default:            return KEY_UNKNOWN;
     }
 
-}   // TranslateVirtualKey
+}
 
 
 /************************************************************************
@@ -165,7 +165,7 @@ static EMouseButton MapMouseButton(UINT msg)
         default:              return static_cast<EMouseButton>(0);
     }
 
-}   // MapMouseButton
+}
 
 
 /************************************************************************
@@ -181,7 +181,7 @@ CWindowsWindow::CWindowsWindow() :
     std::memset(&m_savedPlacement, 0, sizeof(m_savedPlacement));
     m_savedPlacement.length = sizeof(WINDOWPLACEMENT);
 
-}   // Constructor
+}
 
 
 /************************************************************************
@@ -191,7 +191,7 @@ CWindowsWindow::~CWindowsWindow()
 {
     Destroy();
 
-}   // Destructor
+}
 
 
 /************************************************************************
@@ -263,7 +263,7 @@ void CWindowsWindow::Create(int width, int height, const char* title)
     m_upFrameBuffer = std::make_unique<CWindowsFrameBuffer>(
         m_hWnd, m_hDC, width, height);
 
-}   // Create
+}
 
 
 /************************************************************************
@@ -287,7 +287,7 @@ void CWindowsWindow::Destroy()
 
     UnregisterClassA(m_className.c_str(), GetModuleHandle(nullptr));
 
-}   // Destroy
+}
 
 
 /************************************************************************
@@ -302,7 +302,7 @@ void CWindowsWindow::Show(bool visible)
     if( visible )
         UpdateWindow(m_hWnd);
 
-}   // Show
+}
 
 
 /************************************************************************
@@ -313,7 +313,7 @@ void CWindowsWindow::SetTitle(const std::string& title)
     if( m_hWnd != nullptr )
         SetWindowTextA(m_hWnd, title.c_str());
 
-}   // SetTitle
+}
 
 
 /************************************************************************
@@ -356,7 +356,7 @@ void CWindowsWindow::SetFullScreen(bool fullscreen)
             SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
     }
 
-}   // SetFullScreen
+}
 
 
 /************************************************************************
@@ -372,7 +372,7 @@ void CWindowsWindow::PollEvents()
         DispatchMessage(&msg);
     }
 
-}   // PollEvents
+}
 
 
 /************************************************************************
@@ -382,7 +382,7 @@ IFrameBuffer* CWindowsWindow::GetFrameBuffer()
 {
     return m_upFrameBuffer.get();
 
-}   // GetFrameBuffer
+}
 
 
 /************************************************************************
@@ -467,6 +467,6 @@ LRESULT CWindowsWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
     return DefWindowProc(hWnd, msg, wParam, lParam);
 
-}   // HandleMessage
+}
 
-#endif  // _WIN32
+#endif

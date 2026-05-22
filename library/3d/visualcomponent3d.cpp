@@ -19,17 +19,17 @@
 *    desc:  Constructer
 ************************************************************************/
 CVisualComponent3d::CVisualComponent3d( const CObjectData3D & objectData )
-    : m_visualData( objectData.GetVisualData() ),
+    : m_visualData( objectData.getVisualData() ),
       m_vertexBufSize( sizeof(CVertex) ),
       m_uvOffset( sizeof(CPoint<float>) ),
-      m_textureID( m_visualData.GetTextureID() ),
-      m_color( m_visualData.GetColor() ),
-      m_vbo( m_visualData.GetVBO() ),
-      m_ibo( m_visualData.GetIBO() ),
-      m_vertexCount( m_visualData.GetVertexCount() ),
-      m_IndexCount( m_visualData.GetIndexCount() )
+      m_pTexture( m_visualData.getTexture() ),
+      m_color( m_visualData.getColor() ),
+      m_vbo( m_visualData.getVBO() ),
+      m_ibo( m_visualData.getIBO() ),
+      m_vertexCount( m_visualData.getVertexCount() ),
+      m_IndexCount( m_visualData.getIndexCount() )
 {
-}   // constructor
+}
 
 
 /************************************************************************
@@ -37,65 +37,65 @@ CVisualComponent3d::CVisualComponent3d( const CObjectData3D & objectData )
 ************************************************************************/
 CVisualComponent3d::~CVisualComponent3d()
 {
-}   // destructer
+}
 
 
 /************************************************************************
 *    desc:  do the render
 ************************************************************************/
-void CVisualComponent3d::Render( const CMatrix & matrix )
+void CVisualComponent3d::render( const CMatrix & matrix )
 {
-    if( IsActive() )
+    if( isActive() )
     {
         // Increment our stat counter to keep track of what is going on.
-        CStatCounter::Instance().IncDisplayCounter();
+        CStatCounter::Instance().incDisplayCounter();
 
         // If this is a quad, we need to take into account the vertex scale
-        if( m_visualData.GetGenerationType() == NDefs::EGT_QUAD )
+        if( m_visualData.getGenerationType() == NDefs::EGT_QUAD )
         {
             // Calculate the final matrix
             CMatrix finalMatrix;
-            finalMatrix.setScale( m_visualData.GetVertexScale() );
+            finalMatrix.setScale( m_visualData.getVertexScale() );
             finalMatrix *= matrix;
 
-            CSoftwareRender::Instance().Render3D( finalMatrix, m_vertexCount, m_IndexCount, m_textureID, m_vbo, m_ibo, m_color, m_visualData.GetShader() );
+            CSoftwareRender::Instance().render3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_vbo, m_ibo, m_color, m_visualData.getShader() );
         }
     }
 
-}   // Render
+}
 
 
 /************************************************************************
 *    desc:  Is this component active?
 ************************************************************************/
-bool CVisualComponent3d::IsActive()
+bool CVisualComponent3d::isActive()
 {
-    return (m_visualData.GetGenerationType() != NDefs::EGT_NULL);
+    return (m_visualData.getGenerationType() != NDefs::EGT_NULL);
 
-}   // IsActive
+}
 
 
 /************************************************************************
 *    desc:  Set/Get the color 
 ************************************************************************/
-void CVisualComponent3d::SetColor( const CColor<float> & color )
+void CVisualComponent3d::setColor( const CColor<float> & color )
 {
     m_color = color;
 
-}   // SetColor
+}
 
-const CColor<float> & CVisualComponent3d::GetColor() const
+const CColor<float> & CVisualComponent3d::getColor() const
 {
     return m_color;
 
-}   // GetColor
+}
 
 
 /************************************************************************
 *    desc:  Set the texture ID from index
 ************************************************************************/
-void CVisualComponent3d::SetTextureID( uint index )
+void CVisualComponent3d::setTexture( uint index )
 {
-    m_textureID = m_visualData.GetTextureID( index );
+    m_pTexture = m_visualData.getTexture( index );
 
-}   // SetTextureID
+}

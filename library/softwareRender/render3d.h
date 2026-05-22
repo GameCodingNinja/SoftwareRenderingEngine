@@ -12,13 +12,13 @@
 #include <softwareRender/renderdefs.h>
 
 // Forward declaration(s)
-class CSRTexture;
+class CTexture;
 
 class CRender3d
 {
 public:
 
-    CRender3d( CSRTexture * pText, CSurfaceData * pSurface, int32_t * pZBuffer, uint32_t colorR, uint32_t colorG, uint32_t colorB, uint32_t colorA, FragmentShaderFunc shader = nullptr ) :
+    CRender3d( const CTexture * pText, CSurfaceData * pSurface, int32_t * pZBuffer, uint32_t colorR, uint32_t colorG, uint32_t colorB, uint32_t colorA, FragmentShaderFunc shader = nullptr ) :
         m_pText(pText),
         m_pSurface(pSurface),
         m_pZBuffer(pZBuffer),
@@ -35,7 +35,7 @@ public:
     }
 
     // Texture pointer
-    CSRTexture * m_pText;
+    const CTexture * m_pText;
 
     // Surface data pointer
     CSurfaceData * m_pSurface;

@@ -18,4 +18,4 @@ extern stbi_uc *stbi_dds_load_from_file   (FILE *f,                  int *x, int
 //
 //
 ////   end header file   /////////////////////////////////////////////////////
-#endif // HEADER_STB_IMAGE_DDS_AUGMENTATION
+#endif

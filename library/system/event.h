@@ -254,4 +254,4 @@ union CEvent
     CUserEvent user;                // User-defined event data
 };
 
-#endif  // __event_h__
+#endif

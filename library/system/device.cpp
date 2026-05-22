@@ -23,7 +23,7 @@
 ************************************************************************/
 CDevice::CDevice()
 {
-}   // constructor
+}
 
 
 /************************************************************************
@@ -31,7 +31,7 @@ CDevice::CDevice()
 ************************************************************************/
 CDevice::~CDevice()
 {
-}	// destructer
+}
 
 
 /***************************************************************************
@@ -47,7 +47,7 @@ void CDevice::Create()
     m_upWindow->Create( size.getW(), size.getH() );
 
     // Set the software render surface to the window's framebuffer
-    CSoftwareRender::Instance().SetSurface( m_upWindow->GetFrameBuffer() );
+    CSoftwareRender::Instance().setSurface( m_upWindow->GetFrameBuffer() );
 
     // Set the full screen
     if( CSettings::Instance().getFullScreen() )
@@ -56,7 +56,7 @@ void CDevice::Create()
     // Create the projection matrixes
     CreateProjMatrix();
     
-}   // Create
+}
 
 
 /************************************************************************
@@ -80,7 +80,7 @@ void CDevice::CreateProjMatrix()
         CSettings::Instance().getMinZdist(),
         CSettings::Instance().getMaxZdist() );
 
-}   // CreateProjMatrix
+}
 
 
 /************************************************************************
@@ -93,7 +93,7 @@ const CMatrix & CDevice::GetProjectionMatrix( NDefs::EProjectionType type ) cons
     else
         return m_orthographicMatrix;
 
-}   // GetProjectionMatrix
+}
 
 
 /***************************************************************************
@@ -103,7 +103,7 @@ void CDevice::ShowWindow( bool visible )
 {
     m_upWindow->Show( visible );
 
-}   // hide
+}
 
 
 /***************************************************************************
@@ -115,7 +115,7 @@ void CDevice::SetFullScreen( bool fullscreen )
 
     NGenFunc::PostDebugMsg( "SetFullScreen called" );
 
-}   // SetFullScreen
+}
 
 
 /***************************************************************************
@@ -125,7 +125,7 @@ IWindow * CDevice::GetNativeWindow()
 {
     return m_upWindow.get();
 
-}   // GetNativeWindow
+}
 
 
 /***************************************************************************
@@ -135,4 +135,4 @@ IFrameBuffer * CDevice::GetFrameBuffer()
 {
     return m_upWindow->GetFrameBuffer();
 
-}   // GetFrameBuffer
+}

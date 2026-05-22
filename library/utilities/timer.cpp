@@ -24,13 +24,13 @@ CTimer::CTimer(double interval, bool startExpired)
     else
         Reset();
 
-}   // constructor
+}
 
 CTimer::CTimer()
     : expiredTime(CHighResTimer::Instance().GetTime()),
       disabled(false)
 {
-}   // constructor
+}
 
 
 /************************************************************************
@@ -38,7 +38,7 @@ CTimer::CTimer()
 ************************************************************************/
 CTimer::~CTimer()
 {
-}	// destructer
+}
 
 
 /***************************************************************************
@@ -49,7 +49,7 @@ void CTimer::Reset()
     expiredTime = timeInterval + CHighResTimer::Instance().GetTime();
     disabled = false;
 
-}   // Reset
+}
 
 
 /***************************************************************************
@@ -59,7 +59,7 @@ void CTimer::SetExpired()
 {
     expiredTime = CHighResTimer::Instance().GetTime();
 
-}   // Reset
+}
 
 
 /***************************************************************************
@@ -70,7 +70,7 @@ void CTimer::Set( double interval )
     timeInterval = interval;
     Reset();
 
-}   // Set
+}
 
 
 /***************************************************************************
@@ -97,7 +97,7 @@ bool CTimer::Expired( bool resetOnExpire )
 
     return result;
 
-}   // Expired
+}
 
 
 /***************************************************************************
@@ -107,5 +107,5 @@ void CTimer::Disable(bool value)
 {
     disabled = value;
 
-}   // Disable
+}
 

@@ -70,7 +70,7 @@ CWindowsFrameBuffer::CWindowsFrameBuffer(HWND hWnd, HDC hDC, int width, int heig
         std::memset(m_pPixels[i], 0, m_width * m_height * sizeof(uint32_t));
     }
 
-}   // Constructor
+}
 
 
 /************************************************************************
@@ -98,37 +98,37 @@ CWindowsFrameBuffer::~CWindowsFrameBuffer()
         m_pPixels[i] = nullptr;
     }
 
-}   // Destructor
+}
 
 
 /************************************************************************
 *    desc:  Get the raw pixel buffer (returns the back buffer)
 ************************************************************************/
-uint32_t* CWindowsFrameBuffer::GetPixels()
+uint32_t* CWindowsFrameBuffer::getPixels()
 {
     return m_pPixels[m_backIndex];
 
-}   // GetPixels
+}
 
 
 /************************************************************************
 *    desc:  Get framebuffer width
 ************************************************************************/
-int CWindowsFrameBuffer::GetWidth() const
+int CWindowsFrameBuffer::getWidth() const
 {
     return m_width;
 
-}   // GetWidth
+}
 
 
 /************************************************************************
 *    desc:  Get framebuffer height
 ************************************************************************/
-int CWindowsFrameBuffer::GetHeight() const
+int CWindowsFrameBuffer::getHeight() const
 {
     return m_height;
 
-}   // GetHeight
+}
 
 
 /************************************************************************
@@ -138,7 +138,7 @@ void CWindowsFrameBuffer::Clear()
 {
     std::memset(m_pPixels[m_backIndex], 0, m_width * m_height * sizeof(uint32_t));
 
-}   // Clear
+}
 
 
 /************************************************************************
@@ -151,6 +151,6 @@ void CWindowsFrameBuffer::Flip()
     // Swap to the other buffer
     m_backIndex = 1 - m_backIndex;
 
-}   // Flip
+}
 
-#endif  // _WIN32
+#endif

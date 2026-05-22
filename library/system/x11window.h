@@ -76,6 +76,6 @@ private:
     bool m_fullscreen;
 };
 
-#endif  // __linux__
+#endif
 
-#endif  // __x11window_h__
+#endif

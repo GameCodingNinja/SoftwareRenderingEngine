@@ -28,7 +28,7 @@ CObjectPhysicsData2D::CObjectPhysicsData2D()
     m_angDamping(0),
     m_fixedRotation(false)
 {
-}   // constructor
+}
 
 
 /************************************************************************
@@ -37,13 +37,13 @@ CObjectPhysicsData2D::CObjectPhysicsData2D()
 CObjectPhysicsData2D::~CObjectPhysicsData2D()
 {
     // NOTE: Nothing should ever be deleted here
-}   // Destructer
+}
 
 
 /************************************************************************
 *    desc:  Load thes object data from node
 ************************************************************************/
-void CObjectPhysicsData2D::LoadFromNode( const XMLNode & objectNode )
+void CObjectPhysicsData2D::loadFromNode( const XMLNode & objectNode )
 {
     const XMLNode physicsNode = objectNode.getChildNode( "physics" );
 
@@ -152,16 +152,16 @@ void CObjectPhysicsData2D::LoadFromNode( const XMLNode & objectNode )
         }
 
         // Set the color for testing purposes
-        m_color = NParseHelper::LoadColor( physicsNode, m_color );
+        m_color = NParseHelper::loadColor( physicsNode, m_color );
     }
 
-}	// LoadFromNode
+}
 
 
 /************************************************************************
 *    desc:  Get the file path
 ************************************************************************/
-const std::string & CObjectPhysicsData2D::GetFile() const 
+const std::string & CObjectPhysicsData2D::getFile() const 
 {
     return m_file;
 }
@@ -179,7 +179,7 @@ const std::string & CObjectPhysicsData2D::GetFile() const
 /************************************************************************
 *    desc:  Get the physics world name
 ************************************************************************/
-const std::string & CObjectPhysicsData2D::GetWorld() const 
+const std::string & CObjectPhysicsData2D::getWorld() const 
 {
     return m_world;
 }
@@ -188,7 +188,7 @@ const std::string & CObjectPhysicsData2D::GetWorld() const
 /************************************************************************
 *    desc:  Get the size
 ************************************************************************/
-const CSize<float> & CObjectPhysicsData2D::GetSize() const
+const CSize<float> & CObjectPhysicsData2D::getSize() const
 {
     return m_size;
 }
@@ -197,7 +197,7 @@ const CSize<float> & CObjectPhysicsData2D::GetSize() const
 /************************************************************************
 *    desc:  Get the top mod
 ************************************************************************/
-float CObjectPhysicsData2D::GetTopMod() const
+float CObjectPhysicsData2D::getTopMod() const
 {
     return m_topMod;
 }
@@ -206,7 +206,7 @@ float CObjectPhysicsData2D::GetTopMod() const
 /************************************************************************
 *    desc:  Get the bottom mod
 ************************************************************************/
-float CObjectPhysicsData2D::GetBottomMod() const
+float CObjectPhysicsData2D::getBottomMod() const
 {
     return m_bottomMod;
 }
@@ -215,7 +215,7 @@ float CObjectPhysicsData2D::GetBottomMod() const
 /************************************************************************
 *    desc:  Get the left mod
 ************************************************************************/
-float CObjectPhysicsData2D::GetLeftMod() const
+float CObjectPhysicsData2D::getLeftMod() const
 {
     return m_leftMod;
 }
@@ -224,7 +224,7 @@ float CObjectPhysicsData2D::GetLeftMod() const
 /************************************************************************
 *    desc:  Get the left mod
 ************************************************************************/
-float CObjectPhysicsData2D::GetRightMod() const
+float CObjectPhysicsData2D::getRightMod() const
 {
     return m_rightMod;
 }
@@ -233,7 +233,7 @@ float CObjectPhysicsData2D::GetRightMod() const
 /************************************************************************
 *    desc:  Get the mass
 ************************************************************************/
-EColGenType CObjectPhysicsData2D::GetGenType() const
+EColGenType CObjectPhysicsData2D::getGenType() const
 {
     return m_genType;
 }
@@ -242,7 +242,7 @@ EColGenType CObjectPhysicsData2D::GetGenType() const
 /************************************************************************
 *    desc:  Get the density
 ************************************************************************/
-float CObjectPhysicsData2D::GetDensity() const
+float CObjectPhysicsData2D::getDensity() const
 {
     return m_density;
 }
@@ -251,7 +251,7 @@ float CObjectPhysicsData2D::GetDensity() const
 /************************************************************************
 *    desc:  Get the restitution
 ************************************************************************/
-float CObjectPhysicsData2D::GetRestitution() const
+float CObjectPhysicsData2D::getRestitution() const
 {
     return m_restitution;
 }
@@ -260,7 +260,7 @@ float CObjectPhysicsData2D::GetRestitution() const
 /************************************************************************
 *    desc:  Get the damping
 ************************************************************************/
-float CObjectPhysicsData2D::GetDamping() const
+float CObjectPhysicsData2D::getDamping() const
 {
     return m_damping;
 }
@@ -269,7 +269,7 @@ float CObjectPhysicsData2D::GetDamping() const
 /************************************************************************
 *    desc:  Get the angular damping
 ************************************************************************/
-float CObjectPhysicsData2D::GetAngDamping() const
+float CObjectPhysicsData2D::getAngDamping() const
 {
     return m_angDamping;
 }
@@ -278,7 +278,7 @@ float CObjectPhysicsData2D::GetAngDamping() const
 /************************************************************************
 *    desc:  Is the rotation fixed
 ************************************************************************/
-bool CObjectPhysicsData2D::IsRotationFixed() const
+bool CObjectPhysicsData2D::isRotationFixed() const
 {
     return m_fixedRotation;
 }
@@ -287,7 +287,7 @@ bool CObjectPhysicsData2D::IsRotationFixed() const
 /************************************************************************
 *    desc:  Get the color
 ************************************************************************/
-const CColor<float> & CObjectPhysicsData2D::GetColor() const 
+const CColor<float> & CObjectPhysicsData2D::getColor() const 
 {
     return m_color;
 }

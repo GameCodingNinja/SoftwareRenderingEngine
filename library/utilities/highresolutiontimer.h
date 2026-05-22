@@ -55,4 +55,4 @@ private:
 
 };
 
-#endif  // __highresolutiontimer_h__
+#endif

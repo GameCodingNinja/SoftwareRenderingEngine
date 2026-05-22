@@ -24,5 +24,5 @@ namespace NMathFunc
     float Modulus( float v1, float v2 );
 }
 
-#endif  // __math_func_2d_h__
+#endif
 

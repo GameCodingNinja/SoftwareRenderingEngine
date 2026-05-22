@@ -201,7 +201,7 @@ bool CGame::GameLoop()
         Transform();
 
         // Do the rendering
-        Render();
+        render();
 
         // Inc the cycle
         CStatCounter::Instance().IncCycle( m_pWindow );
@@ -244,18 +244,18 @@ void CGame::Transform()
 /***************************************************************************
 *   desc:  Do the rendering
 ****************************************************************************/
-void CGame::Render()
+void CGame::render()
 {
     // Update the software renderer's pixel pointer for the current back buffer
-    CSoftwareRender::Instance().SetSurface( m_pFrameBuffer );
+    CSoftwareRender::Instance().setSurface( m_pFrameBuffer );
 
     m_pFrameBuffer->Clear();
 
     // Clear the z-buffer for 3D rendering
-    CSoftwareRender::Instance().ClearZBuffer();
+    CSoftwareRender::Instance().clearZBuffer();
 
     // Render game content
-    spGameState->Render();
+    spGameState->render();
 
     // Do the back buffer swap
     m_pFrameBuffer->Flip();
