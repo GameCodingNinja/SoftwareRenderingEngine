@@ -6,10 +6,11 @@
       <mesh genType="quad">
         <quad uv.x1="0" uv.y1="0" uv.x2="1" uv.y2="1"/>
         <scaledFrame thicknessWidth="" thicknessHeight="" centerQuad=""/>
-        <texture file="" blendAlpha="false"/>
+        <texture file=""/>
         <file name=""/>
       </mesh>
       <color r="1" g="1" b="1" a="1"/>
+      <shader name="default"/>
     </visual>
     <physics file="" world="" type="static">
       <size width="0" height="0"/>
@@ -27,18 +28,21 @@
     <object name="background">
       <visual>
           <texture file="data/textures/titleScreen/title_background_small.png"/>
+          <shader name="default"/>
       </visual>
     </object>
 
     <object name="background2">
       <visual>
         <texture file="data/textures/titleScreen/title_background_small299.png"/>
+        <shader name="default"/>
       </visual>
     </object>
 
     <object name="enemy">
       <visual>
-        <texture file="data/textures/titleScreen/enemy01a.png" blendAlpha="true"/>
+        <texture file="data/textures/titleScreen/enemy01a.png"/>
+        <shader name="colorModAlpha"/>
       </visual>
     </object>
 

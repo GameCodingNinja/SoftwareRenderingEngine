@@ -19,6 +19,7 @@
 #include <common/point.h>
 #include <common/defs.h>
 #include <utilities/xmlParser.h>
+#include <softwareRender/renderdefs.h>
 
 // Forward Declarations
 struct XMLNode;
@@ -61,6 +62,8 @@ public:
     // Get Index count
     int GetIndexCount() const;
 
+    // Get the shader function (nullptr = use default)
+    FragmentShaderFunc GetShader() const;
 
 private:
 
@@ -96,6 +99,9 @@ private:
 
     // The vertex scale of the object
     CPoint<float> m_vertexScale;
+
+    // Fragment shader function pointer (nullptr = use default built-in)
+    FragmentShaderFunc m_shader;
 };
 
 #endif  // __object_visual_data_3d_h__

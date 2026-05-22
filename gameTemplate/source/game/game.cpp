@@ -28,10 +28,12 @@
 #include <system/eventqueue.h>
 #include <softwareRender/softwareRender.h>
 #include <managers/cameramanager.h>
+#include <managers/shadermanager.h>
 
 // Game dependencies
 #include "../state/startupstate.h"
 #include "../state/titlescreenstate.h"
+#include "softshader.h"
 
 /************************************************************************
 *    desc:  Constructer
@@ -43,6 +45,14 @@ CGame::CGame()
 {
     // Load the settings file
     CSettings::Instance().loadFromXML("data/settings/settings.cfg");
+
+    // Register game-side shaders before any object data is loaded
+    CShaderMgr::Instance().registerShader( "default",       NShader::shaderDefault );
+    CShaderMgr::Instance().registerShader( "colorMod",      NShader::shaderColorMod );
+    CShaderMgr::Instance().registerShader( "alphaTest",     NShader::shaderAlphaTest );
+    CShaderMgr::Instance().registerShader( "colorModAlpha", NShader::shaderColorModAlpha );
+    CShaderMgr::Instance().registerShader( "grayscale",     NShader::shaderGrayscale );
+    CShaderMgr::Instance().registerShader( "alphaBlend",    NShader::shaderAlphaBlend );
 
     // Load the camera data early because many objects init the default camera in their constructor
     CCameraMgr::Instance().load( "data/objects/camera.lst" );

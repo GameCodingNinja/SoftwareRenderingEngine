@@ -26,6 +26,7 @@ set(LIBRARY_SOURCES
     managers/managerbase.cpp
     managers/vertexbuffermanager.cpp
     managers/cameramanager.cpp
+    managers/shadermanager.cpp
     sprite/sprite.cpp
     2d/visualcomponent2d.cpp
     3d/visualcomponent3d.cpp

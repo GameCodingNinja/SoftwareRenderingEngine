@@ -15,6 +15,7 @@
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
 #include <common/defs.h>
+#include <managers/shadermanager.h>
 
 /************************************************************************
 *    desc:  Constructer
@@ -26,7 +27,7 @@ CObjectVisualData2D::CObjectVisualData2D()
       m_vertexCount(0),
       m_indexCount(0),
       m_vertexScale(1,1,1),
-      m_blendAlpha(false)
+      m_shader(nullptr)
 {
 }   // constructor
 
@@ -68,9 +69,6 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
                 m_textureFileVec.push_back( textureNode.getAttribute( "file" ) );
             }
 
-            // Does this texture require alpha blending?
-            if( textureNode.isAttributeSet("blendAlpha") )
-                m_blendAlpha = (std::string(textureNode.getAttribute( "blendAlpha" )) == "true");
         }
 
         // Get the mesh node
@@ -122,6 +120,13 @@ void CObjectVisualData2D::LoadFromNode( const XMLNode & objectNode )
 
         // Check for color
         m_color = NParseHelper::LoadColor( visualNode, m_color );
+
+        // Check for a named shader
+        const XMLNode shaderNode = visualNode.getChildNode("shader");
+        if( !shaderNode.isEmpty() && shaderNode.isAttributeSet("name") )
+        {
+            m_shader = CShaderMgr::Instance().get( shaderNode.getAttribute("name") );
+        }
     }
 
 }   // LoadFromNode
@@ -283,10 +288,10 @@ const CPoint<float> & CObjectVisualData2D::GetVertexScale() const
 
 
 /************************************************************************
-*    desc:  Is alpha blending enabled?
+*    desc:  Get the shader function
 ************************************************************************/
-bool CObjectVisualData2D::IsAlphaBlend() const
+FragmentShaderFunc CObjectVisualData2D::GetShader() const
 {
-    return m_blendAlpha;
+    return m_shader;
 }
 

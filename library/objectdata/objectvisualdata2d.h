@@ -20,6 +20,7 @@
 #include <common/defs.h>
 #include <common/scaledframe.h>
 #include <utilities/xmlParser.h>
+#include <softwareRender/renderdefs.h>
 
 // Forward Declarations
 struct XMLNode;
@@ -65,8 +66,8 @@ public:
     // Get the frame count
     uint GetFrameCount() const;
 
-    // Is alpha blending enabled for this texture?
-    bool IsAlphaBlend() const;
+    // Get the shader function (nullptr = use default)
+    FragmentShaderFunc GetShader() const;
 
 private:
 
@@ -106,8 +107,8 @@ private:
     // Scaled frame
     CScaledFrame m_scaledFrame;
 
-    // Alpha blending flag
-    bool m_blendAlpha;
+    // Fragment shader function pointer (nullptr = use default built-in)
+    FragmentShaderFunc m_shader;
 };
 
 #endif  // __object_visual_data_2d_h__

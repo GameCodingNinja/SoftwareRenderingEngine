@@ -2,11 +2,10 @@
 /************************************************************************
 *    FILE NAME:       renderdefs.h
 *
-*    DESCRIPTION:     List of render definations
+*    DESCRIPTION:     Render type definitions and shader interface
 ************************************************************************/
 
-#ifndef __render_defs_h__
-#define __render_defs_h__
+#pragma once
 
 // Standard lib dependencies
 #include <cstdint>
@@ -14,9 +13,6 @@
 // Game lib dependencies
 #include <common/vertex.h>
 #include <common/defs.h>
-
-// Forward declaration(s)
-class CSRTexture;
 
 /************************************************************************
 *    Surface data struct for the render pipeline
@@ -28,134 +24,58 @@ struct CSurfaceData
     int h = 0;
 };
 
-
 /************************************************************************
-*    Render data passed to worker threads for triangle rasterization
+*    Fragment shader input — what the rasterizer provides per pixel
 ************************************************************************/
-class CRender2d
+struct SFragIn
 {
-public:
+    // Sampled texel from the bound texture (ARGB packed uint32)
+    uint32_t texel;
 
-    CRender2d( CSRTexture * pText, CSurfaceData * pSurface, uint32_t colorR, uint32_t colorG, uint32_t colorB, uint32_t colorA, bool applyColor, bool blendAlpha ) :
-        m_pText(pText),
-        m_pSurface(pSurface),
-        m_cr(colorR), m_cg(colorG), m_cb(colorB), m_ca(colorA),
-        m_applyColor(applyColor),
-        m_blendAlpha(blendAlpha)
-    { }
+    // Current destination pixel in the framebuffer (for blending)
+    uint32_t dstColor;
 
-    // Texture pointer
-    CSRTexture * m_pText;
-
-    // Surface data pointer
-    CSurfaceData * m_pSurface;
-
-    // Color modulation (0-255 fixed-point, 255 = 1.0 = no change)
-    uint32_t m_cr, m_cg, m_cb, m_ca;
-
-    // Flag to apply color modulation
-    bool m_applyColor;
-
-    // Flag to enable per-pixel alpha blending
-    bool m_blendAlpha;
-
-    // Three 2D vertexes
-    CVertex m_vec[TRI];
-
-    // Cull if the projected point are outside the screen
-    bool Cull( int screenW, int screenH )
-    {
-        int XMinInVis(0), XMaxInVis(0), YMinInVis(0), YMaxInVis(0);
-
-        // Determine location of panel's 2D points
-        for( int i = 0; i < TRI; ++i )
-        {
-            if( m_vec[ i ].vert.x < 0 ) // 0 was MINX
-                ++XMinInVis;
-
-            else if( m_vec[ i ].vert.x > screenW )
-                ++XMaxInVis;
-
-            if( m_vec[ i ].vert.y < 0 )  // 0 was MINY
-                ++YMinInVis;
-
-            else if( m_vec[ i ].vert.y > screenH )
-                ++YMaxInVis;
-        }
-
-        if( TRI > XMinInVis && TRI > YMinInVis && 
-            TRI > XMaxInVis && TRI > YMaxInVis )
-            return false;
-
-        return true;
-
-    }   // Cull
-
+    // Interpolated texture coordinates (pixel space, integer)
+    uint32_t texU;
+    uint32_t texV;
 };
 
-
 /************************************************************************
-*    Render data passed to worker threads for 3D triangle rasterization
+*    Uniform block — constant data for the entire draw call.
+*    Set once per sprite, shared across all pixels.
 ************************************************************************/
-class CRender3d
+struct SShaderUniforms
 {
-public:
-
-    CRender3d( CSRTexture * pText, CSurfaceData * pSurface, int32_t * pZBuffer, uint32_t colorR, uint32_t colorG, uint32_t colorB, uint32_t colorA, bool applyColor ) :
-        m_pText(pText),
-        m_pSurface(pSurface),
-        m_pZBuffer(pZBuffer),
-        m_cr(colorR), m_cg(colorG), m_cb(colorB), m_ca(colorA),
-        m_applyColor(applyColor)
-    { }
-
-    // Texture pointer
-    CSRTexture * m_pText;
-
-    // Surface data pointer
-    CSurfaceData * m_pSurface;
-
-    // Z-buffer pointer
-    int32_t * m_pZBuffer;
-
-    // Color modulation (0-255 fixed-point, 255 = 1.0 = no change)
-    uint32_t m_cr, m_cg, m_cb, m_ca;
-
-    // Flag to apply color modulation
-    bool m_applyColor;
-
-    // Three vertexes (screen-projected with 1/Z, U/Z, V/Z)
-    CVertex m_vec[TRI];
-
-    // Cull if the projected points are outside the screen
-    bool Cull( int screenW, int screenH )
-    {
-        int XMinInVis(0), XMaxInVis(0), YMinInVis(0), YMaxInVis(0);
-
-        // Determine location of panel's 2D projected points
-        for( int i = 0; i < TRI; ++i )
-        {
-            if( m_vec[ i ].vert.x < 0 )
-                ++XMinInVis;
-
-            else if( m_vec[ i ].vert.x > screenW )
-                ++XMaxInVis;
-
-            if( m_vec[ i ].vert.y < 0 )
-                ++YMinInVis;
-
-            else if( m_vec[ i ].vert.y > screenH )
-                ++YMaxInVis;
-        }
-
-        if( TRI > XMinInVis && TRI > YMinInVis && 
-            TRI > XMaxInVis && TRI > YMaxInVis )
-            return false;
-
-        return true;
-
-    }   // Cull
-
+    // Color modulation (0-255 fixed-point, 255 = identity)
+    uint32_t cr, cg, cb, ca;
 };
 
-#endif  // __render_defs_h__
+/************************************************************************
+*    Fragment shader output — what the shader produces per pixel
+************************************************************************/
+struct SFragOut
+{
+    // The final pixel color (ARGB packed uint32)
+    uint32_t color;
+
+    // Should the rasterizer write this pixel?
+    bool write;
+};
+
+/************************************************************************
+*    Fragment shader function signature.
+*    The rasterizer calls this once per pixel.
+************************************************************************/
+typedef void (*FragmentShaderFunc)( const SFragIn & in, const SShaderUniforms & uniforms, SFragOut & out );
+
+/************************************************************************
+*    Default fallback shader (engine-side, no game dependency)
+************************************************************************/
+namespace NShaderDefault
+{
+    inline void shaderDefault( const SFragIn & in, const SShaderUniforms & uniforms, SFragOut & out )
+    {
+        out.color = in.texel;
+        out.write = true;
+    }
+}

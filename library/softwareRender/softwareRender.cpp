@@ -237,7 +237,7 @@ uint * CSoftwareRender::GetIBO( uint Id )
 *   Perspective Projection: ((trans.vert[0].vert.x / trans.vert[0].vert.z) * m_halfSize.w) + m_halfSize.w + 0.5f;
 *   Orthographic Projection: (trans.vert[0].vert.x * m_halfSize.w) + m_halfSize.w + 0.5f;
 ****************************************************************************/
-void CSoftwareRender::Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color, bool blendAlpha )
+void CSoftwareRender::Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color, FragmentShaderFunc shader )
 {
     CSRTexture * pText = GetTexture( textId );
     CVertex * pVert = (CVertex *)GetVBO( vboId );
@@ -260,14 +260,10 @@ void CSoftwareRender::Render2D( const CMatrix & matrix, const uint vertCount, co
     }
 
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per sprite
-    bool applyColor = false;
     uint32_t cr = (uint32_t)(color.r * 255.0f);
     uint32_t cg = (uint32_t)(color.g * 255.0f);
     uint32_t cb = (uint32_t)(color.b * 255.0f);
     uint32_t ca = (uint32_t)(color.a * 255.0f);
-
-    if( cr != 255 || cg != 255 || cb != 255 || ca != 255 )
-        applyColor = true;
 
     // Collect surviving triangles for strip-based rendering
     std::vector<CRender2d> triList;
@@ -276,7 +272,7 @@ void CSoftwareRender::Render2D( const CMatrix & matrix, const uint vertCount, co
 
     for( int i = 0; i < triCount; ++i )
     {
-        CRender2d render2d( pText, &m_surfaceData, cr, cg, cb, ca, applyColor, blendAlpha );
+        CRender2d render2d( pText, &m_surfaceData, cr, cg, cb, ca, shader );
 
         // Copy over the verts for this triangle
         for( int j = 0; j < TRI; ++j )
@@ -495,94 +491,30 @@ void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax )
                     fixU = (int64_t)(((double)u + uOffset) * FIX_SCALE_UV);
                     fixV = (int64_t)(((double)v + vOffset) * FIX_SCALE_UV);
 
-                    if( render.m_applyColor && render.m_blendAlpha )
+                    // Unified shader-driven scanline loop
+                    SFragIn fragIn;
+                    SFragOut fragOut;
+
+                    while( width-- > 0 )
                     {
-                        // Color modulation + alpha test (only render fully opaque pixels)
-                        uint32_t cr = render.m_cr;
-                        uint32_t cg = render.m_cg;
-                        uint32_t cb = render.m_cb;
+                        uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
 
-                        while( width-- > 0 )
+                        if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
                         {
-                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
+                            fragIn.texel = *(pText + uvOffset);
+                            fragIn.dstColor = *pDBuffer;
+                            fragIn.texU = (uint)(fixU >> UV_SHIFT);
+                            fragIn.texV = (uint)(fixV >> UV_SHIFT);
 
-                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                            {
-                                uint32_t texel = *(pText + uvOffset);
+                            render.m_shader( fragIn, render.m_uniforms, fragOut );
 
-                                if( ((texel >> 24) & 0xFF) == 255 )
-                                {
-                                    uint32_t r = ((texel >> 16) & 0xFF) * cr / 255;
-                                    uint32_t g = ((texel >>  8) & 0xFF) * cg / 255;
-                                    uint32_t b = ( texel        & 0xFF) * cb / 255;
-                                    *pDBuffer = (255 << 24) | (r << 16) | (g << 8) | b;
-                                }
-                            }
-
-                            ++pDBuffer;
-                            fixU += fixStepU;
-                            fixV += fixStepV;
+                            if( fragOut.write )
+                                *pDBuffer = fragOut.color;
                         }
-                    }
-                    else if( render.m_applyColor )
-                    {
-                        // Color modulation only (no alpha blending)
-                        uint32_t cr = render.m_cr;
-                        uint32_t cg = render.m_cg;
-                        uint32_t cb = render.m_cb;
 
-                        while( width-- > 0 )
-                        {
-                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
-
-                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                            {
-                                uint32_t texel = *(pText + uvOffset);
-                                uint32_t r = ((texel >> 16) & 0xFF) * cr / 255;
-                                uint32_t g = ((texel >>  8) & 0xFF) * cg / 255;
-                                uint32_t b = ( texel        & 0xFF) * cb / 255;
-                                *pDBuffer = (255 << 24) | (r << 16) | (g << 8) | b;
-                            }
-
-                            ++pDBuffer;
-                            fixU += fixStepU;
-                            fixV += fixStepV;
-                        }
-                    }
-                    else if( render.m_blendAlpha )
-                    {
-                        // Alpha test only - render pixels with alpha == 255, skip the rest
-                        while( width-- > 0 )
-                        {
-                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
-
-                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                            {
-                                uint32_t texel = *(pText + uvOffset);
-
-                                if( ((texel >> 24) & 0xFF) == 255 )
-                                    *pDBuffer = texel;
-                            }
-
-                            ++pDBuffer;
-                            fixU += fixStepU;
-                            fixV += fixStepV;
-                        }
-                    }
-                    else
-                    {
-                        // Fast path: no color modulation, no alpha blending
-                        while( width-- > 0 )
-                        {
-                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
-
-                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                                *pDBuffer = *(pText + uvOffset);
-
-                            ++pDBuffer;
-                            fixU += fixStepU;
-                            fixV += fixStepV;
-                        }
+                        ++pDBuffer;
+                        fixU += fixStepU;
+                        fixV += fixStepV;
                     }
                 }
             }
@@ -608,7 +540,7 @@ void CSoftwareRender::ClearZBuffer()
 *          the near plane (W >= nearClip), following the legacy tri3D approach.
 *          Clipping is done in clip space before projection.
 ****************************************************************************/
-void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color )
+void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color, FragmentShaderFunc shader )
 {
     CSRTexture * pText = GetTexture( textId );
     CVertex * pVert = (CVertex *)GetVBO( vboId );
@@ -651,14 +583,10 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
     }
 
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per mesh
-    bool applyColor = false;
     uint32_t cr = (uint32_t)(color.r * 255.0f);
     uint32_t cg = (uint32_t)(color.g * 255.0f);
     uint32_t cb = (uint32_t)(color.b * 255.0f);
     uint32_t ca = (uint32_t)(color.a * 255.0f);
-
-    if( cr != 255 || cg != 255 || cb != 255 || ca != 255 )
-        applyColor = true;
 
     // Collect surviving triangles for strip-based rendering
     std::vector<CRender3d> triList;
@@ -772,7 +700,7 @@ void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, co
         // Fan-triangulate the clipped polygon (3 verts = 1 tri, 4 verts = 2 tris)
         for( int j = 1; j < clipCount - 1; ++j )
         {
-            CRender3d render3d( pText, &m_surfaceData, m_zBuffer.data(), cr, cg, cb, ca, applyColor );
+            CRender3d render3d( pText, &m_surfaceData, m_zBuffer.data(), cr, cg, cb, ca, shader );
 
             render3d.m_vec[0] = projected[0];
             render3d.m_vec[1] = projected[j];
@@ -1043,18 +971,20 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
                                 if( uvOffset < uvOffsetMax )
                                 {
-                                    uint32_t texel = *(pText + uvOffset);
+                                    SFragIn fragIn;
+                                    fragIn.texel = *(pText + uvOffset);
+                                    fragIn.dstColor = *pDBuffer;
+                                    fragIn.texU = texX;
+                                    fragIn.texV = texY;
 
-                                    if( render.m_applyColor )
+                                    SFragOut fragOut;
+                                    render.m_shader( fragIn, render.m_uniforms, fragOut );
+
+                                    if( fragOut.write )
                                     {
-                                        uint32_t r = ((texel >> 16) & 0xFF) * render.m_cr / 255;
-                                        uint32_t g = ((texel >>  8) & 0xFF) * render.m_cg / 255;
-                                        uint32_t b = ( texel        & 0xFF) * render.m_cb / 255;
-                                        texel = (255 << 24) | (r << 16) | (g << 8) | b;
+                                        *pDBuffer = fragOut.color;
+                                        *pZBuffer = (int32_t)fixZ;
                                     }
-
-                                    *pDBuffer = texel;
-                                    *pZBuffer = (int32_t)fixZ;
                                 }
                             }
 
@@ -1112,18 +1042,20 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 
                                 if( uvOffset < uvOffsetMax )
                                 {
-                                    uint32_t texel = *(pText + uvOffset);
+                                    SFragIn fragIn;
+                                    fragIn.texel = *(pText + uvOffset);
+                                    fragIn.dstColor = *pDBuffer;
+                                    fragIn.texU = texX;
+                                    fragIn.texV = texY;
 
-                                    if( render.m_applyColor )
+                                    SFragOut fragOut;
+                                    render.m_shader( fragIn, render.m_uniforms, fragOut );
+
+                                    if( fragOut.write )
                                     {
-                                        uint32_t r = ((texel >> 16) & 0xFF) * render.m_cr / 255;
-                                        uint32_t g = ((texel >>  8) & 0xFF) * render.m_cg / 255;
-                                        uint32_t b = ( texel        & 0xFF) * render.m_cb / 255;
-                                        texel = (255 << 24) | (r << 16) | (g << 8) | b;
+                                        *pDBuffer = fragOut.color;
+                                        *pZBuffer = (int32_t)fixZ;
                                     }
-
-                                    *pDBuffer = texel;
-                                    *pZBuffer = (int32_t)fixZ;
                                 }
                             }
 

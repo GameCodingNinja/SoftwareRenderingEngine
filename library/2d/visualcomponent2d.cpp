@@ -58,7 +58,7 @@ void CVisualComponent2d::Render( const CMatrix & matrix )
             finalMatrix.setScale( m_visualData.GetVertexScale() );
             finalMatrix *= matrix;
 
-            CSoftwareRender::Instance().Render2D( finalMatrix, m_vertexCount, m_IndexCount, m_textureID, m_vbo, m_ibo, m_color, m_visualData.IsAlphaBlend() );
+            CSoftwareRender::Instance().Render2D( finalMatrix, m_vertexCount, m_IndexCount, m_textureID, m_vbo, m_ibo, m_color, m_visualData.GetShader() );
         }
     }
 

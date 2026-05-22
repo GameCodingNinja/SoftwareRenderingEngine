@@ -20,11 +20,12 @@
 #include <common/color.h>
 #include <common/vertex.h>
 #include <softwareRender/renderdefs.h>
+#include <softwareRender/render2d.h>
+#include <softwareRender/render3d.h>
 
 // Forward declaration(s)
 class CSRTexture;
 class CMatrix;
-class CRender2d;
 class IFrameBuffer;
 
 class CSoftwareRender
@@ -60,10 +61,10 @@ public:
     void DeleteIBO( uint Id );
 
     // Render 2D (orthographic)
-    void Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor(), bool blendAlpha = false );
+    void Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor(), FragmentShaderFunc shader = nullptr );
 
     // Render 3D (perspective with z-buffer)
-    void Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor() );
+    void Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor & color = CColor(), FragmentShaderFunc shader = nullptr );
 
     // Clear the z-buffer
     void ClearZBuffer();

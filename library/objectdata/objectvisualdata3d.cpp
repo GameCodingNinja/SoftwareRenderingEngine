@@ -15,6 +15,7 @@
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
 #include <common/defs.h>
+#include <managers/shadermanager.h>
 
 /************************************************************************
 *    desc:  Constructer
@@ -25,7 +26,8 @@ CObjectVisualData3D::CObjectVisualData3D()
       m_genType(NDefs::EGT_NULL),
       m_vertexCount(0),
       m_indexCount(0),
-      m_vertexScale(1,1,1)
+      m_vertexScale(1,1,1),
+      m_shader(nullptr)
 {
 }   // constructor
 
@@ -68,8 +70,6 @@ void CObjectVisualData3D::LoadFromNode( const XMLNode & objectNode )
 
                 else if( genTypeStr == "file" )
                     m_genType = NDefs::EGT_MESH_FILE;
-
-
             }
 
             const XMLNode quadNode = meshNode.getChildNode( "quad" );
@@ -90,6 +90,13 @@ void CObjectVisualData3D::LoadFromNode( const XMLNode & objectNode )
 
         // Check for color
         m_color = NParseHelper::LoadColor( visualNode, m_color );
+
+        // Check for a named shader
+        const XMLNode shaderNode = visualNode.getChildNode("shader");
+        if( !shaderNode.isEmpty() && shaderNode.isAttributeSet("name") )
+        {
+            m_shader = CShaderMgr::Instance().get( shaderNode.getAttribute("name") );
+        }
     }
 
 }   // LoadFromNode
@@ -215,4 +222,12 @@ int CObjectVisualData3D::GetIndexCount() const
 const CPoint<float> & CObjectVisualData3D::GetVertexScale() const 
 {
     return m_vertexScale;
+}
+
+/************************************************************************
+*    desc:  Get the shader function
+************************************************************************/
+FragmentShaderFunc CObjectVisualData3D::GetShader() const
+{
+    return m_shader;
 }
