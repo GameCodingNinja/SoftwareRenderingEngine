@@ -27,7 +27,9 @@ CObjectVisualData2D::CObjectVisualData2D()
       m_vertexCount(0),
       m_indexCount(0),
       m_vertexScale(1,1,1),
-      m_shader(nullptr)
+      m_shader(nullptr),
+      m_blendAlpha(false),
+      m_fixedFunction(false)
 {
 }
 
@@ -126,6 +128,17 @@ void CObjectVisualData2D::loadFromNode( const XMLNode & objectNode )
         if( !shaderNode.isEmpty() && shaderNode.isAttributeSet("name") )
         {
             m_shader = CShaderMgr::Instance().get( shaderNode.getAttribute("name") );
+        }
+
+        // Check for fixed function rendering
+        const XMLNode fixedFuncNode = visualNode.getChildNode("fixedFunction");
+        if( !fixedFuncNode.isEmpty() )
+        {
+            if( fixedFuncNode.isAttributeSet("enable") )
+                m_fixedFunction = (std::string(fixedFuncNode.getAttribute("enable")) == "true");
+
+            if( fixedFuncNode.isAttributeSet("blendAlpha") )
+                m_blendAlpha = (std::string(fixedFuncNode.getAttribute("blendAlpha")) == "true");
         }
     }
 
@@ -292,5 +305,23 @@ const CPoint<float> & CObjectVisualData2D::getVertexScale() const
 FragmentShaderFunc CObjectVisualData2D::getShader() const
 {
     return m_shader;
+}
+
+
+/************************************************************************
+*    desc:  Get the blend alpha flag
+************************************************************************/
+bool CObjectVisualData2D::getBlendAlpha() const
+{
+    return m_blendAlpha;
+}
+
+
+/************************************************************************
+*    desc:  Get the fixed function flag
+************************************************************************/
+bool CObjectVisualData2D::getFixedFunction() const
+{
+    return m_fixedFunction;
 }
 

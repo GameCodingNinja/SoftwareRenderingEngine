@@ -70,6 +70,12 @@ public:
     // Get the shader function (nullptr = use default)
     FragmentShaderFunc getShader() const;
 
+    // Get blend alpha flag
+    bool getBlendAlpha() const;
+
+    // Get fixed function flag
+    bool getFixedFunction() const;
+
 private:
 
     // Loaded texture data
@@ -110,6 +116,12 @@ private:
 
     // Fragment shader function pointer (nullptr = use default built-in)
     FragmentShaderFunc m_shader;
+
+    // Blend alpha flag (alpha test for fixed-function path)
+    bool m_blendAlpha;
+
+    // Use fixed-function rendering instead of shaders
+    bool m_fixedFunction;
 };
 
 #endif

@@ -47,6 +47,12 @@ public:
     // Render 3D (perspective with z-buffer)
     void render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, float * pVBO, uint * pIBO, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
 
+    // Render 2D fixed-function (orthographic, no shader)
+    void renderFixedFunction2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, float * pVBO, uint * pIBO, const CColor<float> & color = CColor<float>(), bool blendAlpha = false );
+
+    // Render 3D fixed-function (perspective with z-buffer, no shader)
+    void renderFixedFunction3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, float * pVBO, uint * pIBO, const CColor<float> & color = CColor<float>() );
+
     // Clear the z-buffer
     void clearZBuffer();
 

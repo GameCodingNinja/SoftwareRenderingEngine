@@ -29,6 +29,7 @@
       <visual>
           <texture file="data/textures/titleScreen/title_background_small.png"/>
           <shader name="default"/>
+          <fixedFunction enable="true"/>
       </visual>
     </object>
 
@@ -36,6 +37,7 @@
       <visual>
         <texture file="data/textures/titleScreen/title_background_small299.png"/>
         <shader name="default"/>
+        <fixedFunction enable="true"/>
       </visual>
     </object>
 
@@ -43,6 +45,7 @@
       <visual>
         <texture file="data/textures/titleScreen/enemy01a.png"/>
         <shader name="colorModAlpha"/>
+        <fixedFunction enable="true" blendAlpha="true"/>
       </visual>
     </object>
 

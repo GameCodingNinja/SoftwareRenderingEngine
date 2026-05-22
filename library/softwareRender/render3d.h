@@ -18,12 +18,24 @@ class CRender3d
 {
 public:
 
+    // Fixed-function constructor
+    CRender3d( const CTexture * pText, CSurfaceData * pSurface, int32_t * pZBuffer, const CColor<uint32_t> & color, bool applyColor ) :
+        m_pText(pText),
+        m_pSurface(pSurface),
+        m_pZBuffer(pZBuffer),
+        m_color(color),
+        m_shader(nullptr),
+        m_applyColor(applyColor)
+    {
+    }
+
     CRender3d( const CTexture * pText, CSurfaceData * pSurface, int32_t * pZBuffer, const CColor<uint32_t> & color, FragmentShaderFunc shader = nullptr ) :
         m_pText(pText),
         m_pSurface(pSurface),
         m_pZBuffer(pZBuffer),
         m_color(color),
-        m_shader(shader)
+        m_shader(shader),
+        m_applyColor(false)
     {
         if( m_shader == nullptr )
             m_shader = NShaderDefault::shaderDefault;
@@ -46,6 +58,9 @@ public:
 
     // Three vertexes (screen-projected with 1/Z, U/Z, V/Z)
     CVertex m_vec[TRI];
+
+    // Fixed-function flag
+    bool m_applyColor;
 
     // Cull if the projected points are outside the screen
     bool Cull( int screenW, int screenH )

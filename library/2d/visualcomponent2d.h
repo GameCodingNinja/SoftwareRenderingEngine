@@ -72,6 +72,12 @@ private:
 
     // Index count
     int m_IndexCount;
+
+    // Blend alpha flag
+    bool m_blendAlpha;
+
+    // Use fixed-function rendering
+    bool m_fixedFunction;
 };
 
 #endif

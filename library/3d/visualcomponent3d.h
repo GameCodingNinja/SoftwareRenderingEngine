@@ -72,6 +72,9 @@ private:
 
     // Index count
     int m_IndexCount;
+
+    // Use fixed-function rendering
+    bool m_fixedFunction;
 };
 
 #endif

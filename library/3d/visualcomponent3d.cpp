@@ -27,7 +27,8 @@ CVisualComponent3d::CVisualComponent3d( const CObjectData3D & objectData )
       m_pVBO( m_visualData.getVBO() ),
       m_pIBO( m_visualData.getIBO() ),
       m_vertexCount( m_visualData.getVertexCount() ),
-      m_IndexCount( m_visualData.getIndexCount() )
+      m_IndexCount( m_visualData.getIndexCount() ),
+      m_fixedFunction( m_visualData.getFixedFunction() )
 {
 }
 
@@ -58,7 +59,10 @@ void CVisualComponent3d::render( const CMatrix & matrix )
             finalMatrix.setScale( m_visualData.getVertexScale() );
             finalMatrix *= matrix;
 
-            CSoftwareRender::Instance().render3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_visualData.getShader() );
+            if( m_fixedFunction )
+                CSoftwareRender::Instance().renderFixedFunction3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color );
+            else
+                CSoftwareRender::Instance().render3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_visualData.getShader() );
         }
     }
 

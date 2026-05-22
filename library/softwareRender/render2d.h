@@ -18,13 +18,25 @@ class CRender2d
 {
 public:
 
+    // Fixed-function constructor
+    CRender2d( const CTexture * pText, CSurfaceData * pSurface, const CColor<uint32_t> & color, bool applyColor, bool blendAlpha ) :
+        m_pText(pText),
+        m_pSurface(pSurface),
+        m_color(color),
+        m_shader(nullptr),
+        m_applyColor(applyColor),
+        m_blendAlpha(blendAlpha)
+    {
+    }
+
     CRender2d( const CTexture * pText, CSurfaceData * pSurface, const CColor<uint32_t> & color, FragmentShaderFunc shader = nullptr ) :
         m_pText(pText),
         m_pSurface(pSurface),
         m_color(color),
-        m_shader(shader)
+        m_shader(shader),
+        m_applyColor(false),
+        m_blendAlpha(false)
     {
-        // If no custom shader was provided, use the default fallback
         if( m_shader == nullptr )
             m_shader = NShaderDefault::shaderDefault;
     }
@@ -43,6 +55,10 @@ public:
 
     // Three 2D vertexes
     CVertex m_vec[TRI];
+
+    // Fixed-function flags
+    bool m_applyColor;
+    bool m_blendAlpha;
 
     // Cull if the projected point are outside the screen
     bool Cull( int screenW, int screenH )
