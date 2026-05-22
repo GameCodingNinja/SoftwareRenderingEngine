@@ -19,6 +19,7 @@
 #include <utilities/deletefuncs.h>
 #include <softwareRender/srtexture.h>
 #include <softwareRender/triangleslope.h>
+#include <managers/texturemanager.h>
 
 #include <system/iframebuffer.h>
 #include <utilities/settings.h>
@@ -39,7 +40,6 @@ void RenderStrip3d( const std::vector<CRender3d> * pTriList, int yMin, int yMax 
 *    desc:  Constructor
 ************************************************************************/
 CSoftwareRender::CSoftwareRender() :
-    m_textIdInc(0),
     m_vboIdInc(0),
     m_iboIdInc(0)
 {
@@ -54,7 +54,6 @@ CSoftwareRender::CSoftwareRender() :
 ************************************************************************/
 CSoftwareRender::~CSoftwareRender()
 {
-    NDelFunc::DeleteMapPointers(m_pTextureMap);
     NDelFunc::DeleteMapArrayPointers(m_pVBOMap);
     NDelFunc::DeleteMapArrayPointers(m_pIBOMap);
 
@@ -77,19 +76,6 @@ void CSoftwareRender::SetSurface( IFrameBuffer * pFrameBuffer )
 
     // Allocate z-buffer for 3D rendering
     m_zBuffer.resize( m_surfaceData.w * m_surfaceData.h, 0 );
-
-}
-
-/***************************************************************************
-*   desc:  Create a texture. The pointer is now owned by this class
-****************************************************************************/
-uint CSoftwareRender::CreateTexture( uchar * pData, int w, int h )
-{
-    ++m_textIdInc;
-
-    m_pTextureMap.insert( std::make_pair(m_textIdInc, new CSRTexture( w, h, pData )) );
-
-    return m_textIdInc;
 
 }
 
@@ -126,21 +112,6 @@ uint CSoftwareRender::CreateIBO( uint * pData, uint sizeInBytes )
 }
 
 /***************************************************************************
-*   desc:  Delete the texture
-****************************************************************************/
-void CSoftwareRender::DeleteTexture( uint Id )
-{
-    // Delete the texture if it exists
-    auto mapIter = m_pTextureMap.find( Id );
-    if( mapIter != m_pTextureMap.end() )
-    {
-        NDelFunc::Delete( mapIter->second );
-        m_pTextureMap.erase( mapIter );
-    }
-
-}
-
-/***************************************************************************
 *   desc:  Delete the VBO
 ****************************************************************************/
 void CSoftwareRender::DeleteVBO( uint Id )
@@ -167,27 +138,6 @@ void CSoftwareRender::DeleteIBO( uint Id )
         NDelFunc::DeleteArray( mapIter->second );
         m_pIBOMap.erase( mapIter );
     }
-
-}
-
-/***************************************************************************
-*   desc:  Get the texture
-****************************************************************************/
-CSRTexture * CSoftwareRender::GetTexture( uint Id )
-{
-    // Delete the texture if it exists
-    auto mapIter = m_pTextureMap.find( Id );
-    if( mapIter != m_pTextureMap.end() )
-    {
-        return mapIter->second;
-    }
-    else
-    {
-        throw NExcept::CCriticalException("Texture Find Error!",
-            NGenFunc::FormatString("Unable to find texture Id (%d).\n\n%s\nLine: %d", Id, __FUNCTION__, __LINE__));
-    }
-
-    return nullptr;
 
 }
 
@@ -239,7 +189,7 @@ uint * CSoftwareRender::GetIBO( uint Id )
 ****************************************************************************/
 void CSoftwareRender::Render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor<float> & color, FragmentShaderFunc shader )
 {
-    CSRTexture * pText = GetTexture( textId );
+    CSRTexture * pText = CTextureMgr::Instance().getTexture( textId );
     CVertex * pVert = (CVertex *)GetVBO( vboId );
     uint * pIBO = GetIBO( iboId );
 
@@ -542,7 +492,7 @@ void CSoftwareRender::ClearZBuffer()
 ****************************************************************************/
 void CSoftwareRender::Render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, uint textId, uint vboId, uint iboId, const CColor<float> & color, FragmentShaderFunc shader )
 {
-    CSRTexture * pText = GetTexture( textId );
+    CSRTexture * pText = CTextureMgr::Instance().getTexture( textId );
     CVertex * pVert = (CVertex *)GetVBO( vboId );
     uint * pIBO = GetIBO( iboId );
 

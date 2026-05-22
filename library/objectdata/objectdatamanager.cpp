@@ -236,7 +236,7 @@ void CObjectDataMgr::FreeGroup( const std::string & group )
     auto groupMapIter = m_pObjectDataMapMap.find( group );
     if( groupMapIter != m_pObjectDataMapMap.end() )
     {
-        CTextureMgr::Instance().DeleteTextureGroupFor2D( group );
+        CTextureMgr::Instance().deleteTextureGroup( group );
         CVertBufMgr::Instance().DeleteBufferGroupFor2D( group );
 
         // Unload the group data

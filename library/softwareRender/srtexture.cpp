@@ -35,8 +35,3 @@ CSRTexture::~CSRTexture()
         stbi_image_free( m_pData );
 
 }	// destructer
-
-
-
-
-

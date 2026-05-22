@@ -27,6 +27,4 @@ public:
     const CSize<int> & GetSize() const {return m_size;}
 };
 
-#endif  // __classtemplate_h__
-
-
+#endif

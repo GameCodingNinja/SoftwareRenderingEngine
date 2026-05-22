@@ -113,7 +113,7 @@ void CObjectVisualData3D::CreateFromData( const std::string & group, CSize<int> 
     {
         for( size_t i = 0; i < m_textureFileVec.size(); ++i )
         {
-            texture = CTextureMgr::Instance().LoadFor2D( group, m_textureFileVec[i] );
+            texture = CTextureMgr::Instance().load( group, m_textureFileVec[i] );
             m_textureIDVec.push_back( texture.GetID() );
         }
 

@@ -24,7 +24,6 @@
 #include <softwareRender/render3d.h>
 
 // Forward declaration(s)
-class CSRTexture;
 class CMatrix;
 class IFrameBuffer;
 
@@ -42,17 +41,11 @@ public:
     // Set the surface data from a framebuffer
     void SetSurface( IFrameBuffer * pFrameBuffer );
 
-    // Create a texture
-    uint CreateTexture( uchar * pData, int w, int h );
-
     // Create the VBO
     uint CreateVBO( float * pData, uint count );
 
     // Create the IBO
     uint CreateIBO( uint * pData, uint sizeInBytes );
-
-    // Delete the texture
-    void DeleteTexture( uint Id );
 
     // Delete the VBO
     void DeleteVBO( uint Id );
@@ -77,9 +70,6 @@ private:
     // Destructor
     ~CSoftwareRender();
 
-    // Get the texture
-    CSRTexture * GetTexture( uint Id );
-
     // Get the VBO
     float * GetVBO( uint Id );
 
@@ -92,12 +82,8 @@ private:
     CSurfaceData m_surfaceData;
 
     // ID inc
-    uint m_textIdInc;
     uint m_vboIdInc;
     uint m_iboIdInc;
-
-    // map of allocated textures
-    std::map<uint, CSRTexture *> m_pTextureMap;
 
     // map of allocated vbo
     std::map<uint, float *> m_pVBOMap;
