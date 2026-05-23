@@ -1,0 +1,13 @@
+Software Rendering Engine - Objectives
+=======================================
+
+This is a software rendering game engine.
+Refer to my other game engines for design and implementating examples but still use best judgements:
+  ~/Development/SDL2-Vulkan-Game-Engine/gameTemplate/gametemplate.code-workspace
+  ~/Development/javajcript-webgl-game-engine/gameTemplate/gametemplate.code-workspace
+  ~/Development/sdl2-opengl-game-engine/gameTemplate/gametemplate.code-workspace
+  ~/Development/Legacy/TheEarlyYears/Funware Projects/Library/tri3D/
+Optimize the hot pixel loops.
+   Use bit shifts instead of division for optimizations
+   Minimize branching and memory access in the inner rasterizer loops
+Utilize threading and SSE intrinsics for SIMD acceleration for performance optimizations

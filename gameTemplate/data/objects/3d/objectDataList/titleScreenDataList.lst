@@ -28,7 +28,6 @@
       <visual>
           <texture file="data/textures/titleScreen/logo.png"/>
           <shader name="default"/>
-          <fixedFunction enable="true"/>
       </visual>
     </object>
 

@@ -892,8 +892,7 @@ void CSoftwareRender::renderFixedFunction2D( const CMatrix & matrix, const uint 
     }
 
     bool applyColor = false;
-    CColor<uint32_t> color32;
-    color32.set( (uint32_t)(color.r * 255.0f), (uint32_t)(color.g * 255.0f), (uint32_t)(color.b * 255.0f), (uint32_t)(color.a * 255.0f) );
+    CColor<uint32_t> color32( (uint32_t)(color.r * 255.0f), (uint32_t)(color.g * 255.0f), (uint32_t)(color.b * 255.0f), (uint32_t)(color.a * 255.0f) );
 
     if( color32.r != 255 || color32.g != 255 || color32.b != 255 || color32.a != 255 )
         applyColor = true;
@@ -1150,8 +1149,7 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint 
     }
 
     bool applyColor = false;
-    CColor<uint32_t> color32;
-    color32.set( (uint32_t)(color.r * 255.0f), (uint32_t)(color.g * 255.0f), (uint32_t)(color.b * 255.0f), (uint32_t)(color.a * 255.0f) );
+    CColor<uint32_t> color32( (uint32_t)(color.r * 255.0f), (uint32_t)(color.g * 255.0f), (uint32_t)(color.b * 255.0f), (uint32_t)(color.a * 255.0f) );
 
     if( color32.r != 255 || color32.g != 255 || color32.b != 255 || color32.a != 255 )
         applyColor = true;
