@@ -84,7 +84,7 @@ private:
     std::vector<int32_t> m_zBuffer;
 
     // Reusable scratch buffers for transformed vertices (avoids per-draw heap allocation)
-    std::vector<CVertex> m_transVerts2D;
+    std::vector<CVertex2d> m_transVerts2D;
     std::vector<TransVert> m_transVerts3D;
 
 };

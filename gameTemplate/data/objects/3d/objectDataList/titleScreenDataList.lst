@@ -6,7 +6,7 @@
       <mesh genType="quad">
         <quad uv.x1="0" uv.y1="0" uv.x2="1" uv.y2="1"/>
         <texture file=""/>
-        <file name=""/>
+        <mesh file=""/>
       </mesh>
       <color r="1" g="1" b="1" a="1"/>
       <shader name="default"/>
@@ -27,6 +27,13 @@
     <object name="logo">
       <visual>
           <texture file="data/textures/titleScreen/logo.png"/>
+          <shader name="default"/>
+      </visual>
+    </object>
+
+    <object name="cube">
+      <visual>
+          <mesh file="data/objects/3d/mesh/cube_multi.obj"/>
           <shader name="default"/>
       </visual>
     </object>

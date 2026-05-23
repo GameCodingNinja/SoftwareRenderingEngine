@@ -83,10 +83,10 @@ void CObjectVisualData3D::loadFromNode( const XMLNode & objectNode )
                 m_uv.y2 = std::atof(quadNode.getAttribute( "uv.y2" ));
             }
 
-            const XMLNode fileNode = meshNode.getChildNode( "file" );
+            const XMLNode fileNode = meshNode.getChildNode( "mesh" );
             if( !fileNode.isEmpty() )
             {
-                m_meshFile = fileNode.getAttribute( "name" );
+                m_meshFile = fileNode.getAttribute( "file" );
             }
         }
 

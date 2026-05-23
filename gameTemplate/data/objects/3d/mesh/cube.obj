@@ -1,0 +1,88 @@
+# Simple textured cube with normals
+# Texture layout: 4x3 cross (1024x768)
+#   Row 0:            top    (col 1)
+#   Row 1: left  front  right  back
+#   Row 2:            bottom (col 1)
+mtllib cube.mtl
+o Cube
+
+# Vertices
+v -1.0 -1.0  1.0
+v  1.0 -1.0  1.0
+v  1.0  1.0  1.0
+v -1.0  1.0  1.0
+v -1.0 -1.0 -1.0
+v  1.0 -1.0 -1.0
+v  1.0  1.0 -1.0
+v -1.0  1.0 -1.0
+
+# Texture coordinates for cross layout (4 cols x 3 rows)
+# Front face (col 1, row 1): u [0.25, 0.50], v [0.3333, 0.6667]
+vt 0.25   0.3333
+vt 0.50   0.3333
+vt 0.50   0.6667
+vt 0.25   0.6667
+
+# Back face (col 3, row 1): u [0.75, 1.00], v [0.3333, 0.6667]
+vt 0.75   0.3333
+vt 1.00   0.3333
+vt 1.00   0.6667
+vt 0.75   0.6667
+
+# Right face (col 2, row 1): u [0.50, 0.75], v [0.3333, 0.6667]
+vt 0.50   0.3333
+vt 0.75   0.3333
+vt 0.75   0.6667
+vt 0.50   0.6667
+
+# Left face (col 0, row 1): u [0.00, 0.25], v [0.3333, 0.6667]
+vt 0.00   0.3333
+vt 0.25   0.3333
+vt 0.25   0.6667
+vt 0.00   0.6667
+
+# Top face (col 1, row 0): u [0.25, 0.50], v [0.6667, 1.00]
+vt 0.25   0.6667
+vt 0.50   0.6667
+vt 0.50   1.00
+vt 0.25   1.00
+
+# Bottom face (col 1, row 2): u [0.25, 0.50], v [0.00, 0.3333]
+vt 0.25   0.00
+vt 0.50   0.00
+vt 0.50   0.3333
+vt 0.25   0.3333
+
+# Normals
+vn  0.0  0.0  1.0
+vn  0.0  0.0 -1.0
+vn  1.0  0.0  0.0
+vn -1.0  0.0  0.0
+vn  0.0  1.0  0.0
+vn  0.0 -1.0  0.0
+
+usemtl CubeTexture
+
+# Front face (vt 1-4)
+f 1/1/1 2/2/1 3/3/1
+f 1/1/1 3/3/1 4/4/1
+
+# Back face (vt 5-8)
+f 6/5/2 5/6/2 8/7/2
+f 6/5/2 8/7/2 7/8/2
+
+# Right face (vt 9-12)
+f 2/9/3 6/10/3 7/11/3
+f 2/9/3 7/11/3 3/12/3
+
+# Left face (vt 13-16)
+f 5/13/4 1/14/4 4/15/4
+f 5/13/4 4/15/4 8/16/4
+
+# Top face (vt 17-20)
+f 4/17/5 3/18/5 7/19/5
+f 4/17/5 7/19/5 8/20/5
+
+# Bottom face (vt 21-24)
+f 5/21/6 6/22/6 2/23/6
+f 5/21/6 2/23/6 1/24/6

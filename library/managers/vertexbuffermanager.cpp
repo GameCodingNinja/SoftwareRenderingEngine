@@ -142,7 +142,7 @@ float * CVertBufMgr::createScaledFrame( const std::string & group,
         const CSize<float> uvLgth( textSize.w - (scaledFrame.m_frame.w * 2.f), textSize.h - (scaledFrame.m_frame.h * 2.f) );
 
         CQuad2D quadBuf[8];
-        CVertex vertBuf[16];
+        CVertex2d vertBuf[16];
 
         // Left frame
         createQuad( CPoint<float>(-center.x, center.y-scaledFrame.m_frame.h),
@@ -218,9 +218,9 @@ float * CVertBufMgr::createScaledFrame( const std::string & group,
         vertBuf[14] = quadBuf[6].vert[0];
         vertBuf[15] = quadBuf[7].vert[0];
 
-        uint vboSize = sizeof(CVertex) * 16 / sizeof(float);
+        uint vboSize = sizeof(CVertex2d) * 16 / sizeof(float);
         float * pVBO = new float[vboSize];
-        std::memcpy( pVBO, (float*)vertBuf, sizeof(CVertex) * 16 );
+        std::memcpy( pVBO, (float*)vertBuf, sizeof(CVertex2d) * 16 );
 
         // Insert the new vertex buffer info
         mapIter = mapMapIter->second.insert( std::make_pair(name, pVBO) ).first;

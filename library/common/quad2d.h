@@ -22,7 +22,7 @@ public:
     }
 
     // Verts
-    CVertex vert[4];
+    CVertex2d vert[4];
 
 };
 

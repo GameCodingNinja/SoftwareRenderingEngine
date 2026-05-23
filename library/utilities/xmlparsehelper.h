@@ -26,7 +26,7 @@
 namespace NParseHelper
 {
     // Load the 2d vertex
-    //CVertex LoadVertex2d( const XMLNode & node );
+    //CVertex2d LoadVertex2d( const XMLNode & node );
 
     // load position data
     CPoint<float> loadPosition( const XMLNode & node );
