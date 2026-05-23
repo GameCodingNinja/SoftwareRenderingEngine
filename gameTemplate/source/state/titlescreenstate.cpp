@@ -23,7 +23,8 @@ CTitleScreenState::CTitleScreenState()
       m_background2( CObjectDataMgr::Instance().getData( "(title_screen)", "background2" ) ),
       m_background3( CObjectDataMgr::Instance().getData( "(title_screen)", "background2" ) ),
       m_enemy( CObjectDataMgr::Instance().getData( "(title_screen)", "enemy" ) ),
-      m_logo( CObjectDataMgr::Instance().getData( "(logo)", "logo" ) ),
+      //m_logo( CObjectDataMgr::Instance().getData( "(3d)", "logo" ) ),
+      //m_cube( CObjectDataMgr::Instance().getData( "(3d)", "cube" ) ),
       m_allowStateChange(false)
 {
     // Set the game states for this object
@@ -39,8 +40,10 @@ CTitleScreenState::CTitleScreenState()
     m_background2.setPos( CPoint<float>( 300,-300,0) );
     m_background3.setPos( CPoint<float>( 300,300,0) );
     m_enemy.setPos( CPoint<float>( -200,0,0) );
-    m_logo.setPos( CPoint<float>( 0, 0, -6) );
-    m_logo.setScale( CPoint<float>(2,2, 2) );
+    //m_logo.setPos( CPoint<float>( 0, 0, -6) );
+    //m_logo.setScale( CPoint<float>(2, 2, 2) );
+    //m_cube.setPos( CPoint<float>( 0, 0, -6) );
+    //m_cube.setScale( CPoint<float>(2, 2, 2) );
 
     m_background.setRot( CPoint<float>(180,0,0) );
 
@@ -68,10 +71,11 @@ void CTitleScreenState::Update()
 {
     CCommonState::Update();
 
-    const float elapsed = CHighResTimer::Instance().GetElapsedTime();
+    //const float elapsed = CHighResTimer::Instance().GetElapsedTime();
     //m_background.incRot( CPoint<float>(0,0,0.2f * elapsed) );
 
-    m_logo.incRot( CPoint<float>(0, 0.1f * elapsed, 0) );
+    //m_logo.incRot( CPoint<float>(0, 0.1f * elapsed, 0) );
+    //m_cube.incRot( CPoint<float>(0, 0.1f * elapsed, 0) );
 
 }	// Update
 
@@ -87,7 +91,8 @@ void CTitleScreenState::Transform()
     m_background2.transform();
     m_background3.transform();
     m_enemy.transform();
-    m_logo.transform();
+    //m_logo.transform();
+    //m_cube.transform();
 
 }	// Transform */
 
@@ -107,8 +112,9 @@ void CTitleScreenState::render()
     m_background3.render( matrix );
     //m_enemy.render( matrix );
 
-    const CMatrix & matrix3d = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_PERSPECTIVE );
-    m_logo.render( matrix3d );
+    //const CMatrix & matrix3d = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_PERSPECTIVE );
+    //m_logo.render( matrix3d );
+    //m_cube.render( matrix3d );
 
 }	// Render
 
@@ -133,7 +139,4 @@ bool CTitleScreenState::DoStateChange()
     return false;
 
 }	// DoStateChange */
-
-
-
 

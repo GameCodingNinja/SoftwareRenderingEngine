@@ -33,8 +33,10 @@
 
     <object name="cube">
       <visual>
+        <mesh genType="mesh">
           <mesh file="data/objects/3d/mesh/cube_multi.obj"/>
           <shader name="default"/>
+        </mesh>
       </visual>
     </object>
 

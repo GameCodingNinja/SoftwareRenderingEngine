@@ -51,21 +51,16 @@ void CVisualComponent3d::render( const CMatrix & matrix )
         // Increment our stat counter to keep track of what is going on.
         CStatCounter::Instance().incDisplayCounter();
 
-        // If this is a quad, we need to take into account the vertex scale
-        if( m_visualData.getGenerationType() == NDefs::EGT_QUAD )
-        {
-            // Calculate the final matrix
-            CMatrix finalMatrix;
-            finalMatrix.setScale( m_visualData.getVertexScale() );
-            finalMatrix *= matrix;
+        // Apply vertex scale (quads use it for aspect ratio, mesh files default to 1,1,1)
+        CMatrix finalMatrix;
+        finalMatrix.setScale( m_visualData.getVertexScale() );
+        finalMatrix *= matrix;
 
-            if( m_fixedFunction )
+        if( m_fixedFunction )
                 CSoftwareRender::Instance().renderFixedFunction3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color );
-            else
+        else
                 CSoftwareRender::Instance().render3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_visualData.getShader() );
-        }
     }
-
 }
 
 

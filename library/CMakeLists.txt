@@ -20,6 +20,7 @@ set(LIBRARY_SOURCES
     utilities/xmlParser.cpp
     utilities/mathfunc.cpp
     utilities/threadpool.cpp
+    utilities/objmeshloader.cpp
     managers/texturemanager.cpp
     managers/managerbase.cpp
     managers/vertexbuffermanager.cpp

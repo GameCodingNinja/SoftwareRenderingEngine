@@ -9,11 +9,13 @@
 #include <objectdata/objectvisualdata3d.h>
 
 // Game lib dependencies
+#include <cstring>
 #include <managers/texturemanager.h>
 #include <managers/vertexbuffermanager.h>
 #include <utilities/xmlparsehelper.h>
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
+#include <utilities/objmeshloader.h>
 #include <common/defs.h>
 #include <managers/shadermanager.h>
 
@@ -70,7 +72,7 @@ void CObjectVisualData3D::loadFromNode( const XMLNode & objectNode )
                 if( genTypeStr == "quad" )
                     m_genType = NDefs::EGT_QUAD;
 
-                else if( genTypeStr == "file" )
+                else if( genTypeStr == "mesh" )
                     m_genType = NDefs::EGT_MESH_FILE;
             }
 
@@ -111,7 +113,6 @@ void CObjectVisualData3D::loadFromNode( const XMLNode & objectNode )
                 m_blendAlpha = (std::string(fixedFuncNode.getAttribute("blendAlpha")) == "true");
         }
     }
-
 }
 
 
@@ -156,6 +157,39 @@ void CObjectVisualData3D::createFromData( const std::string & group, CSize<int> 
 
         // A quad has 6 indexes
         m_indexCount = 6;
+    }
+    else if( m_genType == NDefs::EGT_MESH_FILE && !m_meshFile.empty() )
+    {
+        // Load the OBJ mesh file (also parses the .mtl file for texture paths)
+        CObjMeshData meshData = NObjMeshLoader::load( m_meshFile );
+
+        // Allocate and copy vertex data
+        m_vertexCount = static_cast<int>(meshData.vertices.size());
+        m_pVBO = (float *)new CVertex3d[m_vertexCount];
+        std::memcpy( m_pVBO, meshData.vertices.data(), sizeof(CVertex3d) * m_vertexCount );
+
+        // Flatten all material group indices into one IBO
+        std::vector<uint> allIndices;
+        for( const auto & grp : meshData.groups )
+            allIndices.insert( allIndices.end(), grp.indices.begin(), grp.indices.end() );
+
+        m_indexCount = static_cast<int>(allIndices.size());
+        m_pIBO = new uint[m_indexCount];
+        std::memcpy( m_pIBO, allIndices.data(), sizeof(uint) * m_indexCount );
+
+        // If no texture was defined in the XML, load textures from the MTL file
+        if( m_textureVec.empty() && !meshData.materialTextures.empty() )
+        {
+            for( const auto & grp : meshData.groups )
+            {
+                auto texIt = meshData.materialTextures.find( grp.material );
+                if( texIt != meshData.materialTextures.end() && !texIt->second.empty() )
+                {
+                    const CTexture & texture = CTextureMgr::Instance().load( group, texIt->second );
+                    m_textureVec.push_back( &texture );
+                }
+            }
+        }
     }
 
 }

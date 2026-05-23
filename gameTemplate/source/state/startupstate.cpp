@@ -40,7 +40,7 @@ void CStartUpState::Load()
     CObjectDataMgr::Instance().LoadListTable( "data/objects/2d/objectDataList/dataListTable.lst" );
     CObjectDataMgr::Instance().LoadListTable( "data/objects/3d/objectDataList/dataListTable.lst" );
     CObjectDataMgr::Instance().LoadGroup( "(title_screen)" );
-    CObjectDataMgr::Instance().LoadGroup( "(logo)" );
+    CObjectDataMgr::Instance().LoadGroup( "(3d)" );
 
 }   // Load
 
