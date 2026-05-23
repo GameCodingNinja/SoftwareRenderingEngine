@@ -105,7 +105,7 @@ void CTitleScreenState::render()
     m_background.render( matrix );
     m_background2.render( matrix );
     m_background3.render( matrix );
-    m_enemy.render( matrix );
+    //m_enemy.render( matrix );
 
     //const CMatrix & matrix3d = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_PERSPECTIVE );
     //m_logo.render( matrix3d );

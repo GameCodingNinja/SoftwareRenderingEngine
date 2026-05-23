@@ -140,3 +140,19 @@ void CTriangleSlope::Inc()
 }
 
 
+/************************************************************************
+*    desc:  Advance the slope by multiple lines at once (skip scanlines)
+************************************************************************/
+void CTriangleSlope::Advance( int lines )
+{
+    m_slope.vert.x += m_step.vert.x * lines;
+    m_slope.vert.z += m_step.vert.z * lines;
+    m_slope.uv.u   += m_step.uv.u   * lines;
+    m_slope.uv.v   += m_step.uv.v   * lines;
+
+    y += lines;
+    m_length -= lines;
+
+}
+
+

@@ -36,6 +36,9 @@ public:
     // Inc the slope
     void Inc();
 
+    // Advance the slope by multiple lines at once (skip scanlines)
+    void Advance( int lines );
+
     // slopt position
     CVertex m_slope;
 

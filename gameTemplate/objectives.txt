@@ -11,3 +11,4 @@ Optimize the hot pixel loops.
    Use bit shifts instead of division for optimizations
    Minimize branching and memory access in the inner rasterizer loops
 Utilize threading and SSE intrinsics for SIMD acceleration for performance optimizations
+Ignore the fixed function rendering pipeline for development. It's just there for speed comparisons.

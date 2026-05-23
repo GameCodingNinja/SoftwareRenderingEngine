@@ -1,0 +1,107 @@
+Software Renderer - Optimization Suggestions
+=============================================
+Note: Fixed-function pipeline is excluded (benchmark-only code).
+
+
+HIGH IMPACT
+===========
+
+H1. Each strip replays triangle scanlines above its strip
+---------------------------------------------------------
+Where: RenderTriStrip2d (line ~284-348), RenderTriStrip3d (line ~684-869)
+Problem: Every thread initializes slopes from the triangle top vertex and calls
+  Inc() repeatedly for scanlines above yMin, only to skip them. Pure wasted work
+  that grows worse with more threads/strips.
+Fix: Add CTriangleSlope::Advance(int lines) to jump both slopes directly to
+  max(yMin, triTopY), then remove the per-scanline "if( leftSlope.y >= yMin )" check.
+
+  void CTriangleSlope::Advance(int lines) {
+      m_slope.vert.x += m_step.vert.x * lines;
+      m_slope.vert.z += m_step.vert.z * lines;
+      m_slope.uv.u   += m_step.uv.u   * lines;
+      m_slope.uv.v   += m_step.uv.v   * lines;
+      y += lines;
+      m_length -= lines;
+  }
+
+H2. Every thread scans the full triangle list
+----------------------------------------------
+Where: RenderStrip2d, RenderStrip3d
+Problem: Each worker iterates all triangles, recomputes Y min/max, does overlap
+  tests, and runs slope setup for triangles that may not touch its strip at all.
+Fix: Pre-bin triangles into per-strip vectors during setup (compute triMinY/triMaxY
+  once, append to overlapping strip lists). Each thread only processes its own list.
+  Minimal alternative: cache triMinY/triMaxY in CRender2d/CRender3d during setup.
+
+H3. Redundant per-pixel safety checks in inner loops
+-----------------------------------------------------
+Where: All inner scanline loops
+Problem: "pDBuffer < pPixelsEnd" and "uvOffset < uvOffsetMax" are tested per pixel
+  but are almost always true after span clipping. They add branches and dependency
+  chains in the tightest code.
+Fix: After clipping xStart/xEnd to the framebuffer, pDBuffer is guaranteed in range;
+  remove the check. In 3D, once texX/texY are clamped, uvOffset is guaranteed valid;
+  drop the uvOffsetMax check. For 2D, add a power-of-two fast path using masks.
+
+
+MEDIUM IMPACT
+=============
+
+M1. Repeated float division by width every scanline
+----------------------------------------------------
+Where: 2D stepU/stepV, 3D stepZ/stepU/stepV
+Problem: 3D pays 3 divides per scanline; 2D pays 2.
+Fix: Compute once: float invWidth = 1.0f / width; then multiply.
+
+M2. Per-draw heap allocations in setup code
+--------------------------------------------
+Where: new[] pTrans in render2D (line 87), render3D (line 378)
+Problem: Allocator pressure and frame-time noise on every draw call.
+Fix: Use reusable member scratch buffers (std::vector<CVertex> m_transformed2D, etc.)
+  Also reserve() triList to triCount and futures to thread count.
+
+M3. Thread pool posting overhead for small batches
+---------------------------------------------------
+Where: CThreadPool::post() uses std::packaged_task + shared_ptr + std::bind
+Problem: Task overhead may exceed raster work for small sprites/meshes.
+Fix: Add a cutoff: single-thread if triList.size() is small or estimated covered
+  scanlines are below a threshold.
+
+M4. Power-of-two textures not exploited
+-----------------------------------------
+Where: All rasterizers compute uvOffset = texY * textureW + texX
+Problem: If textures are POT, the multiply and clamp can be replaced with shifts
+  and masks, per the project's bit-shift optimization rule.
+Fix: Precompute per texture: isPOT, uMask, vMask, rowShift. Fast path:
+  texX &= uMask; texY &= vMask; uvOffset = (texY << rowShift) + texX;
+
+M5. SSE/SIMD opportunities (after specialization)
+---------------------------------------------------
+Where: Color modulation/blend paths, z-compare batches
+Problem: SSE2 has no gather so texture fetch stays scalar, but color unpack/
+  multiply/pack on batches of fetched texels is still useful.
+Fix: After specializing to predictable paths (H1), add SSE2 for:
+  - Color modulation of 4 texels (_mm_mullo_epi16 etc.)
+  - Alpha-test mask generation
+  - 4-wide depth compare/store in opaque path
+  Do NOT start with a full SIMD texturing rewrite.
+
+
+LOW IMPACT
+==========
+
+L1. Triangle Y bounds recomputed inside rasterizers
+----------------------------------------------------
+Where: Start of RenderTriStrip2d, RenderTriStrip3d
+Fix: Cache triMinY/triMaxY in CRender2d/CRender3d during triangle setup.
+
+L2. CTriangleSlope::ClipTop() only clips to screen top, not strip top
+----------------------------------------------------------------------
+Where: triangleslope.cpp:97-121
+Fix: Generalize into ClipTop(int yMin) or use the Advance() method from H2.
+
+L3. Thread count default may not match expectations
+----------------------------------------------------
+Where: softwareRender.cpp:49-50 calls init(2, -1)
+Problem: Actually resolves to hardware_concurrency() - 1 with minimum 2.
+Fix: Make explicit/configurable. After binning/strip fixes, revisit optimal count.

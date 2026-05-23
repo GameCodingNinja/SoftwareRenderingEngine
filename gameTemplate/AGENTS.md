@@ -29,6 +29,9 @@ These rules apply to all hot pixel loops and rasterizer code:
 4. Prefer `__m128`/`__m128i` SSE types and `_mm_*` intrinsics in pixel-processing code.
 5. Keep inner loops tight — avoid function calls, virtual dispatch, and heap allocation inside hot paths.
 
+## Fixed-Function Pipeline
+Ignore the fixed function rendering pipeline for development. It's just there for speed comparisons.
+
 ## Code Style
 - C++26 standard, no exceptions to this.
 - Use `pthread` for threading (per CMake flags).

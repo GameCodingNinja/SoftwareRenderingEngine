@@ -64,6 +64,14 @@ private:
     // Destructor
     ~CSoftwareRender();
 
+    // Temporary struct to hold transformed but unprojected 3D vertex data
+    struct TransVert
+    {
+        CPoint<float> pos;  // Clip-space position (x, y, z from matrix transform)
+        float w;            // Clip-space W (represents -eye.z for PerspectiveFovRH)
+        float u, v;         // Raw UV (0-1)
+    };
+
 private:
 
     // Surface data for the render target
@@ -74,6 +82,10 @@ private:
 
     // Z-buffer for 3D depth testing
     std::vector<int32_t> m_zBuffer;
+
+    // Reusable scratch buffers for transformed vertices (avoids per-draw heap allocation)
+    std::vector<CVertex> m_transVerts2D;
+    std::vector<TransVert> m_transVerts3D;
 
 };
 

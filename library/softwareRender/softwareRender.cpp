@@ -25,20 +25,56 @@
 // Render a single triangle within a screen strip
 void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax );
 
-// Render all triangles within a screen strip
-void RenderStrip2d( const std::vector<CRender2d> * pTriList, int yMin, int yMax );
+// Render all triangles within a screen strip (binned pointer list)
+void RenderStrip2d( const std::vector<const CRender2d *> * pTriList, int yMin, int yMax );
 
 // Render a single 3D triangle within a screen strip
 void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax );
 
-// Render all 3D triangles within a screen strip
-void RenderStrip3d( const std::vector<CRender3d> * pTriList, int yMin, int yMax );
+// Render all 3D triangles within a screen strip (binned pointer list)
+void RenderStrip3d( const std::vector<const CRender3d *> * pTriList, int yMin, int yMax );
 
 // Fixed-function render functions
 void RenderTriStripFixedFunction2d( const CRender2d & render, int yMin, int yMax );
-void RenderStripFixedFunction2d( const std::vector<CRender2d> * pTriList, int yMin, int yMax );
+void RenderStripFixedFunction2d( const std::vector<const CRender2d *> * pTriList, int yMin, int yMax );
 void RenderTriStripFixedFunction3d( const CRender3d & render, int yMin, int yMax );
-void RenderStripFixedFunction3d( const std::vector<CRender3d> * pTriList, int yMin, int yMax );
+void RenderStripFixedFunction3d( const std::vector<const CRender3d *> * pTriList, int yMin, int yMax );
+
+/************************************************************************
+*    desc:  Compute and cache triangle Y bounds for strip binning
+************************************************************************/
+template<typename T>
+void CalcTriYBounds( T & tri )
+{
+    tri.m_triYMin = tri.m_vec[0].vert.y;
+    tri.m_triYMax = tri.m_vec[0].vert.y;
+    for( int i = 1; i < TRI; ++i )
+    {
+        if( tri.m_vec[i].vert.y < tri.m_triYMin ) tri.m_triYMin = tri.m_vec[i].vert.y;
+        if( tri.m_vec[i].vert.y > tri.m_triYMax ) tri.m_triYMax = tri.m_vec[i].vert.y;
+    }
+}
+
+/************************************************************************
+*    desc:  Bin triangles into per-strip vectors based on cached Y bounds
+************************************************************************/
+template<typename T>
+void BinTriangles( const std::vector<T> & triList, std::vector<std::vector<const T *>> & stripBins, int screenH, size_t threads )
+{
+    int stripH = screenH / threads;
+
+    for( const auto & tri : triList )
+    {
+        for( size_t t = 0; t < threads; ++t )
+        {
+            int yMin = t * stripH;
+            int yMax = (t == threads - 1) ? screenH : (t + 1) * stripH;
+
+            if( tri.m_triYMax >= yMin && tri.m_triYMin < yMax )
+                stripBins[t].push_back( &tri );
+        }
+    }
+}
 
 /************************************************************************
 *    desc:  Constructor
@@ -84,7 +120,8 @@ void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, co
 {
     CVertex * pVert = (CVertex *)pVBO;
 
-    CVertex * pTrans = new CVertex[vertCount];
+    m_transVerts2D.resize( vertCount );
+    CVertex * pTrans = m_transVerts2D.data();
 
     for( uint i = 0; i < vertCount; ++i )
     {
@@ -118,7 +155,10 @@ void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, co
 
         // Only keep visible triangles
         if( !render2d.Cull( m_surfaceData.w, m_surfaceData.h ) )
+        {
+            CalcTriYBounds( render2d );
             triList.push_back( render2d );
+        }
     }
 
     // Dispatch strip-rendering jobs: each thread owns a horizontal
@@ -130,6 +170,10 @@ void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, co
 
         if( threads > 0 )
         {
+            // Bin triangles into per-strip lists
+            std::vector<std::vector<const CRender2d *>> stripBins( threads );
+            BinTriangles( triList, stripBins, screenH, threads );
+
             int stripH = screenH / threads;
             std::vector<std::future<void>> futures;
 
@@ -139,7 +183,7 @@ void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, co
                 int yMax = (t == threads - 1) ? screenH : (t + 1) * stripH;
 
                 futures.emplace_back(
-                    CThreadPool::Instance().post( RenderStrip2d, &triList, yMin, yMax ) );
+                    CThreadPool::Instance().post( RenderStrip2d, &stripBins[t], yMin, yMax ) );
             }
 
             for( auto & fut : futures )
@@ -147,21 +191,23 @@ void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, co
         }
         else
         {
-            // Fallback: single-threaded
-            RenderStrip2d( &triList, 0, screenH );
+            // Fallback: single-threaded (build a single bin with all triangles)
+            std::vector<const CRender2d *> allTris;
+            allTris.reserve( triList.size() );
+            for( const auto & tri : triList )
+                allTris.push_back( &tri );
+            RenderStrip2d( &allTris, 0, screenH );
         }
     }
-
-    delete[] pTrans;
 }
 
 /***************************************************************************
 *   desc:  Render all triangles within a horizontal screen strip
 ****************************************************************************/
-void RenderStrip2d( const std::vector<CRender2d> * pTriList, int yMin, int yMax )
+void RenderStrip2d( const std::vector<const CRender2d *> * pTriList, int yMin, int yMax )
 {
-    for( const auto & tri : *pTriList )
-        RenderTriStrip2d( tri, yMin, yMax );
+    for( const auto * pTri : *pTriList )
+        RenderTriStrip2d( *pTri, yMin, yMax );
 }
 
 /***************************************************************************
@@ -169,17 +215,6 @@ void RenderStrip2d( const std::vector<CRender2d> * pTriList, int yMin, int yMax 
 ****************************************************************************/
 void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax )
 {
-    // Early out if triangle doesn't overlap this strip
-    float triYMin = render.m_vec[0].vert.y;
-    float triYMax = render.m_vec[0].vert.y;
-    for( int i = 1; i < TRI; ++i )
-    {
-        if( render.m_vec[i].vert.y < triYMin ) triYMin = render.m_vec[i].vert.y;
-        if( render.m_vec[i].vert.y > triYMax ) triYMax = render.m_vec[i].vert.y;
-    }
-    if( triYMax < yMin || triYMin >= yMax )
-        return;
-
     // Define all the variables up here for speed reasons.
     int xStart, xEnd, width, height, slopeCount(TRI);
     int64_t fixStepU, fixStepV, fixU, fixV;
@@ -200,13 +235,6 @@ void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax )
     // Calculate if we need uv plotting correction. .5 is needed for odd sizes
     double uOffset( (textureW % 2) ? 0.5 : 0.0 );
     double vOffset( (textureH % 2) ? 0.5 : 0.0 );
-
-    // Create the range check variables
-    uint uvOffsetMax = render.m_pText->m_size.w * render.m_pText->m_size.h;
-    uint uvOffset;
-
-    // Pointer-based screen bounds check (eliminates per-pixel offset increment)
-    uint * pPixelsEnd = pPixels + (render.m_pSurface->w * render.m_pSurface->h);
 
     // Loop to find the top vert of the triangle to extablish vertex order
     int vTop(0);
@@ -277,68 +305,78 @@ void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax )
         // This is where we spend most of our time
         ////////////////////////////////////////////
 
+        // Skip scanlines above this strip's range in one shot
+        if( leftSlope.y < yMin )
+        {
+            int skip = yMin - leftSlope.y;
+            if( skip > height ) skip = height;
+            leftSlope.Advance( skip );
+            rightSlope.Advance( skip );
+            height -= skip;
+        }
+
         // Init the y index for scanline offset accumulation (avoids per-line multiply)
         int yIndex = leftSlope.y * (int)screenW;
 
         // Loop for the height of the slope
         while( height-- > 0 )
         {
-            // Only render scanlines within this strip's range
-            if( leftSlope.y >= yMin )
+            // Calculate initial values
+            xStart = leftSlope.m_slope.vert.x;
+            xEnd = rightSlope.m_slope.vert.x;
+            width = xEnd - xStart;
+
+            // Make sure we are within the bounds of the screen
+            if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < yMax) )
             {
-                // Calculate initial values
-                xStart = leftSlope.m_slope.vert.x;
-                xEnd = rightSlope.m_slope.vert.x;
-                width = xEnd - xStart;
+                u = leftSlope.m_slope.uv.u;
+                v = leftSlope.m_slope.uv.v;
 
-                // Make sure we are within the bounds of the screen
-                if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < yMax) )
+                // Create the step amounts for the scan line
+                stepU = (rightSlope.m_slope.uv.u - u) / width;
+                stepV = (rightSlope.m_slope.uv.v - v) / width;
+
+                // Clip the scan-line
+                if( xStart < 0 )
                 {
-                    u = leftSlope.m_slope.uv.u;
-                    v = leftSlope.m_slope.uv.v;
+                    step = -xStart;
 
-                    // Create the step amounts for the scan line
-                    stepU = (rightSlope.m_slope.uv.u - u) / width;
-                    stepV = (rightSlope.m_slope.uv.v - v) / width;
+                    u += (stepU * step);
+                    v += (stepV * step);
 
-                    // Clip the scan-line
-                    if( xStart < 0 )
-                    {
-                        step = -xStart;
+                    xStart = 0;
+                    width = xEnd;
+                }
 
-                        u += (stepU * step);
-                        v += (stepV * step);
+                if( xEnd > (int)screenW )
+                {
+                    xEnd = screenW;
+                    width = xEnd - xStart;
+                }
 
-                        xStart = 0;
-                        width = xEnd;
-                    }
+                // Index into the starting point of the display buffers scan line
+                pDBuffer = pPixels + yIndex + xStart;
 
-                    if( xEnd > (int)screenW )
-                    {
-                        xEnd = screenW;
-                        width = xEnd - xStart;
-                    }
+                // Init the 64-bit fix point variables for speedy rendering
+                fixStepU = (int64_t)((double)stepU * FIX_SCALE_UV);
+                fixStepV = (int64_t)((double)stepV * FIX_SCALE_UV);
+                fixU = (int64_t)(((double)u + uOffset) * FIX_SCALE_UV);
+                fixV = (int64_t)(((double)v + vOffset) * FIX_SCALE_UV);
 
-                    // Index into the starting point of the display buffers scan line
-                    pDBuffer = pPixels + yIndex + xStart;
+                while( width-- > 0 )
+                {
+                    uint texU = (uint)(fixU >> UV_SHIFT);
+                    uint texV = (uint)(fixV >> UV_SHIFT);
 
-                    // Init the 64-bit fix point variables for speedy rendering
-                    fixStepU = (int64_t)((double)stepU * FIX_SCALE_UV);
-                    fixStepV = (int64_t)((double)stepV * FIX_SCALE_UV);
-                    fixU = (int64_t)(((double)u + uOffset) * FIX_SCALE_UV);
-                    fixV = (int64_t)(((double)v + vOffset) * FIX_SCALE_UV);
+                    // Clamp texture coordinates
+                    if( texU >= textureW ) texU = textureW - 1;
+                    if( texV >= textureH ) texV = textureH - 1;
 
-                    while( width-- > 0 )
-                    {
-                        uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
+                    render.m_shader( *(pText + texV * textureW + texU), pDBuffer, texU, texV, render.m_color );
 
-                        if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                            render.m_shader( *(pText + uvOffset), pDBuffer, (uint)(fixU >> UV_SHIFT), (uint)(fixV >> UV_SHIFT), render.m_color );
-
-                        ++pDBuffer;
-                        fixU += fixStepU;
-                        fixV += fixStepV;
-                    }
+                    ++pDBuffer;
+                    fixU += fixStepU;
+                    fixV += fixStepV;
                 }
             }
 
@@ -367,15 +405,8 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
 {
     CVertex * pVert = (CVertex *)pVBO;
 
-    // Temporary struct to hold transformed but unprojected vertex data
-    struct TransVert
-    {
-        CPoint<float> pos;  // Clip-space position (x, y, z from matrix transform)
-        float w;            // Clip-space W (represents -eye.z for PerspectiveFovRH)
-        float u, v;         // Raw UV (0-1)
-    };
-
-    TransVert * pTrans = new TransVert[vertCount];
+    m_transVerts3D.resize( vertCount );
+    TransVert * pTrans = m_transVerts3D.data();
 
     // Get raw matrix data for W computation
     const float * mat = matrix();
@@ -526,7 +557,10 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
 
             // Only keep visible triangles
             if( !render3d.Cull( m_surfaceData.w, m_surfaceData.h ) )
+            {
+                CalcTriYBounds( render3d );
                 triList.push_back( render3d );
+            }
         }
     }
 
@@ -539,6 +573,10 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
 
         if( threads > 0 )
         {
+            // Bin triangles into per-strip lists
+            std::vector<std::vector<const CRender3d *>> stripBins( threads );
+            BinTriangles( triList, stripBins, screenH, threads );
+
             int stripH = screenH / threads;
             std::vector<std::future<void>> futures;
 
@@ -548,7 +586,7 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
                 int yMax = (t == threads - 1) ? screenH : (t + 1) * stripH;
 
                 futures.emplace_back(
-                    CThreadPool::Instance().post( RenderStrip3d, &triList, yMin, yMax ) );
+                    CThreadPool::Instance().post( RenderStrip3d, &stripBins[t], yMin, yMax ) );
             }
 
             for( auto & fut : futures )
@@ -557,20 +595,22 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
         else
         {
             // Fallback: single-threaded
-            RenderStrip3d( &triList, 0, screenH );
+            std::vector<const CRender3d *> allTris;
+            allTris.reserve( triList.size() );
+            for( const auto & tri : triList )
+                allTris.push_back( &tri );
+            RenderStrip3d( &allTris, 0, screenH );
         }
     }
-
-    delete[] pTrans;
 }
 
 /***************************************************************************
 *   desc:  Render all 3D triangles within a horizontal screen strip
 ****************************************************************************/
-void RenderStrip3d( const std::vector<CRender3d> * pTriList, int yMin, int yMax )
+void RenderStrip3d( const std::vector<const CRender3d *> * pTriList, int yMin, int yMax )
 {
-    for( const auto & tri : *pTriList )
-        RenderTriStrip3d( tri, yMin, yMax );
+    for( const auto * pTri : *pTriList )
+        RenderTriStrip3d( *pTri, yMin, yMax );
 }
 
 /***************************************************************************
@@ -585,17 +625,6 @@ void RenderStrip3d( const std::vector<CRender3d> * pTriList, int yMin, int yMax 
 ****************************************************************************/
 void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 {
-    // Early out if triangle doesn't overlap this strip
-    float triYMin = render.m_vec[0].vert.y;
-    float triYMax = render.m_vec[0].vert.y;
-    for( int i = 1; i < TRI; ++i )
-    {
-        if( render.m_vec[i].vert.y < triYMin ) triYMin = render.m_vec[i].vert.y;
-        if( render.m_vec[i].vert.y > triYMax ) triYMax = render.m_vec[i].vert.y;
-    }
-    if( triYMax < yMin || triYMin >= yMax )
-        return;
-
     // Define all the variables up here for speed reasons
     int xStart, xEnd, width, height, slopeCount(TRI);
     float u, v, z, stepU, stepV, stepZ;
@@ -622,12 +651,6 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
     uint * pPixels = (uint *)render.m_pSurface->pixels;
     uint * pText = (uint *)render.m_pText->m_pData;
     int32_t * pZBuf = render.m_pZBuffer;
-
-    // Create the range check variables
-    uint uvOffsetMax = textureW * textureH;
-
-    // Pointer-based screen bounds check
-    uint * pPixelsEnd = pPixels + (render.m_pSurface->w * render.m_pSurface->h);
 
     // Loop to find the top vert of the triangle
     int vTop(0);
@@ -677,188 +700,184 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
         // This is where we spend most of our time
         ////////////////////////////////////////////
 
+        // Skip scanlines above this strip's range in one shot
+        if( leftSlope.y < yMin )
+        {
+            int skip = yMin - leftSlope.y;
+            if( skip > height ) skip = height;
+            leftSlope.Advance( skip );
+            rightSlope.Advance( skip );
+            height -= skip;
+        }
+
         // Init the y index for scanline offset accumulation
         int yIndex = leftSlope.y * (int)screenW;
 
         // Loop for the height of the slope
         while( height-- > 0 )
         {
-            // Only render scanlines within this strip's range
-            if( leftSlope.y >= yMin )
+            // Calculate initial values
+            xStart = leftSlope.m_slope.vert.x;
+            xEnd = rightSlope.m_slope.vert.x;
+            width = xEnd - xStart;
+
+            // Make sure we are within the bounds of the screen
+            if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < yMax) )
             {
-                // Calculate initial values
-                xStart = leftSlope.m_slope.vert.x;
-                xEnd = rightSlope.m_slope.vert.x;
-                width = xEnd - xStart;
+                // Get the interpolated 1/W and U/W, V/W at the left edge
+                z = leftSlope.m_slope.vert.z;
+                u = leftSlope.m_slope.uv.u;
+                v = leftSlope.m_slope.uv.v;
 
-                // Make sure we are within the bounds of the screen
-                if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < yMax) )
+                // Create the step amounts for the scan line
+                stepZ = (rightSlope.m_slope.vert.z - z) / width;
+                stepU = (rightSlope.m_slope.uv.u - u) / width;
+                stepV = (rightSlope.m_slope.uv.v - v) / width;
+
+                // Clip the scan-line
+                if( xStart < 0 )
                 {
-                    // Get the interpolated 1/W and U/W, V/W at the left edge
-                    z = leftSlope.m_slope.vert.z;
-                    u = leftSlope.m_slope.uv.u;
-                    v = leftSlope.m_slope.uv.v;
+                    float clip = -xStart;
 
-                    // Create the step amounts for the scan line
-                    stepZ = (rightSlope.m_slope.vert.z - z) / width;
-                    stepU = (rightSlope.m_slope.uv.u - u) / width;
-                    stepV = (rightSlope.m_slope.uv.v - v) / width;
+                    z += (stepZ * clip);
+                    u += (stepU * clip);
+                    v += (stepV * clip);
 
-                    // Clip the scan-line
-                    if( xStart < 0 )
+                    xStart = 0;
+                    width = xEnd;
+                }
+
+                if( xEnd > (int)screenW )
+                {
+                    xEnd = screenW;
+                    width = xEnd - xStart;
+                }
+
+                // Index into the starting point of the display and z buffers
+                pDBuffer = pPixels + yIndex + xStart;
+                pZBuffer = pZBuf + yIndex + xStart;
+
+                // Init the 64-bit fixed point Z for z-buffer testing
+                fixZ = (int64_t)(z * FIX_SCALE_Z);
+                fixStepZ = (int64_t)(stepZ * FIX_SCALE_Z);
+
+                ////////////////////////////////////////////
+                // Perspective-correct texture mapping with
+                // affine subdivision (16-pixel runs)
+                // Following the legacy tri3D approach
+                ////////////////////////////////////////////
+
+                // Calculate the first real texture coordinates
+                // U/W divided by 1/W recovers raw U (0-1), multiply by texture size
+                float realZ = 1.0f / z;
+                fixTx1 = (int64_t)((double)(u * realZ) * (double)textureW * FIX_SCALE_TEX);
+                fixTy1 = (int64_t)((double)(v * realZ) * (double)textureH * FIX_SCALE_TEX);
+
+                // Calculate subdivision loops (width / 16)
+                int runLoops = width >> RUN_SHIFT;
+
+                // Premultiply steps for subdivision
+                float subUStep = stepU * RUN_LENGTH;
+                float subVStep = stepV * RUN_LENGTH;
+                float subZStep = stepZ * RUN_LENGTH;
+
+                // Loop for number of subdivisions
+                for( int count = 0; count < runLoops; ++count )
+                {
+                    int length = RUN_LENGTH;
+
+                    // Jump ahead to next subdivision
+                    float nextU = u + subUStep;
+                    float nextV = v + subVStep;
+                    float nextZ = z + subZStep;
+
+                    // Calculate the next point to interpolate
+                    float nextRealZ = 1.0f / nextZ;
+                    int64_t fixTx2 = (int64_t)((double)(nextU * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
+                    int64_t fixTy2 = (int64_t)((double)(nextV * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
+
+                    // Divide by 16 via shift
+                    int64_t fixTxStep = (fixTx2 - fixTx1) >> RUN_SHIFT;
+                    int64_t fixTyStep = (fixTy2 - fixTy1) >> RUN_SHIFT;
+
+                    int64_t fixTx = fixTx1;
+                    int64_t fixTy = fixTy1;
+
+                    // Loop for width of scan-line
+                    while( length-- > 0 )
                     {
-                        float clip = -xStart;
-
-                        z += (stepZ * clip);
-                        u += (stepU * clip);
-                        v += (stepV * clip);
-
-                        xStart = 0;
-                        width = xEnd;
-                    }
-
-                    if( xEnd > (int)screenW )
-                    {
-                        xEnd = screenW;
-                        width = xEnd - xStart;
-                    }
-
-                    // Index into the starting point of the display and z buffers
-                    pDBuffer = pPixels + yIndex + xStart;
-                    pZBuffer = pZBuf + yIndex + xStart;
-
-                    // Init the 64-bit fixed point Z for z-buffer testing
-                    fixZ = (int64_t)(z * FIX_SCALE_Z);
-                    fixStepZ = (int64_t)(stepZ * FIX_SCALE_Z);
-
-                    ////////////////////////////////////////////
-                    // Perspective-correct texture mapping with
-                    // affine subdivision (16-pixel runs)
-                    // Following the legacy tri3D approach
-                    ////////////////////////////////////////////
-
-                    // Calculate the first real texture coordinates
-                    // U/W divided by 1/W recovers raw U (0-1), multiply by texture size
-                    float realZ = 1.0f / z;
-                    fixTx1 = (int64_t)((double)(u * realZ) * (double)textureW * FIX_SCALE_TEX);
-                    fixTy1 = (int64_t)((double)(v * realZ) * (double)textureH * FIX_SCALE_TEX);
-
-                    // Calculate subdivision loops (width / 16)
-                    int runLoops = width >> RUN_SHIFT;
-
-                    // Premultiply steps for subdivision
-                    float subUStep = stepU * RUN_LENGTH;
-                    float subVStep = stepV * RUN_LENGTH;
-                    float subZStep = stepZ * RUN_LENGTH;
-
-                    // Loop for number of subdivisions
-                    for( int count = 0; count < runLoops; ++count )
-                    {
-                        int length = RUN_LENGTH;
-
-                        // Jump ahead to next subdivision
-                        float nextU = u + subUStep;
-                        float nextV = v + subVStep;
-                        float nextZ = z + subZStep;
-
-                        // Calculate the next point to interpolate
-                        float nextRealZ = 1.0f / nextZ;
-                        int64_t fixTx2 = (int64_t)((double)(nextU * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
-                        int64_t fixTy2 = (int64_t)((double)(nextV * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
-
-                        // Divide by 16 via shift
-                        int64_t fixTxStep = (fixTx2 - fixTx1) >> RUN_SHIFT;
-                        int64_t fixTyStep = (fixTy2 - fixTy1) >> RUN_SHIFT;
-
-                        int64_t fixTx = fixTx1;
-                        int64_t fixTy = fixTy1;
-
-                        // Loop for width of scan-line
-                        while( length-- > 0 )
+                        if( *pZBuffer < (int32_t)fixZ )
                         {
-                            if( *pZBuffer < (int32_t)fixZ && pDBuffer < pPixelsEnd )
-                            {
-                                uint texX = (uint)(fixTx >> TEX_SHIFT);
-                                uint texY = (uint)(fixTy >> TEX_SHIFT);
+                            uint texX = (uint)(fixTx >> TEX_SHIFT);
+                            uint texY = (uint)(fixTy >> TEX_SHIFT);
 
-                                // Clamp texture coordinates
-                                if( texX >= textureW ) texX = textureW - 1;
-                                if( texY >= textureH ) texY = textureH - 1;
+                            // Clamp texture coordinates
+                            if( texX >= textureW ) texX = textureW - 1;
+                            if( texY >= textureH ) texY = textureH - 1;
 
-                                uint uvOffset = texY * textureW + texX;
-
-                                if( uvOffset < uvOffsetMax )
-                                {
-                                    if( render.m_shader( *(pText + uvOffset), pDBuffer, texX, texY, render.m_color ) )
-                                        *pZBuffer = (int32_t)fixZ;
-                                }
-                            }
-
-                            fixZ += fixStepZ;
-                            fixTx += fixTxStep;
-                            fixTy += fixTyStep;
-                            ++pDBuffer;
-                            ++pZBuffer;
+                            if( render.m_shader( *(pText + texY * textureW + texX), pDBuffer, texX, texY, render.m_color ) )
+                                *pZBuffer = (int32_t)fixZ;
                         }
 
-                        // Advance u, v, z to the next subdivision point
-                        u = nextU;
-                        v = nextV;
-                        z = nextZ;
-
-                        // Reuse the last calculations as the first
-                        fixTx1 = fixTx2;
-                        fixTy1 = fixTy2;
+                        fixZ += fixStepZ;
+                        fixTx += fixTxStep;
+                        fixTy += fixTyStep;
+                        ++pDBuffer;
+                        ++pZBuffer;
                     }
 
-                    // Calculate remainder of scan-line left to rasterize
-                    int length = width & (RUN_LENGTH - 1);
+                    // Advance u, v, z to the next subdivision point
+                    u = nextU;
+                    v = nextV;
+                    z = nextZ;
 
-                    if( length > 0 )
+                    // Reuse the last calculations as the first
+                    fixTx1 = fixTx2;
+                    fixTy1 = fixTy2;
+                }
+
+                // Calculate remainder of scan-line left to rasterize
+                int length = width & (RUN_LENGTH - 1);
+
+                if( length > 0 )
+                {
+                    // Jump ahead to the remainder
+                    float nextU = u + (stepU * length);
+                    float nextV = v + (stepV * length);
+                    float nextZ = z + (stepZ * length);
+
+                    // Calculate the next point to interpolate
+                    float nextRealZ = 1.0f / nextZ;
+                    int64_t fixTx2 = (int64_t)((double)(nextU * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
+                    int64_t fixTy2 = (int64_t)((double)(nextV * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
+
+                    int64_t fixTxStep = (fixTx2 - fixTx1) / length;
+                    int64_t fixTyStep = (fixTy2 - fixTy1) / length;
+
+                    int64_t fixTx = fixTx1;
+                    int64_t fixTy = fixTy1;
+
+                    // Loop for remainder width
+                    while( length-- > 0 )
                     {
-                        // Jump ahead to the remainder
-                        float nextU = u + (stepU * length);
-                        float nextV = v + (stepV * length);
-                        float nextZ = z + (stepZ * length);
-
-                        // Calculate the next point to interpolate
-                        float nextRealZ = 1.0f / nextZ;
-                        int64_t fixTx2 = (int64_t)((double)(nextU * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
-                        int64_t fixTy2 = (int64_t)((double)(nextV * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
-
-                        int64_t fixTxStep = (fixTx2 - fixTx1) / length;
-                        int64_t fixTyStep = (fixTy2 - fixTy1) / length;
-
-                        int64_t fixTx = fixTx1;
-                        int64_t fixTy = fixTy1;
-
-                        // Loop for remainder width
-                        while( length-- > 0 )
+                        if( *pZBuffer < (int32_t)fixZ )
                         {
-                            if( *pZBuffer < (int32_t)fixZ && pDBuffer < pPixelsEnd )
-                            {
-                                uint texX = (uint)(fixTx >> TEX_SHIFT);
-                                uint texY = (uint)(fixTy >> TEX_SHIFT);
+                            uint texX = (uint)(fixTx >> TEX_SHIFT);
+                            uint texY = (uint)(fixTy >> TEX_SHIFT);
 
-                                // Clamp texture coordinates
-                                if( texX >= textureW ) texX = textureW - 1;
-                                if( texY >= textureH ) texY = textureH - 1;
+                            // Clamp texture coordinates
+                            if( texX >= textureW ) texX = textureW - 1;
+                            if( texY >= textureH ) texY = textureH - 1;
 
-                                uint uvOffset = texY * textureW + texX;
-
-                                if( uvOffset < uvOffsetMax )
-                                {
-                                    if( render.m_shader( *(pText + uvOffset), pDBuffer, texX, texY, render.m_color ) )
-                                        *pZBuffer = (int32_t)fixZ;
-                                }
-                            }
-
-                            fixZ += fixStepZ;
-                            fixTx += fixTxStep;
-                            fixTy += fixTyStep;
-                            ++pDBuffer;
-                            ++pZBuffer;
+                            if( render.m_shader( *(pText + texY * textureW + texX), pDBuffer, texX, texY, render.m_color ) )
+                                *pZBuffer = (int32_t)fixZ;
                         }
+
+                        fixZ += fixStepZ;
+                        fixTx += fixTxStep;
+                        fixTy += fixTyStep;
+                        ++pDBuffer;
+                        ++pZBuffer;
                     }
                 }
             }
@@ -878,7 +897,8 @@ void CSoftwareRender::renderFixedFunction2D( const CMatrix & matrix, const uint 
 {
     CVertex * pVert = (CVertex *)pVBO;
 
-    CVertex * pTrans = new CVertex[vertCount];
+    m_transVerts2D.resize( vertCount );
+    CVertex * pTrans = m_transVerts2D.data();
 
     for( uint i = 0; i < vertCount; ++i )
     {
@@ -909,7 +929,10 @@ void CSoftwareRender::renderFixedFunction2D( const CMatrix & matrix, const uint 
             render2d.m_vec[j] = pTrans[ pIBO[vIndex++] ];
 
         if( !render2d.Cull( m_surfaceData.w, m_surfaceData.h ) )
+        {
+            CalcTriYBounds( render2d );
             triList.push_back( render2d );
+        }
     }
 
     if( !triList.empty() )
@@ -919,6 +942,10 @@ void CSoftwareRender::renderFixedFunction2D( const CMatrix & matrix, const uint 
 
         if( threads > 0 )
         {
+            // Bin triangles into per-strip lists
+            std::vector<std::vector<const CRender2d *>> stripBins( threads );
+            BinTriangles( triList, stripBins, screenH, threads );
+
             int stripH = screenH / threads;
             std::vector<std::future<void>> futures;
 
@@ -928,7 +955,7 @@ void CSoftwareRender::renderFixedFunction2D( const CMatrix & matrix, const uint 
                 int yMax = (t == threads - 1) ? screenH : (t + 1) * stripH;
 
                 futures.emplace_back(
-                    CThreadPool::Instance().post( RenderStripFixedFunction2d, &triList, yMin, yMax ) );
+                    CThreadPool::Instance().post( RenderStripFixedFunction2d, &stripBins[t], yMin, yMax ) );
             }
 
             for( auto & fut : futures )
@@ -936,31 +963,23 @@ void CSoftwareRender::renderFixedFunction2D( const CMatrix & matrix, const uint 
         }
         else
         {
-            RenderStripFixedFunction2d( &triList, 0, screenH );
+            std::vector<const CRender2d *> allTris;
+            allTris.reserve( triList.size() );
+            for( const auto & tri : triList )
+                allTris.push_back( &tri );
+            RenderStripFixedFunction2d( &allTris, 0, screenH );
         }
     }
-
-    delete[] pTrans;
 }
 
-void RenderStripFixedFunction2d( const std::vector<CRender2d> * pTriList, int yMin, int yMax )
+void RenderStripFixedFunction2d( const std::vector<const CRender2d *> * pTriList, int yMin, int yMax )
 {
-    for( const auto & tri : *pTriList )
-        RenderTriStripFixedFunction2d( tri, yMin, yMax );
+    for( const auto * pTri : *pTriList )
+        RenderTriStripFixedFunction2d( *pTri, yMin, yMax );
 }
 
 void RenderTriStripFixedFunction2d( const CRender2d & render, int yMin, int yMax )
 {
-    float triYMin = render.m_vec[0].vert.y;
-    float triYMax = render.m_vec[0].vert.y;
-    for( int i = 1; i < TRI; ++i )
-    {
-        if( render.m_vec[i].vert.y < triYMin ) triYMin = render.m_vec[i].vert.y;
-        if( render.m_vec[i].vert.y > triYMax ) triYMax = render.m_vec[i].vert.y;
-    }
-    if( triYMax < yMin || triYMin >= yMax )
-        return;
-
     int xStart, xEnd, width, height, slopeCount(TRI);
     int64_t fixStepU, fixStepV, fixU, fixV;
     float u, v, stepU, stepV, step;
@@ -977,10 +996,6 @@ void RenderTriStripFixedFunction2d( const CRender2d & render, int yMin, int yMax
 
     double uOffset( (textureW % 2) ? 0.5 : 0.0 );
     double vOffset( (textureH % 2) ? 0.5 : 0.0 );
-
-    uint uvOffsetMax = render.m_pText->m_size.w * render.m_pText->m_size.h;
-    uint uvOffset;
-    uint * pPixelsEnd = pPixels + (render.m_pSurface->w * render.m_pSurface->h);
 
     int vTop(0);
     for( int i = 1; i < TRI; ++i )
@@ -1020,100 +1035,109 @@ void RenderTriStripFixedFunction2d( const CRender2d & render, int yMin, int yMax
             if( (rightSlope.y + height) >= yMax ) { height = yMax - rightSlope.y; slopeCount = 0; }
         }
 
+        // Skip scanlines above this strip's range in one shot
+        if( leftSlope.y < yMin )
+        {
+            int skip = yMin - leftSlope.y;
+            if( skip > height ) skip = height;
+            leftSlope.Advance( skip );
+            rightSlope.Advance( skip );
+            height -= skip;
+        }
+
         int yIndex = leftSlope.y * (int)screenW;
 
         while( height-- > 0 )
         {
-            if( leftSlope.y >= yMin )
+            xStart = leftSlope.m_slope.vert.x;
+            xEnd = rightSlope.m_slope.vert.x;
+            width = xEnd - xStart;
+
+            if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < yMax) )
             {
-                xStart = leftSlope.m_slope.vert.x;
-                xEnd = rightSlope.m_slope.vert.x;
-                width = xEnd - xStart;
+                u = leftSlope.m_slope.uv.u;
+                v = leftSlope.m_slope.uv.v;
+                stepU = (rightSlope.m_slope.uv.u - u) / width;
+                stepV = (rightSlope.m_slope.uv.v - v) / width;
 
-                if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < yMax) )
+                if( xStart < 0 )
                 {
-                    u = leftSlope.m_slope.uv.u;
-                    v = leftSlope.m_slope.uv.v;
-                    stepU = (rightSlope.m_slope.uv.u - u) / width;
-                    stepV = (rightSlope.m_slope.uv.v - v) / width;
+                    step = -xStart;
+                    u += (stepU * step);
+                    v += (stepV * step);
+                    xStart = 0;
+                    width = xEnd;
+                }
 
-                    if( xStart < 0 )
-                    {
-                        step = -xStart;
-                        u += (stepU * step);
-                        v += (stepV * step);
-                        xStart = 0;
-                        width = xEnd;
-                    }
+                if( xEnd > (int)screenW ) { xEnd = screenW; width = xEnd - xStart; }
 
-                    if( xEnd > (int)screenW ) { xEnd = screenW; width = xEnd - xStart; }
+                pDBuffer = pPixels + yIndex + xStart;
+                fixStepU = (int64_t)((double)stepU * FIX_SCALE_UV);
+                fixStepV = (int64_t)((double)stepV * FIX_SCALE_UV);
+                fixU = (int64_t)(((double)u + uOffset) * FIX_SCALE_UV);
+                fixV = (int64_t)(((double)v + vOffset) * FIX_SCALE_UV);
 
-                    pDBuffer = pPixels + yIndex + xStart;
-                    fixStepU = (int64_t)((double)stepU * FIX_SCALE_UV);
-                    fixStepV = (int64_t)((double)stepV * FIX_SCALE_UV);
-                    fixU = (int64_t)(((double)u + uOffset) * FIX_SCALE_UV);
-                    fixV = (int64_t)(((double)v + vOffset) * FIX_SCALE_UV);
-
-                    if( render.m_applyColor && render.m_blendAlpha )
+                if( render.m_applyColor && render.m_blendAlpha )
+                {
+                    uint32_t cr = render.m_color.r, cg = render.m_color.g, cb = render.m_color.b;
+                    while( width-- > 0 )
                     {
-                        uint32_t cr = render.m_color.r, cg = render.m_color.g, cb = render.m_color.b;
-                        while( width-- > 0 )
+                        uint texU = (uint)(fixU >> UV_SHIFT);
+                        uint texV = (uint)(fixV >> UV_SHIFT);
+                        if( texU >= textureW ) texU = textureW - 1;
+                        if( texV >= textureH ) texV = textureH - 1;
+                        uint32_t texel = *(pText + texV * textureW + texU);
+                        if( ((texel >> 24) & 0xFF) == 255 )
                         {
-                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
-                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                            {
-                                uint32_t texel = *(pText + uvOffset);
-                                if( ((texel >> 24) & 0xFF) == 255 )
-                                {
-                                    uint32_t r = ((texel >> 16) & 0xFF) * cr / 255;
-                                    uint32_t g = ((texel >>  8) & 0xFF) * cg / 255;
-                                    uint32_t b = ( texel        & 0xFF) * cb / 255;
-                                    *pDBuffer = (255u << 24) | (r << 16) | (g << 8) | b;
-                                }
-                            }
-                            ++pDBuffer; fixU += fixStepU; fixV += fixStepV;
+                            uint32_t r = ((texel >> 16) & 0xFF) * cr / 255;
+                            uint32_t g = ((texel >>  8) & 0xFF) * cg / 255;
+                            uint32_t b = ( texel        & 0xFF) * cb / 255;
+                            *pDBuffer = (255u << 24) | (r << 16) | (g << 8) | b;
                         }
+                        ++pDBuffer; fixU += fixStepU; fixV += fixStepV;
                     }
-                    else if( render.m_applyColor )
+                }
+                else if( render.m_applyColor )
+                {
+                    uint32_t cr = render.m_color.r, cg = render.m_color.g, cb = render.m_color.b;
+                    while( width-- > 0 )
                     {
-                        uint32_t cr = render.m_color.r, cg = render.m_color.g, cb = render.m_color.b;
-                        while( width-- > 0 )
-                        {
-                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
-                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                            {
-                                uint32_t texel = *(pText + uvOffset);
-                                uint32_t r = ((texel >> 16) & 0xFF) * cr / 255;
-                                uint32_t g = ((texel >>  8) & 0xFF) * cg / 255;
-                                uint32_t b = ( texel        & 0xFF) * cb / 255;
-                                *pDBuffer = (255u << 24) | (r << 16) | (g << 8) | b;
-                            }
-                            ++pDBuffer; fixU += fixStepU; fixV += fixStepV;
-                        }
+                        uint texU = (uint)(fixU >> UV_SHIFT);
+                        uint texV = (uint)(fixV >> UV_SHIFT);
+                        if( texU >= textureW ) texU = textureW - 1;
+                        if( texV >= textureH ) texV = textureH - 1;
+                        uint32_t texel = *(pText + texV * textureW + texU);
+                        uint32_t r = ((texel >> 16) & 0xFF) * cr / 255;
+                        uint32_t g = ((texel >>  8) & 0xFF) * cg / 255;
+                        uint32_t b = ( texel        & 0xFF) * cb / 255;
+                        *pDBuffer = (255u << 24) | (r << 16) | (g << 8) | b;
+                        ++pDBuffer; fixU += fixStepU; fixV += fixStepV;
                     }
-                    else if( render.m_blendAlpha )
+                }
+                else if( render.m_blendAlpha )
+                {
+                    while( width-- > 0 )
                     {
-                        while( width-- > 0 )
-                        {
-                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
-                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                            {
-                                uint32_t texel = *(pText + uvOffset);
-                                if( ((texel >> 24) & 0xFF) == 255 )
-                                    *pDBuffer = texel;
-                            }
-                            ++pDBuffer; fixU += fixStepU; fixV += fixStepV;
-                        }
+                        uint texU = (uint)(fixU >> UV_SHIFT);
+                        uint texV = (uint)(fixV >> UV_SHIFT);
+                        if( texU >= textureW ) texU = textureW - 1;
+                        if( texV >= textureH ) texV = textureH - 1;
+                        uint32_t texel = *(pText + texV * textureW + texU);
+                        if( ((texel >> 24) & 0xFF) == 255 )
+                            *pDBuffer = texel;
+                        ++pDBuffer; fixU += fixStepU; fixV += fixStepV;
                     }
-                    else
+                }
+                else
+                {
+                    while( width-- > 0 )
                     {
-                        while( width-- > 0 )
-                        {
-                            uvOffset = ((uint)(fixV >> UV_SHIFT) * textureW) + (uint)(fixU >> UV_SHIFT);
-                            if( (uvOffset < uvOffsetMax) && (pDBuffer < pPixelsEnd) )
-                                *pDBuffer = *(pText + uvOffset);
-                            ++pDBuffer; fixU += fixStepU; fixV += fixStepV;
-                        }
+                        uint texU = (uint)(fixU >> UV_SHIFT);
+                        uint texV = (uint)(fixV >> UV_SHIFT);
+                        if( texU >= textureW ) texU = textureW - 1;
+                        if( texV >= textureH ) texV = textureH - 1;
+                        *pDBuffer = *(pText + texV * textureW + texU);
+                        ++pDBuffer; fixU += fixStepU; fixV += fixStepV;
                     }
                 }
             }
@@ -1130,9 +1154,8 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint 
 {
     CVertex * pVert = (CVertex *)pVBO;
 
-    struct TransVert { CPoint<float> pos; float w; float u, v; };
-
-    TransVert * pTrans = new TransVert[vertCount];
+    m_transVerts3D.resize( vertCount );
+    TransVert * pTrans = m_transVerts3D.data();
     const float * mat = matrix();
     const float nearClip = CSettings::Instance().getMinZdist();
     const int MAX_CLIP_VERTS = 4;
@@ -1244,7 +1267,10 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint 
             render3d.m_vec[2] = projected[j + 1];
 
             if( !render3d.Cull( m_surfaceData.w, m_surfaceData.h ) )
+            {
+                CalcTriYBounds( render3d );
                 triList.push_back( render3d );
+            }
         }
     }
 
@@ -1255,6 +1281,10 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint 
 
         if( threads > 0 )
         {
+            // Bin triangles into per-strip lists
+            std::vector<std::vector<const CRender3d *>> stripBins( threads );
+            BinTriangles( triList, stripBins, screenH, threads );
+
             int stripH = screenH / threads;
             std::vector<std::future<void>> futures;
 
@@ -1263,37 +1293,29 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint 
                 int yMin = t * stripH;
                 int yMax = (t == threads - 1) ? screenH : (t + 1) * stripH;
                 futures.emplace_back(
-                    CThreadPool::Instance().post( RenderStripFixedFunction3d, &triList, yMin, yMax ) );
+                    CThreadPool::Instance().post( RenderStripFixedFunction3d, &stripBins[t], yMin, yMax ) );
             }
             for( auto & fut : futures ) fut.get();
         }
         else
         {
-            RenderStripFixedFunction3d( &triList, 0, screenH );
+            std::vector<const CRender3d *> allTris;
+            allTris.reserve( triList.size() );
+            for( const auto & tri : triList )
+                allTris.push_back( &tri );
+            RenderStripFixedFunction3d( &allTris, 0, screenH );
         }
     }
-
-    delete[] pTrans;
 }
 
-void RenderStripFixedFunction3d( const std::vector<CRender3d> * pTriList, int yMin, int yMax )
+void RenderStripFixedFunction3d( const std::vector<const CRender3d *> * pTriList, int yMin, int yMax )
 {
-    for( const auto & tri : *pTriList )
-        RenderTriStripFixedFunction3d( tri, yMin, yMax );
+    for( const auto * pTri : *pTriList )
+        RenderTriStripFixedFunction3d( *pTri, yMin, yMax );
 }
 
 void RenderTriStripFixedFunction3d( const CRender3d & render, int yMin, int yMax )
 {
-    float triYMin = render.m_vec[0].vert.y;
-    float triYMax = render.m_vec[0].vert.y;
-    for( int i = 1; i < TRI; ++i )
-    {
-        if( render.m_vec[i].vert.y < triYMin ) triYMin = render.m_vec[i].vert.y;
-        if( render.m_vec[i].vert.y > triYMax ) triYMax = render.m_vec[i].vert.y;
-    }
-    if( triYMax < yMin || triYMin >= yMax )
-        return;
-
     int xStart, xEnd, width, height, slopeCount(TRI);
     float u, v, z, stepU, stepV, stepZ;
     int64_t fixZ, fixStepZ, fixTx1, fixTy1;
@@ -1312,9 +1334,6 @@ void RenderTriStripFixedFunction3d( const CRender3d & render, int yMin, int yMax
     uint * pPixels = (uint *)render.m_pSurface->pixels;
     uint * pText = (uint *)render.m_pText->m_pData;
     int32_t * pZBuf = render.m_pZBuffer;
-
-    uint uvOffsetMax = textureW * textureH;
-    uint * pPixelsEnd = pPixels + (render.m_pSurface->w * render.m_pSurface->h);
 
     int vTop(0);
     for( int i = 1; i < TRI; ++i )
@@ -1340,129 +1359,128 @@ void RenderTriStripFixedFunction3d( const CRender3d & render, int yMin, int yMax
             if( (rightSlope.y + height) >= yMax ) { height = yMax - rightSlope.y; slopeCount = 0; }
         }
 
+        // Skip scanlines above this strip's range in one shot
+        if( leftSlope.y < yMin )
+        {
+            int skip = yMin - leftSlope.y;
+            if( skip > height ) skip = height;
+            leftSlope.Advance( skip );
+            rightSlope.Advance( skip );
+            height -= skip;
+        }
+
         int yIndex = leftSlope.y * (int)screenW;
 
         while( height-- > 0 )
         {
-            if( leftSlope.y >= yMin )
+            xStart = leftSlope.m_slope.vert.x;
+            xEnd = rightSlope.m_slope.vert.x;
+            width = xEnd - xStart;
+
+            if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < yMax) )
             {
-                xStart = leftSlope.m_slope.vert.x;
-                xEnd = rightSlope.m_slope.vert.x;
-                width = xEnd - xStart;
+                z = leftSlope.m_slope.vert.z;
+                u = leftSlope.m_slope.uv.u;
+                v = leftSlope.m_slope.uv.v;
+                stepZ = (rightSlope.m_slope.vert.z - z) / width;
+                stepU = (rightSlope.m_slope.uv.u - u) / width;
+                stepV = (rightSlope.m_slope.uv.v - v) / width;
 
-                if( ( width > 0 ) && ( xEnd > 0 ) && ( xStart < (int)screenW ) && (leftSlope.y < yMax) )
+                if( xStart < 0 )
                 {
-                    z = leftSlope.m_slope.vert.z;
-                    u = leftSlope.m_slope.uv.u;
-                    v = leftSlope.m_slope.uv.v;
-                    stepZ = (rightSlope.m_slope.vert.z - z) / width;
-                    stepU = (rightSlope.m_slope.uv.u - u) / width;
-                    stepV = (rightSlope.m_slope.uv.v - v) / width;
+                    float clip = -xStart;
+                    z += (stepZ * clip); u += (stepU * clip); v += (stepV * clip);
+                    xStart = 0; width = xEnd;
+                }
 
-                    if( xStart < 0 )
+                if( xEnd > (int)screenW ) { xEnd = screenW; width = xEnd - xStart; }
+
+                pDBuffer = pPixels + yIndex + xStart;
+                pZBuffer = pZBuf + yIndex + xStart;
+                fixZ = (int64_t)(z * FIX_SCALE_Z);
+                fixStepZ = (int64_t)(stepZ * FIX_SCALE_Z);
+
+                float realZ = 1.0f / z;
+                fixTx1 = (int64_t)((double)(u * realZ) * (double)textureW * FIX_SCALE_TEX);
+                fixTy1 = (int64_t)((double)(v * realZ) * (double)textureH * FIX_SCALE_TEX);
+
+                int runLoops = width >> RUN_SHIFT;
+                float subUStep = stepU * RUN_LENGTH;
+                float subVStep = stepV * RUN_LENGTH;
+                float subZStep = stepZ * RUN_LENGTH;
+
+                for( int count = 0; count < runLoops; ++count )
+                {
+                    int length = RUN_LENGTH;
+                    float nextU = u + subUStep, nextV = v + subVStep, nextZ = z + subZStep;
+                    float nextRealZ = 1.0f / nextZ;
+                    int64_t fixTx2 = (int64_t)((double)(nextU * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
+                    int64_t fixTy2 = (int64_t)((double)(nextV * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
+                    int64_t fixTxStep = (fixTx2 - fixTx1) >> RUN_SHIFT;
+                    int64_t fixTyStep = (fixTy2 - fixTy1) >> RUN_SHIFT;
+                    int64_t fixTx = fixTx1, fixTy = fixTy1;
+
+                    while( length-- > 0 )
                     {
-                        float clip = -xStart;
-                        z += (stepZ * clip); u += (stepU * clip); v += (stepV * clip);
-                        xStart = 0; width = xEnd;
+                        if( *pZBuffer < (int32_t)fixZ )
+                        {
+                            uint texX = (uint)(fixTx >> TEX_SHIFT);
+                            uint texY = (uint)(fixTy >> TEX_SHIFT);
+                            if( texX >= textureW ) texX = textureW - 1;
+                            if( texY >= textureH ) texY = textureH - 1;
+
+                            uint32_t texel = *(pText + texY * textureW + texX);
+                            if( render.m_applyColor )
+                            {
+                                uint32_t r = ((texel >> 16) & 0xFF) * render.m_color.r / 255;
+                                uint32_t g = ((texel >>  8) & 0xFF) * render.m_color.g / 255;
+                                uint32_t b = ( texel        & 0xFF) * render.m_color.b / 255;
+                                texel = (255u << 24) | (r << 16) | (g << 8) | b;
+                            }
+                            *pDBuffer = texel;
+                            *pZBuffer = (int32_t)fixZ;
+                        }
+                        fixZ += fixStepZ; fixTx += fixTxStep; fixTy += fixTyStep;
+                        ++pDBuffer; ++pZBuffer;
                     }
 
-                    if( xEnd > (int)screenW ) { xEnd = screenW; width = xEnd - xStart; }
+                    u = nextU; v = nextV; z = nextZ;
+                    fixTx1 = fixTx2; fixTy1 = fixTy2;
+                }
 
-                    pDBuffer = pPixels + yIndex + xStart;
-                    pZBuffer = pZBuf + yIndex + xStart;
-                    fixZ = (int64_t)(z * FIX_SCALE_Z);
-                    fixStepZ = (int64_t)(stepZ * FIX_SCALE_Z);
+                int length = width & (RUN_LENGTH - 1);
+                if( length > 0 )
+                {
+                    float nextU = u + (stepU * length), nextV = v + (stepV * length), nextZ = z + (stepZ * length);
+                    float nextRealZ = 1.0f / nextZ;
+                    int64_t fixTx2 = (int64_t)((double)(nextU * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
+                    int64_t fixTy2 = (int64_t)((double)(nextV * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
+                    int64_t fixTxStep = (fixTx2 - fixTx1) / length;
+                    int64_t fixTyStep = (fixTy2 - fixTy1) / length;
+                    int64_t fixTx = fixTx1, fixTy = fixTy1;
 
-                    float realZ = 1.0f / z;
-                    fixTx1 = (int64_t)((double)(u * realZ) * (double)textureW * FIX_SCALE_TEX);
-                    fixTy1 = (int64_t)((double)(v * realZ) * (double)textureH * FIX_SCALE_TEX);
-
-                    int runLoops = width >> RUN_SHIFT;
-                    float subUStep = stepU * RUN_LENGTH;
-                    float subVStep = stepV * RUN_LENGTH;
-                    float subZStep = stepZ * RUN_LENGTH;
-
-                    for( int count = 0; count < runLoops; ++count )
+                    while( length-- > 0 )
                     {
-                        int length = RUN_LENGTH;
-                        float nextU = u + subUStep, nextV = v + subVStep, nextZ = z + subZStep;
-                        float nextRealZ = 1.0f / nextZ;
-                        int64_t fixTx2 = (int64_t)((double)(nextU * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
-                        int64_t fixTy2 = (int64_t)((double)(nextV * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
-                        int64_t fixTxStep = (fixTx2 - fixTx1) >> RUN_SHIFT;
-                        int64_t fixTyStep = (fixTy2 - fixTy1) >> RUN_SHIFT;
-                        int64_t fixTx = fixTx1, fixTy = fixTy1;
-
-                        while( length-- > 0 )
+                        if( *pZBuffer < (int32_t)fixZ )
                         {
-                            if( *pZBuffer < (int32_t)fixZ && pDBuffer < pPixelsEnd )
+                            uint texX = (uint)(fixTx >> TEX_SHIFT);
+                            uint texY = (uint)(fixTy >> TEX_SHIFT);
+                            if( texX >= textureW ) texX = textureW - 1;
+                            if( texY >= textureH ) texY = textureH - 1;
+
+                            uint32_t texel = *(pText + texY * textureW + texX);
+                            if( render.m_applyColor )
                             {
-                                uint texX = (uint)(fixTx >> TEX_SHIFT);
-                                uint texY = (uint)(fixTy >> TEX_SHIFT);
-                                if( texX >= textureW ) texX = textureW - 1;
-                                if( texY >= textureH ) texY = textureH - 1;
-                                uint uvOffset = texY * textureW + texX;
-
-                                if( uvOffset < uvOffsetMax )
-                                {
-                                    uint32_t texel = *(pText + uvOffset);
-                                    if( render.m_applyColor )
-                                    {
-                                        uint32_t r = ((texel >> 16) & 0xFF) * render.m_color.r / 255;
-                                        uint32_t g = ((texel >>  8) & 0xFF) * render.m_color.g / 255;
-                                        uint32_t b = ( texel        & 0xFF) * render.m_color.b / 255;
-                                        texel = (255u << 24) | (r << 16) | (g << 8) | b;
-                                    }
-                                    *pDBuffer = texel;
-                                    *pZBuffer = (int32_t)fixZ;
-                                }
+                                uint32_t r = ((texel >> 16) & 0xFF) * render.m_color.r / 255;
+                                uint32_t g = ((texel >>  8) & 0xFF) * render.m_color.g / 255;
+                                uint32_t b = ( texel        & 0xFF) * render.m_color.b / 255;
+                                texel = (255u << 24) | (r << 16) | (g << 8) | b;
                             }
-                            fixZ += fixStepZ; fixTx += fixTxStep; fixTy += fixTyStep;
-                            ++pDBuffer; ++pZBuffer;
+                            *pDBuffer = texel;
+                            *pZBuffer = (int32_t)fixZ;
                         }
-
-                        u = nextU; v = nextV; z = nextZ;
-                        fixTx1 = fixTx2; fixTy1 = fixTy2;
-                    }
-
-                    int length = width & (RUN_LENGTH - 1);
-                    if( length > 0 )
-                    {
-                        float nextU = u + (stepU * length), nextV = v + (stepV * length), nextZ = z + (stepZ * length);
-                        float nextRealZ = 1.0f / nextZ;
-                        int64_t fixTx2 = (int64_t)((double)(nextU * nextRealZ) * (double)textureW * FIX_SCALE_TEX);
-                        int64_t fixTy2 = (int64_t)((double)(nextV * nextRealZ) * (double)textureH * FIX_SCALE_TEX);
-                        int64_t fixTxStep = (fixTx2 - fixTx1) / length;
-                        int64_t fixTyStep = (fixTy2 - fixTy1) / length;
-                        int64_t fixTx = fixTx1, fixTy = fixTy1;
-
-                        while( length-- > 0 )
-                        {
-                            if( *pZBuffer < (int32_t)fixZ && pDBuffer < pPixelsEnd )
-                            {
-                                uint texX = (uint)(fixTx >> TEX_SHIFT);
-                                uint texY = (uint)(fixTy >> TEX_SHIFT);
-                                if( texX >= textureW ) texX = textureW - 1;
-                                if( texY >= textureH ) texY = textureH - 1;
-                                uint uvOffset = texY * textureW + texX;
-
-                                if( uvOffset < uvOffsetMax )
-                                {
-                                    uint32_t texel = *(pText + uvOffset);
-                                    if( render.m_applyColor )
-                                    {
-                                        uint32_t r = ((texel >> 16) & 0xFF) * render.m_color.r / 255;
-                                        uint32_t g = ((texel >>  8) & 0xFF) * render.m_color.g / 255;
-                                        uint32_t b = ( texel        & 0xFF) * render.m_color.b / 255;
-                                        texel = (255u << 24) | (r << 16) | (g << 8) | b;
-                                    }
-                                    *pDBuffer = texel;
-                                    *pZBuffer = (int32_t)fixZ;
-                                }
-                            }
-                            fixZ += fixStepZ; fixTx += fixTxStep; fixTy += fixTyStep;
-                            ++pDBuffer; ++pZBuffer;
-                        }
+                        fixZ += fixStepZ; fixTx += fixTxStep; fixTy += fixTyStep;
+                        ++pDBuffer; ++pZBuffer;
                     }
                 }
             }

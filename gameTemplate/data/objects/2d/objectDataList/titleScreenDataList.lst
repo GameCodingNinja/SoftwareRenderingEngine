@@ -28,6 +28,7 @@
     <object name="background">
       <visual>
           <texture file="data/textures/titleScreen/title_background_small.png"/>
+
       </visual>
     </object>
 
@@ -41,6 +42,7 @@
       <visual>
         <texture file="data/textures/titleScreen/enemy01a.png"/>
         <shader name="alphaBlend"/>
+        <fixedFunction enable="false" blendAlpha="true"/>
       </visual>
     </object>
 

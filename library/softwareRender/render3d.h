@@ -59,6 +59,10 @@ public:
     // Three vertexes (screen-projected with 1/Z, U/Z, V/Z)
     CVertex m_vec[TRI];
 
+    // Cached triangle Y bounds for strip binning
+    float m_triYMin;
+    float m_triYMax;
+
     // Fixed-function flag
     bool m_applyColor;
 

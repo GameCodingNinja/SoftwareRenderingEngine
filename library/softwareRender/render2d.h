@@ -56,6 +56,10 @@ public:
     // Three 2D vertexes
     CVertex m_vec[TRI];
 
+    // Cached triangle Y bounds for strip binning
+    float m_triYMin;
+    float m_triYMax;
+
     // Fixed-function flags
     bool m_applyColor;
     bool m_blendAlpha;
