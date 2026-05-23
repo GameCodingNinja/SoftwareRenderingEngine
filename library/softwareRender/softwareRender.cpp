@@ -47,8 +47,7 @@ CSoftwareRender::CSoftwareRender()
 {
     // Init the thread pool if not already active
     if( !CThreadPool::Instance().isActive() )
-        CThreadPool::Instance().init( 2, 0 );
-
+        CThreadPool::Instance().init( 2, -1 );
 }
 
 /************************************************************************

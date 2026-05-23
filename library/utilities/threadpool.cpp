@@ -44,21 +44,13 @@ void CThreadPool::init( const int minThreads, const int maxThreads )
     const int maxCores = std::thread::hardware_concurrency();
 
     std::string threadCountType = "Default";
-    // Allow for half of all the threads
-    if( maxThreads == -2 )
+    // Allow for max thread minus negative number
+    if( maxThreads < 0 )
     {
-        threadCountType = "Half";
-        threads = maxCores / 2;
-        if( threads < 2 )
-            threads = 2;
-    }
-    // Allow for the maximum number of threads minus 1
-    else if( maxThreads == -1 )
-    {
-        threadCountType = "Max minus 1";
-        threads = maxCores-1;
-        if( threads < 2 )
-            threads = 2;
+        threadCountType = "Max minus negative";
+        threads = maxCores + maxThreads;
+        if( threads < minThreads )
+            threads = minThreads;
     }
     // Allow for the maximum number of threads
     else if( ((maxThreads == 0) || (maxThreads >= maxCores)) && (minThreads <= maxCores) )
@@ -79,10 +71,10 @@ void CThreadPool::init( const int minThreads, const int maxThreads )
         NGenFunc::FormatString(
             "Thread Info...\n"
             "  Thread count type: %s\n"
-            "  Max cores: %u\n"
-            "  Min threads: %u\n"
-            "  Max threads: %u\n"
-            "  Threads in pool: %u\n",
+            "  Max cores: %d\n"
+            "  Min threads: %d\n"
+            "  Max threads: %d\n"
+            "  Threads in pool: %d\n",
             threadCountType,
             maxCores,
             minThreads,

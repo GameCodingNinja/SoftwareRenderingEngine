@@ -11,12 +11,12 @@
       </mesh>
       <color r="1" g="1" b="1" a="1"/>
       <shader name="default"/>
+      <fixedFunction enable="false" blendAlpha="false"/>
     </visual>
     <physics file="" world="" type="static">
       <size width="0" height="0"/>
       <sizeMod top="0" bottom="0" left="0" right="0"/>
       <body density="0" restitution="0" damping="0" angDamping="0" fixedRotation="false"/>
-      <color r="1" g="1" b="1" a="1"/>
     </physics>
     <scale x="1" y="1" z="1"/>
     <size width="0" height="0"/>
@@ -28,24 +28,19 @@
     <object name="background">
       <visual>
           <texture file="data/textures/titleScreen/title_background_small.png"/>
-          <shader name="default"/>
-          <fixedFunction enable="true"/>
       </visual>
     </object>
 
     <object name="background2">
       <visual>
         <texture file="data/textures/titleScreen/title_background_small299.png"/>
-        <shader name="default"/>
-        <fixedFunction enable="true"/>
       </visual>
     </object>
 
     <object name="enemy">
       <visual>
         <texture file="data/textures/titleScreen/enemy01a.png"/>
-        <shader name="colorModAlpha"/>
-        <fixedFunction enable="true" blendAlpha="true"/>
+        <shader name="alphaBlend"/>
       </visual>
     </object>
 
