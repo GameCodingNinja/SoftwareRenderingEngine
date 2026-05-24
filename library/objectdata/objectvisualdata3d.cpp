@@ -192,7 +192,7 @@ void CObjectVisualData3D::createFromData( const std::string & group, CSize<int> 
 
         // Store VBO/IBO in the vertex buffer manager using the file path as the name
         m_pVBO = CVertBufMgr::Instance().createMeshVBO( group, m_meshFile,
-            (float *)meshLoader.m_vertices.data(), sizeof(CVertex3d) * m_vertexCount );
+            (float *)meshLoader.m_vertices.data(), sizeof(CVertex) * m_vertexCount );
 
         m_pIBO = CVertBufMgr::Instance().createIBO( group, m_meshFile,
             meshLoader.m_indices.data(), sizeof(uint) * m_indexCount );

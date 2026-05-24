@@ -59,12 +59,13 @@ float * CVertBufMgr::createQuadVBO( const std::string & group, const std::string
         // Test VBO data
         // UV x starts from the top left. UV y starts from the bottom right. Clockwise
         // verts start from the bottom left. Counter clockwise
+        // Layout: vert(x,y,z), uv(u,v), norm(x,y,z)
         float vertexData[] =
         {
-            -0.5f, -0.5f, 0.0,  uv.x1, uv.y1,
-             0.5f, -0.5f, 0.0,  uv.x2, uv.y1,
-             0.5f,  0.5f, 0.0,  uv.x2, uv.y2,
-            -0.5f,  0.5f, 0.0,  uv.x1, uv.y2
+            -0.5f, -0.5f, 0.0,  uv.x1, uv.y1,  0.0, 0.0, 0.0,
+             0.5f, -0.5f, 0.0,  uv.x2, uv.y1,  0.0, 0.0, 0.0,
+             0.5f,  0.5f, 0.0,  uv.x2, uv.y2,  0.0, 0.0, 0.0,
+            -0.5f,  0.5f, 0.0,  uv.x1, uv.y2,  0.0, 0.0, 0.0
         };
 
         uint size = sizeof(CQuad2D) / sizeof(float);
@@ -170,7 +171,7 @@ float * CVertBufMgr::createScaledFrame( const std::string & group,
         const CSize<float> uvLgth( textSize.w - (scaledFrame.m_frame.w * 2.f), textSize.h - (scaledFrame.m_frame.h * 2.f) );
 
         CQuad2D quadBuf[8];
-        CVertex2d vertBuf[16];
+        CVertex vertBuf[16];
 
         // Left frame
         createQuad( CPoint<float>(-center.x, center.y-scaledFrame.m_frame.h),
@@ -246,9 +247,9 @@ float * CVertBufMgr::createScaledFrame( const std::string & group,
         vertBuf[14] = quadBuf[6].vert[0];
         vertBuf[15] = quadBuf[7].vert[0];
 
-        uint vboSize = sizeof(CVertex2d) * 16 / sizeof(float);
+        uint vboSize = sizeof(CVertex) * 16 / sizeof(float);
         float * pVBO = new float[vboSize];
-        std::memcpy( pVBO, (float*)vertBuf, sizeof(CVertex2d) * 16 );
+        std::memcpy( pVBO, (float*)vertBuf, sizeof(CVertex) * 16 );
 
         // Insert the new vertex buffer info
         mapIter = mapMapIter->second.insert( std::make_pair(name, pVBO) ).first;

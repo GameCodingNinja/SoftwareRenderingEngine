@@ -118,10 +118,10 @@ void CSoftwareRender::setSurface( IFrameBuffer * pFrameBuffer )
 ****************************************************************************/
 void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, float * pVBO, uint * pIBO, const CColor<float> & color, FragmentShaderFunc shader )
 {
-    CVertex2d * pVert = (CVertex2d *)pVBO;
+    CVertex * pVert = (CVertex *)pVBO;
 
     m_transVerts2D.resize( vertCount );
-    CVertex2d * pTrans = m_transVerts2D.data();
+    CVertex * pTrans = m_transVerts2D.data();
 
     for( uint i = 0; i < vertCount; ++i )
     {
@@ -250,18 +250,18 @@ void RenderTriStrip2d( const CRender2d & render, int yMin, int yMax )
     float e2x = render.m_vec[2].vert.x - render.m_vec[0].vert.x;
     float e2y = render.m_vec[2].vert.y - render.m_vec[0].vert.y;
 
-    CTriangleSlope2d::ESlopeType leftType  = CTriangleSlope2d::EST_LEFT;
-    CTriangleSlope2d::ESlopeType rightType = CTriangleSlope2d::EST_RIGHT;
+    CTriangleSlope::ESlopeType leftType  = CTriangleSlope::EST_LEFT;
+    CTriangleSlope::ESlopeType rightType = CTriangleSlope::EST_RIGHT;
 
     if( (e1x * e2y - e1y * e2x) < 0.0f )
     {
-        leftType  = CTriangleSlope2d::EST_RIGHT;
-        rightType = CTriangleSlope2d::EST_LEFT;
+        leftType  = CTriangleSlope::EST_RIGHT;
+        rightType = CTriangleSlope::EST_LEFT;
     }
 
     // Init the slope class for managing the scan lines
-    CTriangleSlope2d leftSlope( render.m_vec, vTop, leftType );
-    CTriangleSlope2d rightSlope( render.m_vec, vTop, rightType );
+    CTriangleSlope leftSlope( render.m_vec, vTop, leftType );
+    CTriangleSlope rightSlope( render.m_vec, vTop, rightType );
     
     while( slopeCount > 0 )
     {
@@ -403,7 +403,7 @@ void CSoftwareRender::clearZBuffer()
 ****************************************************************************/
 void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, float * pVBO, uint * pIBO, const CColor<float> & color, FragmentShaderFunc shader )
 {
-    CVertex2d * pVert = (CVertex2d *)pVBO;
+    CVertex * pVert = (CVertex *)pVBO;
 
     m_transVerts3D.resize( vertCount );
     TransVert * pTrans = m_transVerts3D.data();
@@ -534,7 +534,7 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
             continue;
 
         // Project clipped verts to screen space
-        CVertex3d projected[MAX_CLIP_VERTS];
+        CVertex projected[MAX_CLIP_VERTS];
         for( int j = 0; j < clipCount; ++j )
         {
             float oneOverW = 1.0f / clipped[j].w;
@@ -659,8 +659,8 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
             vTop = i;
 
     // Init the slope class for managing the scan lines
-    CTriangleSlope3d leftSlope( render.m_vec, vTop, CTriangleSlope3d::EST_LEFT );
-    CTriangleSlope3d rightSlope( render.m_vec, vTop, CTriangleSlope3d::EST_RIGHT );
+    CTriangleSlope leftSlope( render.m_vec, vTop, CTriangleSlope::EST_LEFT );
+    CTriangleSlope rightSlope( render.m_vec, vTop, CTriangleSlope::EST_RIGHT );
 
     while( slopeCount > 0 )
     {
@@ -895,10 +895,10 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 ****************************************************************************/
 void CSoftwareRender::renderFixedFunction2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, float * pVBO, uint * pIBO, const CColor<float> & color, bool blendAlpha )
 {
-    CVertex2d * pVert = (CVertex2d *)pVBO;
+    CVertex * pVert = (CVertex *)pVBO;
 
     m_transVerts2D.resize( vertCount );
-    CVertex2d * pTrans = m_transVerts2D.data();
+    CVertex * pTrans = m_transVerts2D.data();
 
     for( uint i = 0; i < vertCount; ++i )
     {
@@ -1007,17 +1007,17 @@ void RenderTriStripFixedFunction2d( const CRender2d & render, int yMin, int yMax
     float e2x = render.m_vec[2].vert.x - render.m_vec[0].vert.x;
     float e2y = render.m_vec[2].vert.y - render.m_vec[0].vert.y;
 
-    CTriangleSlope2d::ESlopeType leftType  = CTriangleSlope2d::EST_LEFT;
-    CTriangleSlope2d::ESlopeType rightType = CTriangleSlope2d::EST_RIGHT;
+    CTriangleSlope::ESlopeType leftType  = CTriangleSlope::EST_LEFT;
+    CTriangleSlope::ESlopeType rightType = CTriangleSlope::EST_RIGHT;
 
     if( (e1x * e2y - e1y * e2x) < 0.0f )
     {
-        leftType  = CTriangleSlope2d::EST_RIGHT;
-        rightType = CTriangleSlope2d::EST_LEFT;
+        leftType  = CTriangleSlope::EST_RIGHT;
+        rightType = CTriangleSlope::EST_LEFT;
     }
 
-    CTriangleSlope2d leftSlope( render.m_vec, vTop, leftType );
-    CTriangleSlope2d rightSlope( render.m_vec, vTop, rightType );
+    CTriangleSlope leftSlope( render.m_vec, vTop, leftType );
+    CTriangleSlope rightSlope( render.m_vec, vTop, rightType );
 
     while( slopeCount > 0 )
     {
@@ -1152,7 +1152,7 @@ void RenderTriStripFixedFunction2d( const CRender2d & render, int yMin, int yMax
 
 void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, float * pVBO, uint * pIBO, const CColor<float> & color )
 {
-    CVertex2d * pVert = (CVertex2d *)pVBO;
+    CVertex * pVert = (CVertex *)pVBO;
 
     m_transVerts3D.resize( vertCount );
     TransVert * pTrans = m_transVerts3D.data();
@@ -1248,7 +1248,7 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint 
 
         if( clipCount < TRI ) continue;
 
-        CVertex3d projected[MAX_CLIP_VERTS];
+        CVertex projected[MAX_CLIP_VERTS];
         for( int j = 0; j < clipCount; ++j )
         {
             float oneOverW = 1.0f / clipped[j].w;
@@ -1340,8 +1340,8 @@ void RenderTriStripFixedFunction3d( const CRender3d & render, int yMin, int yMax
         if( render.m_vec[i].vert.y < render.m_vec[vTop].vert.y )
             vTop = i;
 
-    CTriangleSlope3d leftSlope( render.m_vec, vTop, CTriangleSlope3d::EST_LEFT );
-    CTriangleSlope3d rightSlope( render.m_vec, vTop, CTriangleSlope3d::EST_RIGHT );
+    CTriangleSlope leftSlope( render.m_vec, vTop, CTriangleSlope::EST_LEFT );
+    CTriangleSlope rightSlope( render.m_vec, vTop, CTriangleSlope::EST_RIGHT );
 
     while( slopeCount > 0 )
     {

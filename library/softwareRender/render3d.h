@@ -57,7 +57,7 @@ public:
     FragmentShaderFunc m_shader;
 
     // Three vertexes (screen-projected with 1/Z, U/Z, V/Z)
-    CVertex3d m_vec[TRI];
+    CVertex m_vec[TRI];
 
     // Cached triangle Y bounds for strip binning
     float m_triYMin;

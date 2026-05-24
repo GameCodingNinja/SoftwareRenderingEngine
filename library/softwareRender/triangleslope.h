@@ -2,7 +2,7 @@
 /************************************************************************
 *    FILE NAME:       triangleslope.h
 *
-*    DESCRIPTION:     Triangle slope class (templated on vertex type)
+*    DESCRIPTION:     Triangle slope class
 ************************************************************************/
 
 #ifndef __triangle_slope_h__
@@ -14,7 +14,6 @@
 // Game lib dependencies
 #include <common/vertex.h>
 
-template <typename VertexType>
 class CTriangleSlope
 {
 public:
@@ -26,7 +25,7 @@ public:
     };
 
     // Constructor
-    CTriangleSlope( const VertexType trans[], int vTop, ESlopeType slopeType ) :
+    CTriangleSlope( const CVertex trans[], int vTop, ESlopeType slopeType ) :
         m_length(0),
         y(0),
         m_pVert( trans ),
@@ -122,7 +121,7 @@ public:
     }
 
     // slope position
-    VertexType m_slope;
+    CVertex m_slope;
 
     // Length of slope
     int m_length;
@@ -163,7 +162,7 @@ private:
 private:
 
     // Pointer to projected verts
-    const VertexType * m_pVert;
+    const CVertex * m_pVert;
 
     // Top vert index
     int m_vTop;
@@ -172,16 +171,11 @@ private:
     int m_vNext;
 
     // step interpolation
-    VertexType m_step;
+    CVertex m_step;
 
     // The type of slope
     const ESlopeType m_slopeType;
 
 };
 
-// Convenience typedefs
-using CTriangleSlope2d = CTriangleSlope<CVertex2d>;
-using CTriangleSlope3d = CTriangleSlope<CVertex3d>;
-
 #endif
-

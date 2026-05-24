@@ -23,8 +23,8 @@ public:
     // Load an OBJ mesh file
     void load( const std::string & filePath );
 
-    // Flattened vertex data (one CVertex3d per unique v/vt/vn combo)
-    std::vector<CVertex3d> m_vertices;
+    // Flattened vertex data (one CVertex per unique v/vt/vn combo)
+    std::vector<CVertex> m_vertices;
 
     // Index data
     std::vector<uint> m_indices;

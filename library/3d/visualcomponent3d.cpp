@@ -20,7 +20,7 @@
 ************************************************************************/
 CVisualComponent3d::CVisualComponent3d( const CObjectData3D & objectData )
     : m_visualData( objectData.getVisualData() ),
-      m_vertexBufSize( sizeof(CVertex3d) ),
+      m_vertexBufSize( sizeof(CVertex) ),
       m_uvOffset( sizeof(CPoint<float>) ),
       m_pTexture( m_visualData.getTexture() ),
       m_color( m_visualData.getColor() ),

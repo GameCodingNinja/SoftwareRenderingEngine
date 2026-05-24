@@ -93,7 +93,7 @@ void CObjMeshLoader::load( const std::string & filePath )
                     }
 
                     // OBJ indices are 1-based
-                    CVertex3d vertex;
+                    CVertex vertex;
                     vertex.vert = positions[indices[0] - 1];
                     vertex.uv   = texCoords[indices[1] - 1];
                     vertex.norm  = normals[indices[2] - 1];

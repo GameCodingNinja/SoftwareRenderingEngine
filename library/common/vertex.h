@@ -11,7 +11,7 @@
 #include <common/point.h>
 #include <common/uv.h>
 
-class CVertex2d
+class CVertex
 {
 public:
 
@@ -20,20 +20,9 @@ public:
 
     // uv
     CUV<float> uv;
-};
-
-class CVertex3d
-{
-public:
-
-    // Verts
-    CPoint<float> vert;
 
     // Normal
     CPoint<float> norm;
-
-    // uv
-    CUV<float> uv;
 };
 
 #endif
