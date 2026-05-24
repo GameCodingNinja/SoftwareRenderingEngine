@@ -80,6 +80,34 @@ float * CVertBufMgr::createQuadVBO( const std::string & group, const std::string
 
 
 /************************************************************************
+*    desc:  Create a mesh VBO buffer
+************************************************************************/
+float * CVertBufMgr::createMeshVBO( const std::string & group, const std::string & name, float * vertexData, int sizeInBytes )
+{
+    // Create the map group if it doesn't already exist
+    auto mapMapIter = m_vertexBufMapMap.find( group );
+    if( mapMapIter == m_vertexBufMapMap.end() )
+            mapMapIter = m_vertexBufMapMap.insert( std::make_pair(group, std::map<const std::string, float *>()) ).first;
+
+    // See if this vertex buffer ID has already been loaded
+    auto mapIter = mapMapIter->second.find( name );
+
+    // If it's not found, create the vertex buffer and add it to the list
+    if( mapIter == mapMapIter->second.end() )
+    {
+        uint size = sizeInBytes / sizeof(float);
+        float * pVBO = new float[size];
+        std::memcpy( pVBO, vertexData, sizeInBytes );
+
+        // Insert the new vertex buffer info
+        mapIter = mapMapIter->second.insert( std::make_pair(name, pVBO) ).first;
+    }
+
+    return mapIter->second;
+}
+
+
+/************************************************************************
 *    desc:  Create a IBO buffer
 ************************************************************************/
 uint * CVertBufMgr::createIBO( const std::string & group, const std::string & name, uint indexData[], int sizeInBytes )

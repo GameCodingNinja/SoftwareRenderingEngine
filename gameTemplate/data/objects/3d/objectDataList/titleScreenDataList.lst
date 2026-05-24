@@ -3,9 +3,9 @@
   <!-- DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT DEFAULT -->
   <default  name="">
     <visual>
+      <texture file=""/>
       <mesh genType="quad">
         <quad uv.x1="0" uv.y1="0" uv.x2="1" uv.y2="1"/>
-        <texture file=""/>
         <mesh file=""/>
       </mesh>
       <color r="1" g="1" b="1" a="1"/>
@@ -33,8 +33,9 @@
 
     <object name="cube">
       <visual>
+        <texture file="data/textures/3d/cube.png"/>
         <mesh genType="mesh">
-          <mesh file="data/objects/3d/mesh/cube_multi.obj"/>
+          <mesh file="data/objects/3d/mesh/cube.obj"/>
           <shader name="default"/>
         </mesh>
       </visual>

@@ -58,7 +58,23 @@ void CObjectVisualData3D::loadFromNode( const XMLNode & objectNode )
         const XMLNode textureNode = visualNode.getChildNode("texture");
         if( !textureNode.isEmpty() )
         {
-            m_textureFileVec.push_back( textureNode.getAttribute( "file" ) );
+            // Clear any info from the default values
+            m_textureFileVec.clear();
+
+            if( textureNode.isAttributeSet("count") )
+            {
+                const uint count = std::atoi( textureNode.getAttribute( "count" ) );
+                const std::string file( textureNode.getAttribute( "file" ) );
+
+                m_textureFileVec.reserve( count );
+
+                for( uint i = 0; i < count; ++i )
+                    m_textureFileVec.push_back( NGenFunc::FormatString(file.c_str(), i) );
+            }
+            else
+            {
+                m_textureFileVec.push_back( textureNode.getAttribute( "file" ) );
+            }
         }
 
         // Get the mesh node
@@ -90,12 +106,19 @@ void CObjectVisualData3D::loadFromNode( const XMLNode & objectNode )
             {
                 m_meshFile = fileNode.getAttribute( "file" );
             }
+
+            // Shader defined inside mesh node
+            const XMLNode meshShaderNode = meshNode.getChildNode( "shader" );
+            if( !meshShaderNode.isEmpty() && meshShaderNode.isAttributeSet("name") )
+            {
+                m_shader = CShaderMgr::Instance().get( meshShaderNode.getAttribute("name") );
+            }
         }
 
         // Check for color
         m_color = NParseHelper::loadColor( visualNode, m_color );
 
-        // Check for a named shader
+        // Check for a named shader on the visual node (for quads)
         const XMLNode shaderNode = visualNode.getChildNode("shader");
         if( !shaderNode.isEmpty() && shaderNode.isAttributeSet("name") )
         {
@@ -160,36 +183,19 @@ void CObjectVisualData3D::createFromData( const std::string & group, CSize<int> 
     }
     else if( m_genType == NDefs::EGT_MESH_FILE && !m_meshFile.empty() )
     {
-        // Load the OBJ mesh file (also parses the .mtl file for texture paths)
-        CObjMeshData meshData = NObjMeshLoader::load( m_meshFile );
+        // Load the OBJ mesh file
+        CObjMeshLoader meshLoader;
+        meshLoader.load( m_meshFile );
 
-        // Allocate and copy vertex data
-        m_vertexCount = static_cast<int>(meshData.vertices.size());
-        m_pVBO = (float *)new CVertex3d[m_vertexCount];
-        std::memcpy( m_pVBO, meshData.vertices.data(), sizeof(CVertex3d) * m_vertexCount );
+        m_vertexCount = static_cast<int>(meshLoader.m_vertices.size());
+        m_indexCount = static_cast<int>(meshLoader.m_indices.size());
 
-        // Flatten all material group indices into one IBO
-        std::vector<uint> allIndices;
-        for( const auto & grp : meshData.groups )
-            allIndices.insert( allIndices.end(), grp.indices.begin(), grp.indices.end() );
+        // Store VBO/IBO in the vertex buffer manager using the file path as the name
+        m_pVBO = CVertBufMgr::Instance().createMeshVBO( group, m_meshFile,
+            (float *)meshLoader.m_vertices.data(), sizeof(CVertex3d) * m_vertexCount );
 
-        m_indexCount = static_cast<int>(allIndices.size());
-        m_pIBO = new uint[m_indexCount];
-        std::memcpy( m_pIBO, allIndices.data(), sizeof(uint) * m_indexCount );
-
-        // If no texture was defined in the XML, load textures from the MTL file
-        if( m_textureVec.empty() && !meshData.materialTextures.empty() )
-        {
-            for( const auto & grp : meshData.groups )
-            {
-                auto texIt = meshData.materialTextures.find( grp.material );
-                if( texIt != meshData.materialTextures.end() && !texIt->second.empty() )
-                {
-                    const CTexture & texture = CTextureMgr::Instance().load( group, texIt->second );
-                    m_textureVec.push_back( &texture );
-                }
-            }
-        }
+        m_pIBO = CVertBufMgr::Instance().createIBO( group, m_meshFile,
+            meshLoader.m_indices.data(), sizeof(uint) * m_indexCount );
     }
 
 }

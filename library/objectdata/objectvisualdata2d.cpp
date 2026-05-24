@@ -56,6 +56,9 @@ void CObjectVisualData2D::loadFromNode( const XMLNode & objectNode )
         const XMLNode textureNode = visualNode.getChildNode("texture");
         if( !textureNode.isEmpty() )
         {
+            // Clear any info from the default values
+            m_textureFileVec.clear();
+
             if( textureNode.isAttributeSet("count") )
             {
                 const uint count = std::atoi( textureNode.getAttribute( "count" ) );
@@ -70,7 +73,6 @@ void CObjectVisualData2D::loadFromNode( const XMLNode & objectNode )
             {
                 m_textureFileVec.push_back( textureNode.getAttribute( "file" ) );
             }
-
         }
 
         // Get the mesh node

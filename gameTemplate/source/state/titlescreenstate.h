@@ -47,7 +47,7 @@ private:
     CSprite m_background3;
     CSprite m_enemy;
     //CSprite m_logo;
-    //CSprite m_cube;
+    CSprite m_cube;
 
     // Allow for the state change
     bool m_allowStateChange;

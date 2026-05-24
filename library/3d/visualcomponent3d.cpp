@@ -32,14 +32,12 @@ CVisualComponent3d::CVisualComponent3d( const CObjectData3D & objectData )
 {
 }
 
-
 /************************************************************************
 *    desc:  destructer                                                             
 ************************************************************************/
 CVisualComponent3d::~CVisualComponent3d()
 {
 }
-
 
 /************************************************************************
 *    desc:  do the render
@@ -63,16 +61,13 @@ void CVisualComponent3d::render( const CMatrix & matrix )
     }
 }
 
-
 /************************************************************************
 *    desc:  Is this component active?
 ************************************************************************/
 bool CVisualComponent3d::isActive()
 {
     return (m_visualData.getGenerationType() != NDefs::EGT_NULL);
-
 }
-
 
 /************************************************************************
 *    desc:  Set/Get the color 
@@ -80,15 +75,12 @@ bool CVisualComponent3d::isActive()
 void CVisualComponent3d::setColor( const CColor<float> & color )
 {
     m_color = color;
-
 }
 
 const CColor<float> & CVisualComponent3d::getColor() const
 {
     return m_color;
-
 }
-
 
 /************************************************************************
 *    desc:  Set the texture ID from index
@@ -96,5 +88,4 @@ const CColor<float> & CVisualComponent3d::getColor() const
 void CVisualComponent3d::setTexture( uint index )
 {
     m_pTexture = m_visualData.getTexture( index );
-
 }

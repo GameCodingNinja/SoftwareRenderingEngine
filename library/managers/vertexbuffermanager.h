@@ -37,6 +37,9 @@ public:
     // Create a quad VBO buffers
     float * createQuadVBO( const std::string & group, const std::string & name, const CRect<float> & uv );
 
+    // Create a mesh VBO buffer
+    float * createMeshVBO( const std::string & group, const std::string & name, float * vertexData, int sizeInBytes );
+
     // Create a IBO buffer
     uint * createIBO( const std::string & group, const std::string & name, uint indexData[], int sizeInBytes );
 
