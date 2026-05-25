@@ -180,6 +180,17 @@ void CObjectVisualData3D::createFromData( const std::string & group, CSize<int> 
 
         // A quad has 6 indexes
         m_indexCount = 6;
+
+        // Build unique vert data — all 4 quad verts have unique positions
+        CVertex * pVertBase = (CVertex *)m_pVBO;
+        m_uniqueVerts.resize( m_vertexCount );
+        m_vertToUniqueVec.resize( m_vertexCount );
+
+        for( int i = 0; i < m_vertexCount; ++i )
+        {
+            m_uniqueVerts[i] = &pVertBase[i].vert;
+            m_vertToUniqueVec[i] = i;
+        }
     }
     else if( m_genType == NDefs::EGT_MESH_FILE && !m_meshFile.empty() )
     {

@@ -17,6 +17,7 @@
 #include <common/color.h>
 #include <common/point.h>
 #include <common/defs.h>
+#include <softwareRender/renderdefs.h>
 
 // Forward declaration(s)
 class CTexture;
@@ -45,6 +46,30 @@ public:
 
     // Set the texture from index
     void setTexture( uint index ) override;
+
+    // Get the texture
+    const CTexture * getTexture() const;
+
+    // Get the VBO
+    float * getVBO() const;
+
+    // Get the IBO
+    uint * getIBO() const;
+
+    // Get the vertex count
+    int getVertexCount() const;
+
+    // Get the index count
+    int getIndexCount() const;
+
+    // Get the shader function
+    FragmentShaderFunc getShader() const;
+
+    // Get blend alpha flag
+    bool getBlendAlpha() const;
+
+    // Is fixed function rendering
+    bool isFixedFunction() const;
 
 private:
 

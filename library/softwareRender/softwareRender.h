@@ -27,6 +27,8 @@
 class CTexture;
 class CMatrix;
 class IFrameBuffer;
+class CVisualComponent2d;
+class CVisualComponent3d;
 
 class CSoftwareRender
 {
@@ -43,16 +45,16 @@ public:
     void setSurface( IFrameBuffer * pFrameBuffer );
 
     // Render 2D (orthographic)
-    void render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, float * pVBO, uint * pIBO, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr );
+    void render2D( const CMatrix & matrix, const CVisualComponent2d & visualComponent );
 
     // Render 3D (perspective with z-buffer)
-    void render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, float * pVBO, uint * pIBO, const CColor<float> & color = CColor<float>(), FragmentShaderFunc shader = nullptr, const std::vector<CPoint<float>*> & uniqueVerts = {}, const std::vector<uint> & vertToUniqueVec = {} );
+    void render3D( const CMatrix & matrix, const CVisualComponent3d & visualComponent );
 
     // Render 2D fixed-function (orthographic, no shader)
-    void renderFixedFunction2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, float * pVBO, uint * pIBO, const CColor<float> & color = CColor<float>(), bool blendAlpha = false );
+    void renderFixedFunction2D( const CMatrix & matrix, const CVisualComponent2d & visualComponent );
 
     // Render 3D fixed-function (perspective with z-buffer, no shader)
-    void renderFixedFunction3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pTexture, float * pVBO, uint * pIBO, const CColor<float> & color = CColor<float>(), const std::vector<CPoint<float>*> & uniqueVerts = {}, const std::vector<uint> & vertToUniqueVec = {} );
+    void renderFixedFunction3D( const CMatrix & matrix, const CVisualComponent3d & visualComponent );
 
     // Clear the z-buffer
     void clearZBuffer();
@@ -65,12 +67,19 @@ private:
     // Destructor
     ~CSoftwareRender();
 
-    // Temporary struct to hold transformed but unprojected 3D vertex data
-    struct STransVert
+    // Struct for unique transformed positions
+    struct SUniqueVert
     {
         CPoint<float> pos;  // Clip-space position (x, y, z from matrix transform)
         float w;            // Clip-space W (represents -eye.z for PerspectiveFovRH)
-        float u, v;         // Raw UV (0-1)
+    };
+
+    // Struct for clipping interpolation (stack-local, not per-mesh)
+    struct SClipVert
+    {
+        CPoint<float> pos;
+        float w;
+        float u, v;
     };
 
 private:
@@ -84,16 +93,8 @@ private:
     // Z-buffer for 3D depth testing
     std::vector<int32_t> m_zBuffer;
 
-    // Struct for unique transformed positions
-    struct SUniqueVert
-    {
-        CPoint<float> pos;
-        float w;
-    };
-
     // Reusable scratch buffers for transformed vertices (avoids per-draw heap allocation)
     std::vector<CVertex> m_transVerts2D;
-    std::vector<STransVert> m_transVerts;
 
     // Reusable scratch buffer for unique transformed positions
     std::vector<SUniqueVert> m_transUniqueVerts;

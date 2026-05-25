@@ -61,9 +61,9 @@ void CVisualComponent2d::render( const CMatrix & matrix )
             finalMatrix *= matrix;
 
             if( m_fixedFunction )
-                CSoftwareRender::Instance().renderFixedFunction2D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_blendAlpha );
+                CSoftwareRender::Instance().renderFixedFunction2D( finalMatrix, *this );
             else
-                CSoftwareRender::Instance().render2D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_visualData.getShader() );
+                CSoftwareRender::Instance().render2D( finalMatrix, *this );
         }
     }
 
@@ -102,5 +102,76 @@ const CColor<float> & CVisualComponent2d::getColor() const
 void CVisualComponent2d::setTexture( uint index )
 {
     m_pTexture = m_visualData.getTexture( index );
+}
 
+
+/************************************************************************
+*    desc:  Get the texture
+************************************************************************/
+const CTexture * CVisualComponent2d::getTexture() const
+{
+    return m_pTexture;
+}
+
+
+/************************************************************************
+*    desc:  Get the VBO
+************************************************************************/
+float * CVisualComponent2d::getVBO() const
+{
+    return m_pVBO;
+}
+
+
+/************************************************************************
+*    desc:  Get the IBO
+************************************************************************/
+uint * CVisualComponent2d::getIBO() const
+{
+    return m_pIBO;
+}
+
+
+/************************************************************************
+*    desc:  Get the vertex count
+************************************************************************/
+int CVisualComponent2d::getVertexCount() const
+{
+    return m_vertexCount;
+}
+
+
+/************************************************************************
+*    desc:  Get the index count
+************************************************************************/
+int CVisualComponent2d::getIndexCount() const
+{
+    return m_IndexCount;
+}
+
+
+/************************************************************************
+*    desc:  Get the shader function
+************************************************************************/
+FragmentShaderFunc CVisualComponent2d::getShader() const
+{
+    return m_visualData.getShader();
+}
+
+
+/************************************************************************
+*    desc:  Get blend alpha flag
+************************************************************************/
+bool CVisualComponent2d::getBlendAlpha() const
+{
+    return m_blendAlpha;
+}
+
+
+/************************************************************************
+*    desc:  Is fixed function rendering
+************************************************************************/
+bool CVisualComponent2d::isFixedFunction() const
+{
+    return m_fixedFunction;
 }

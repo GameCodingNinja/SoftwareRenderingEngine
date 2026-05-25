@@ -57,9 +57,9 @@ void CVisualComponent3d::render( const CMatrix & matrix )
         finalMatrix *= matrix;
 
         if( m_fixedFunction )
-                CSoftwareRender::Instance().renderFixedFunction3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_uniqueVerts, m_vertToUniqueVec );
+                CSoftwareRender::Instance().renderFixedFunction3D( finalMatrix, *this );
         else
-                CSoftwareRender::Instance().render3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_visualData.getShader(), m_uniqueVerts, m_vertToUniqueVec );
+                CSoftwareRender::Instance().render3D( finalMatrix, *this );
     }
 }
 
@@ -90,4 +90,85 @@ const CColor<float> & CVisualComponent3d::getColor() const
 void CVisualComponent3d::setTexture( uint index )
 {
     m_pTexture = m_visualData.getTexture( index );
+}
+
+
+/************************************************************************
+*    desc:  Get the texture
+************************************************************************/
+const CTexture * CVisualComponent3d::getTexture() const
+{
+    return m_pTexture;
+}
+
+
+/************************************************************************
+*    desc:  Get the VBO
+************************************************************************/
+float * CVisualComponent3d::getVBO() const
+{
+    return m_pVBO;
+}
+
+
+/************************************************************************
+*    desc:  Get the IBO
+************************************************************************/
+uint * CVisualComponent3d::getIBO() const
+{
+    return m_pIBO;
+}
+
+
+/************************************************************************
+*    desc:  Get the vertex count
+************************************************************************/
+int CVisualComponent3d::getVertexCount() const
+{
+    return m_vertexCount;
+}
+
+
+/************************************************************************
+*    desc:  Get the index count
+************************************************************************/
+int CVisualComponent3d::getIndexCount() const
+{
+    return m_IndexCount;
+}
+
+
+/************************************************************************
+*    desc:  Get the unique verts
+************************************************************************/
+const std::vector<CPoint<float>*> & CVisualComponent3d::getUniqueVerts() const
+{
+    return m_uniqueVerts;
+}
+
+
+/************************************************************************
+*    desc:  Get the vertex to unique position mapping
+************************************************************************/
+const std::vector<uint> & CVisualComponent3d::getVertToUniqueVec() const
+{
+    return m_vertToUniqueVec;
+}
+
+
+/************************************************************************
+*    desc:  Get the shader function
+************************************************************************/
+FragmentShaderFunc CVisualComponent3d::getShader() const
+{
+    return m_visualData.getShader();
+}
+
+
+/************************************************************************
+*    desc:  Is fixed function rendering
+************************************************************************/
+bool CVisualComponent3d::isFixedFunction() const
+{
+    return m_fixedFunction;
 }

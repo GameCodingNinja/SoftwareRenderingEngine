@@ -20,6 +20,8 @@
 #include <utilities/genfunc.h>
 #include <utilities/exceptionhandling.h>
 #include <common/texture.h>
+#include <2d/visualcomponent2d.h>
+#include <3d/visualcomponent3d.h>
 #include <softwareRender/triangleslope.h>
 
 #include <system/iframebuffer.h>
@@ -119,9 +121,15 @@ void CSoftwareRender::setSurface( IFrameBuffer * pFrameBuffer )
 *   Perspective Projection: ((trans.vert[0].vert.x / trans.vert[0].vert.z) * m_halfSize.w) + m_halfSize.w + 0.5f;
 *   Orthographic Projection: (trans.vert[0].vert.x * m_halfSize.w) + m_halfSize.w + 0.5f;
 ****************************************************************************/
-void CSoftwareRender::render2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, float * pVBO, uint * pIBO, const CColor<float> & color, FragmentShaderFunc shader )
+void CSoftwareRender::render2D( const CMatrix & matrix, const CVisualComponent2d & visualComponent )
 {
-    CVertex * pVert = (CVertex *)pVBO;
+    CVertex * pVert = (CVertex *)visualComponent.getVBO();
+    const uint vertCount = visualComponent.getVertexCount();
+    const uint indexCount = visualComponent.getIndexCount();
+    uint * pIBO = visualComponent.getIBO();
+    const CTexture * pText = visualComponent.getTexture();
+    const CColor<float> & color = visualComponent.getColor();
+    FragmentShaderFunc shader = visualComponent.getShader();
 
     m_transVerts2D.resize( vertCount );
     CVertex * pTrans = m_transVerts2D.data();
@@ -404,12 +412,16 @@ void CSoftwareRender::clearZBuffer()
 *          the near plane (W >= nearClip), following the legacy tri3D approach.
 *          Clipping is done in clip space before projection.
 ****************************************************************************/
-void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, float * pVBO, uint * pIBO, const CColor<float> & color, FragmentShaderFunc shader, const std::vector<CPoint<float>*> & uniqueVerts, const std::vector<uint> & vertToUniqueVec )
+void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d & visualComponent )
 {
-    CVertex * pVert = (CVertex *)pVBO;
-
-    m_transVerts.resize( vertCount );
-    STransVert * pTrans = m_transVerts.data();
+    CVertex * pVert = (CVertex *)visualComponent.getVBO();
+    const uint indexCount = visualComponent.getIndexCount();
+    uint * pIBO = visualComponent.getIBO();
+    const CTexture * pText = visualComponent.getTexture();
+    const std::vector<CPoint<float>*> & uniqueVerts = visualComponent.getUniqueVerts();
+    const std::vector<uint> & vertToUniqueVec = visualComponent.getVertToUniqueVec();
+    const CColor<float> & color = visualComponent.getColor();
+    FragmentShaderFunc shader = visualComponent.getShader();
 
     // Get raw matrix data for W computation
     const float * mat = matrix();
@@ -426,66 +438,28 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
     const __m128 wRow = _mm_set_ps( mat[CMatrix::m33], mat[CMatrix::m23], mat[CMatrix::m13], mat[CMatrix::m03] );
 #endif
 
-    // Transform only unique vertex positions if available
-    if( !uniqueVerts.empty() )
-    {
-        const uint uniqueCount = static_cast<uint>(uniqueVerts.size());
-        m_transUniqueVerts.resize( uniqueCount );
+    // Transform only unique vertex positions
+    const uint uniqueCount = static_cast<uint>(uniqueVerts.size());
+    m_transUniqueVerts.resize( uniqueCount );
 
-        for( uint i = 0; i < uniqueCount; ++i )
-        {
-            matrix.transform( m_transUniqueVerts[i].pos, *uniqueVerts[i] );
+    for( uint i = 0; i < uniqueCount; ++i )
+    {
+        matrix.transform( m_transUniqueVerts[i].pos, *uniqueVerts[i] );
 
 #ifdef MATRIX_USE_SSE
-            // Compute W via SSE: (x * m03) + (y * m13) + (z * m23) + m33
-            __m128 vert = _mm_set_ps( 1.0f, uniqueVerts[i]->z, uniqueVerts[i]->y, uniqueVerts[i]->x );
-            __m128 mul = _mm_mul_ps( vert, wRow );
-            __m128 shuf1 = _mm_movehl_ps( mul, mul );
-            __m128 sum1 = _mm_add_ps( mul, shuf1 );
-            __m128 shuf2 = _mm_shuffle_ps( sum1, sum1, _MM_SHUFFLE(0,0,0,1) );
-            m_transUniqueVerts[i].w = _mm_cvtss_f32( _mm_add_ss( sum1, shuf2 ) );
+        // Compute W via SSE: (x * m03) + (y * m13) + (z * m23) + m33
+        __m128 vert = _mm_set_ps( 1.0f, uniqueVerts[i]->z, uniqueVerts[i]->y, uniqueVerts[i]->x );
+        __m128 mul = _mm_mul_ps( vert, wRow );
+        __m128 shuf1 = _mm_movehl_ps( mul, mul );
+        __m128 sum1 = _mm_add_ps( mul, shuf1 );
+        __m128 shuf2 = _mm_shuffle_ps( sum1, sum1, _MM_SHUFFLE(0,0,0,1) );
+        m_transUniqueVerts[i].w = _mm_cvtss_f32( _mm_add_ss( sum1, shuf2 ) );
 #else
-            m_transUniqueVerts[i].w = ( uniqueVerts[i]->x * mat[CMatrix::m03] )
-                                    + ( uniqueVerts[i]->y * mat[CMatrix::m13] )
-                                    + ( uniqueVerts[i]->z * mat[CMatrix::m23] )
-                                    + mat[CMatrix::m33];
+        m_transUniqueVerts[i].w = ( uniqueVerts[i]->x * mat[CMatrix::m03] )
+                                + ( uniqueVerts[i]->y * mat[CMatrix::m13] )
+                                + ( uniqueVerts[i]->z * mat[CMatrix::m23] )
+                                + mat[CMatrix::m33];
 #endif
-        }
-
-        // Build per-vertex STransVert from unique transforms + per-vertex UVs
-        for( uint i = 0; i < vertCount; ++i )
-        {
-            const uint uniqueIdx = vertToUniqueVec[i];
-            pTrans[i].pos = m_transUniqueVerts[uniqueIdx].pos;
-            pTrans[i].w   = m_transUniqueVerts[uniqueIdx].w;
-            pTrans[i].u   = pVert[i].uv.u;
-            pTrans[i].v   = pVert[i].uv.v;
-        }
-    }
-    else
-    {
-        for( uint i = 0; i < vertCount; ++i )
-        {
-            matrix.transform( pTrans[i].pos, pVert[i].vert );
-
-#ifdef MATRIX_USE_SSE
-            // Compute W via SSE: (x * m03) + (y * m13) + (z * m23) + m33
-            __m128 vert = _mm_set_ps( 1.0f, pVert[i].vert.z, pVert[i].vert.y, pVert[i].vert.x );
-            __m128 mul = _mm_mul_ps( vert, wRow );
-            __m128 shuf1 = _mm_movehl_ps( mul, mul );
-            __m128 sum1 = _mm_add_ps( mul, shuf1 );
-            __m128 shuf2 = _mm_shuffle_ps( sum1, sum1, _MM_SHUFFLE(0,0,0,1) );
-            pTrans[i].w = _mm_cvtss_f32( _mm_add_ss( sum1, shuf2 ) );
-#else
-            pTrans[i].w = ( pVert[i].vert.x * mat[CMatrix::m03] )
-                        + ( pVert[i].vert.y * mat[CMatrix::m13] )
-                        + ( pVert[i].vert.z * mat[CMatrix::m23] )
-                        + mat[CMatrix::m33];
-#endif
-
-            pTrans[i].u = pVert[i].uv.u;
-            pTrans[i].v = pVert[i].uv.v;
-        }
     }
 
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per mesh
@@ -498,10 +472,17 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
 
     for( int i = 0; i < triCount; ++i )
     {
-        // Get the three transformed (unprojected) verts for this triangle
-        STransVert triVerts[TRI];
+        // Build clip verts from unique transforms + pVert UVs
+        SClipVert triVerts[TRI];
         for( int j = 0; j < TRI; ++j )
-            triVerts[j] = pTrans[ pIBO[vIndex++] ];
+        {
+            uint idx = pIBO[vIndex++];
+            const SUniqueVert & vert = m_transUniqueVerts[ vertToUniqueVec[idx] ];
+            triVerts[j].pos = vert.pos;
+            triVerts[j].w   = vert.w;
+            triVerts[j].u   = pVert[idx].uv.u;
+            triVerts[j].v   = pVert[idx].uv.v;
+        }
 
         // Count how many verts are behind the near clip plane
         int behindCount = 0;
@@ -514,7 +495,7 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const uint vertCount, co
             continue;
 
         // Clipped output verts
-        STransVert clipped[MAX_CLIP_VERTS];
+        SClipVert clipped[MAX_CLIP_VERTS];
         int clipCount = 0;
 
         if( behindCount == 0 )
@@ -947,9 +928,15 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
 /***************************************************************************
 *   desc:  Render 2D fixed-function (orthographic, no shader)
 ****************************************************************************/
-void CSoftwareRender::renderFixedFunction2D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, float * pVBO, uint * pIBO, const CColor<float> & color, bool blendAlpha )
+void CSoftwareRender::renderFixedFunction2D( const CMatrix & matrix, const CVisualComponent2d & visualComponent )
 {
-    CVertex * pVert = (CVertex *)pVBO;
+    CVertex * pVert = (CVertex *)visualComponent.getVBO();
+    const uint vertCount = visualComponent.getVertexCount();
+    const uint indexCount = visualComponent.getIndexCount();
+    uint * pIBO = visualComponent.getIBO();
+    const CTexture * pText = visualComponent.getTexture();
+    const CColor<float> & color = visualComponent.getColor();
+    bool blendAlpha = visualComponent.getBlendAlpha();
 
     m_transVerts2D.resize( vertCount );
     CVertex * pTrans = m_transVerts2D.data();
@@ -1204,12 +1191,16 @@ void RenderTriStripFixedFunction2d( const CRender2d & render, int yMin, int yMax
 }
 
 
-void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint vertCount, const uint indexCount, const CTexture * pText, float * pVBO, uint * pIBO, const CColor<float> & color, const std::vector<CPoint<float>*> & uniqueVerts, const std::vector<uint> & vertToUniqueVec )
+void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const CVisualComponent3d & visualComponent )
 {
-    CVertex * pVert = (CVertex *)pVBO;
+    CVertex * pVert = (CVertex *)visualComponent.getVBO();
+    const uint indexCount = visualComponent.getIndexCount();
+    uint * pIBO = visualComponent.getIBO();
+    const CTexture * pText = visualComponent.getTexture();
+    const std::vector<CPoint<float>*> & uniqueVerts = visualComponent.getUniqueVerts();
+    const std::vector<uint> & vertToUniqueVec = visualComponent.getVertToUniqueVec();
+    const CColor<float> & color = visualComponent.getColor();
 
-    m_transVerts.resize( vertCount );
-    STransVert * pTrans = m_transVerts.data();
     const float * mat = matrix();
     const float nearClip = CSettings::Instance().getMinZdist();
     const int MAX_CLIP_VERTS = 4;
@@ -1219,66 +1210,28 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint 
     const __m128 wRow = _mm_set_ps( mat[CMatrix::m33], mat[CMatrix::m23], mat[CMatrix::m13], mat[CMatrix::m03] );
 #endif
 
-    // Transform only unique vertex positions if available
-    if( !uniqueVerts.empty() )
-    {
-        const uint uniqueCount = static_cast<uint>(uniqueVerts.size());
-        m_transUniqueVerts.resize( uniqueCount );
+    // Transform only unique vertex positions
+    const uint uniqueCount = static_cast<uint>(uniqueVerts.size());
+    m_transUniqueVerts.resize( uniqueCount );
 
-        for( uint i = 0; i < uniqueCount; ++i )
-        {
-            matrix.transform( m_transUniqueVerts[i].pos, *uniqueVerts[i] );
+    for( uint i = 0; i < uniqueCount; ++i )
+    {
+        matrix.transform( m_transUniqueVerts[i].pos, *uniqueVerts[i] );
 
 #ifdef MATRIX_USE_SSE
-            // Compute W via SSE: (x * m03) + (y * m13) + (z * m23) + m33
-            __m128 vert = _mm_set_ps( 1.0f, uniqueVerts[i]->z, uniqueVerts[i]->y, uniqueVerts[i]->x );
-            __m128 mul = _mm_mul_ps( vert, wRow );
-            __m128 shuf1 = _mm_movehl_ps( mul, mul );
-            __m128 sum1 = _mm_add_ps( mul, shuf1 );
-            __m128 shuf2 = _mm_shuffle_ps( sum1, sum1, _MM_SHUFFLE(0,0,0,1) );
-            m_transUniqueVerts[i].w = _mm_cvtss_f32( _mm_add_ss( sum1, shuf2 ) );
+        // Compute W via SSE: (x * m03) + (y * m13) + (z * m23) + m33
+        __m128 vert = _mm_set_ps( 1.0f, uniqueVerts[i]->z, uniqueVerts[i]->y, uniqueVerts[i]->x );
+        __m128 mul = _mm_mul_ps( vert, wRow );
+        __m128 shuf1 = _mm_movehl_ps( mul, mul );
+        __m128 sum1 = _mm_add_ps( mul, shuf1 );
+        __m128 shuf2 = _mm_shuffle_ps( sum1, sum1, _MM_SHUFFLE(0,0,0,1) );
+        m_transUniqueVerts[i].w = _mm_cvtss_f32( _mm_add_ss( sum1, shuf2 ) );
 #else
-            m_transUniqueVerts[i].w = ( uniqueVerts[i]->x * mat[CMatrix::m03] )
-                                    + ( uniqueVerts[i]->y * mat[CMatrix::m13] )
-                                    + ( uniqueVerts[i]->z * mat[CMatrix::m23] )
-                                    + mat[CMatrix::m33];
+        m_transUniqueVerts[i].w = ( uniqueVerts[i]->x * mat[CMatrix::m03] )
+                                + ( uniqueVerts[i]->y * mat[CMatrix::m13] )
+                                + ( uniqueVerts[i]->z * mat[CMatrix::m23] )
+                                + mat[CMatrix::m33];
 #endif
-        }
-
-        // Build per-vertex STransVert from unique transforms + per-vertex UVs
-        for( uint i = 0; i < vertCount; ++i )
-        {
-            const uint uniqueIdx = vertToUniqueVec[i];
-            pTrans[i].pos = m_transUniqueVerts[uniqueIdx].pos;
-            pTrans[i].w   = m_transUniqueVerts[uniqueIdx].w;
-            pTrans[i].u   = pVert[i].uv.u;
-            pTrans[i].v   = pVert[i].uv.v;
-        }
-    }
-    else
-    {
-        for( uint i = 0; i < vertCount; ++i )
-        {
-            matrix.transform( pTrans[i].pos, pVert[i].vert );
-
-#ifdef MATRIX_USE_SSE
-            // Compute W via SSE: (x * m03) + (y * m13) + (z * m23) + m33
-            __m128 vert = _mm_set_ps( 1.0f, pVert[i].vert.z, pVert[i].vert.y, pVert[i].vert.x );
-            __m128 mul = _mm_mul_ps( vert, wRow );
-            __m128 shuf1 = _mm_movehl_ps( mul, mul );
-            __m128 sum1 = _mm_add_ps( mul, shuf1 );
-            __m128 shuf2 = _mm_shuffle_ps( sum1, sum1, _MM_SHUFFLE(0,0,0,1) );
-            pTrans[i].w = _mm_cvtss_f32( _mm_add_ss( sum1, shuf2 ) );
-#else
-            pTrans[i].w = ( pVert[i].vert.x * mat[CMatrix::m03] )
-                        + ( pVert[i].vert.y * mat[CMatrix::m13] )
-                        + ( pVert[i].vert.z * mat[CMatrix::m23] )
-                        + mat[CMatrix::m33];
-#endif
-
-            pTrans[i].u = pVert[i].uv.u;
-            pTrans[i].v = pVert[i].uv.v;
-        }
     }
 
     bool applyColor = false;
@@ -1293,9 +1246,17 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint 
 
     for( int i = 0; i < triCount; ++i )
     {
-        STransVert triVerts[TRI];
+        // Build clip verts from unique transforms + pVert UVs
+        SClipVert triVerts[TRI];
         for( int j = 0; j < TRI; ++j )
-            triVerts[j] = pTrans[ pIBO[vIndex++] ];
+        {
+            uint idx = pIBO[vIndex++];
+            const SUniqueVert & vert = m_transUniqueVerts[ vertToUniqueVec[idx] ];
+            triVerts[j].pos = vert.pos;
+            triVerts[j].w   = vert.w;
+            triVerts[j].u   = pVert[idx].uv.u;
+            triVerts[j].v   = pVert[idx].uv.v;
+        }
 
         int behindCount = 0;
         for( int j = 0; j < TRI; ++j )
@@ -1303,7 +1264,7 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const uint 
 
         if( behindCount == TRI ) continue;
 
-        STransVert clipped[MAX_CLIP_VERTS];
+        SClipVert clipped[MAX_CLIP_VERTS];
         int clipCount = 0;
 
         if( behindCount == 0 )
