@@ -42,7 +42,7 @@ CTitleScreenState::CTitleScreenState()
     m_enemy.setPos( CPoint<float>( -200,0,0) );
     m_logo.setPos( CPoint<float>( -1.5, 0, -6) );
     m_logo.setScale( CPoint<float>(2, 2, 2) );
-    m_cube.setPos( CPoint<float>( 1.5, 0, -6) );
+    m_cube.setPos( CPoint<float>( 1.4, 0, -6) );
     m_cube.setScale( CPoint<float>(.8, .8, .8) );
 
     m_background.setRot( CPoint<float>(180,0,0) );

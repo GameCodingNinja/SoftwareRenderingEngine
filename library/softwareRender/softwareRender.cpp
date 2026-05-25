@@ -472,23 +472,17 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d
 
     for( int i = 0; i < triCount; ++i )
     {
-        // Build clip verts from unique transforms + pVert UVs
-        SClipVert triVerts[TRI];
-        for( int j = 0; j < TRI; ++j )
-        {
-            uint idx = pIBO[vIndex++];
-            const SUniqueVert & vert = m_transUniqueVerts[ vertToUniqueVec[idx] ];
-            triVerts[j].pos = vert.pos;
-            triVerts[j].w   = vert.w;
-            triVerts[j].u   = pVert[idx].uv.u;
-            triVerts[j].v   = pVert[idx].uv.v;
-        }
+        // Get IBO indices for this triangle
+        const uint iboIdx[TRI] = { pIBO[vIndex], pIBO[vIndex+1], pIBO[vIndex+2] };
+        vIndex += TRI;
+
+        // Look up transformed unique verts directly
+        const SUniqueVert & v0 = m_transUniqueVerts[ vertToUniqueVec[iboIdx[0]] ];
+        const SUniqueVert & v1 = m_transUniqueVerts[ vertToUniqueVec[iboIdx[1]] ];
+        const SUniqueVert & v2 = m_transUniqueVerts[ vertToUniqueVec[iboIdx[2]] ];
 
         // Count how many verts are behind the near clip plane
-        int behindCount = 0;
-        for( int j = 0; j < TRI; ++j )
-            if( triVerts[j].w < nearClip )
-                ++behindCount;
+        int behindCount = (v0.w < nearClip) + (v1.w < nearClip) + (v2.w < nearClip);
 
         // All verts behind near plane — skip entirely
         if( behindCount == TRI )
@@ -500,68 +494,98 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d
 
         if( behindCount == 0 )
         {
-            // No clipping needed — all verts in front of the near plane
-            clipCount = TRI;
+            // No clipping needed — project directly from unique verts + pVert UVs
+            CVertex projected[TRI];
             for( int j = 0; j < TRI; ++j )
-                clipped[j] = triVerts[j];
-        }
-        else
-        {
-            // Sutherland-Hodgman clip against near plane (W >= nearClip)
-            // Following the legacy tri3D ClipProjectXYZ approach
-            int startI = TRI - 1;
-
-            for( int endI = 0; endI < TRI; ++endI )
             {
-                bool startInside = (triVerts[startI].w >= nearClip);
-                bool endInside   = (triVerts[endI].w >= nearClip);
+                const SUniqueVert & uv = m_transUniqueVerts[ vertToUniqueVec[iboIdx[j]] ];
+                float oneOverW = 1.0f / uv.w;
 
-                if( startInside )
+                projected[j].vert.x = (uv.pos.x * oneOverW * m_halfScreen.w) + m_halfScreen.w;
+                projected[j].vert.y = (uv.pos.y * oneOverW * m_halfScreen.h) + m_halfScreen.h;
+                projected[j].vert.z = oneOverW;
+                projected[j].uv.u = pVert[iboIdx[j]].uv.u * oneOverW;
+                projected[j].uv.v = pVert[iboIdx[j]].uv.v * oneOverW;
+            }
+
+            CRender3d render3d( pText, &m_surfaceData, m_zBuffer.data(), color32, shader );
+            render3d.m_vec[0] = projected[0];
+            render3d.m_vec[1] = projected[1];
+            render3d.m_vec[2] = projected[2];
+
+            if( !render3d.Cull( m_surfaceData.w, m_surfaceData.h ) )
+            {
+                CalcTriYBounds( render3d );
+                triList.push_back( render3d );
+            }
+
+            continue;
+        }
+
+        // Build clip verts only when clipping is needed
+        const SUniqueVert * triUV[TRI] = { &v0, &v1, &v2 };
+        SClipVert triVerts[TRI];
+        for( int j = 0; j < TRI; ++j )
+        {
+            triVerts[j].pos = triUV[j]->pos;
+            triVerts[j].w   = triUV[j]->w;
+            triVerts[j].u   = pVert[iboIdx[j]].uv.u;
+            triVerts[j].v   = pVert[iboIdx[j]].uv.v;
+        }
+
+        // Sutherland-Hodgman clip against near plane (W >= nearClip)
+        // Following the legacy tri3D ClipProjectXYZ approach
+        int startI = TRI - 1;
+
+        for( int endI = 0; endI < TRI; ++endI )
+        {
+            bool startInside = (triVerts[startI].w >= nearClip);
+            bool endInside   = (triVerts[endI].w >= nearClip);
+
+            if( startInside )
+            {
+                if( endInside )
                 {
-                    if( endInside )
-                    {
-                        // Case 1: Both inside — output end vertex
-                        clipped[clipCount++] = triVerts[endI];
-                    }
-                    else
-                    {
-                        // Case 2: Leaving view volume — output intersection
-                        // p = (nearClip - startW) / (endW - startW)
-                        float deltaW = triVerts[endI].w - triVerts[startI].w;
-                        float p = (nearClip - triVerts[startI].w) / deltaW;
-
-                        clipped[clipCount].pos.x = triVerts[startI].pos.x + (triVerts[endI].pos.x - triVerts[startI].pos.x) * p;
-                        clipped[clipCount].pos.y = triVerts[startI].pos.y + (triVerts[endI].pos.y - triVerts[startI].pos.y) * p;
-                        clipped[clipCount].pos.z = triVerts[startI].pos.z + (triVerts[endI].pos.z - triVerts[startI].pos.z) * p;
-                        clipped[clipCount].w = nearClip;
-                        clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
-                        clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
-                        ++clipCount;
-                    }
+                    // Case 1: Both inside — output end vertex
+                    clipped[clipCount++] = triVerts[endI];
                 }
                 else
                 {
-                    if( endInside )
-                    {
-                        // Case 3: Entering view volume — output intersection + end vertex
-                        float deltaW = triVerts[endI].w - triVerts[startI].w;
-                        float p = (nearClip - triVerts[startI].w) / deltaW;
+                    // Case 2: Leaving view volume — output intersection
+                    float deltaW = triVerts[endI].w - triVerts[startI].w;
+                    float p = (nearClip - triVerts[startI].w) / deltaW;
 
-                        clipped[clipCount].pos.x = triVerts[startI].pos.x + (triVerts[endI].pos.x - triVerts[startI].pos.x) * p;
-                        clipped[clipCount].pos.y = triVerts[startI].pos.y + (triVerts[endI].pos.y - triVerts[startI].pos.y) * p;
-                        clipped[clipCount].pos.z = triVerts[startI].pos.z + (triVerts[endI].pos.z - triVerts[startI].pos.z) * p;
-                        clipped[clipCount].w = nearClip;
-                        clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
-                        clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
-                        ++clipCount;
-
-                        clipped[clipCount++] = triVerts[endI];
-                    }
-                    // Case 4: Both outside — output nothing
+                    clipped[clipCount].pos.x = triVerts[startI].pos.x + (triVerts[endI].pos.x - triVerts[startI].pos.x) * p;
+                    clipped[clipCount].pos.y = triVerts[startI].pos.y + (triVerts[endI].pos.y - triVerts[startI].pos.y) * p;
+                    clipped[clipCount].pos.z = triVerts[startI].pos.z + (triVerts[endI].pos.z - triVerts[startI].pos.z) * p;
+                    clipped[clipCount].w = nearClip;
+                    clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
+                    clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
+                    ++clipCount;
                 }
-
-                startI = endI;
             }
+            else
+            {
+                if( endInside )
+                {
+                    // Case 3: Entering view volume — output intersection + end vertex
+                    float deltaW = triVerts[endI].w - triVerts[startI].w;
+                    float p = (nearClip - triVerts[startI].w) / deltaW;
+
+                    clipped[clipCount].pos.x = triVerts[startI].pos.x + (triVerts[endI].pos.x - triVerts[startI].pos.x) * p;
+                    clipped[clipCount].pos.y = triVerts[startI].pos.y + (triVerts[endI].pos.y - triVerts[startI].pos.y) * p;
+                    clipped[clipCount].pos.z = triVerts[startI].pos.z + (triVerts[endI].pos.z - triVerts[startI].pos.z) * p;
+                    clipped[clipCount].w = nearClip;
+                    clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
+                    clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
+                    ++clipCount;
+
+                    clipped[clipCount++] = triVerts[endI];
+                }
+                // Case 4: Both outside — output nothing
+            }
+
+            startI = endI;
         }
 
         // Skip degenerate results
@@ -576,9 +600,9 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d
 
             projected[j].vert.x = (clipped[j].pos.x * oneOverW * m_halfScreen.w) + m_halfScreen.w;
             projected[j].vert.y = (clipped[j].pos.y * oneOverW * m_halfScreen.h) + m_halfScreen.h;
-            projected[j].vert.z = oneOverW;              // 1/W for z-buffer
-            projected[j].uv.u = clipped[j].u * oneOverW; // U/W
-            projected[j].uv.v = clipped[j].v * oneOverW; // V/W
+            projected[j].vert.z = oneOverW;
+            projected[j].uv.u = clipped[j].u * oneOverW;
+            projected[j].uv.v = clipped[j].v * oneOverW;
         }
 
         // Fan-triangulate the clipped polygon (3 verts = 1 tri, 4 verts = 2 tris)
@@ -1246,60 +1270,79 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const CVisu
 
     for( int i = 0; i < triCount; ++i )
     {
-        // Build clip verts from unique transforms + pVert UVs
-        SClipVert triVerts[TRI];
-        for( int j = 0; j < TRI; ++j )
-        {
-            uint idx = pIBO[vIndex++];
-            const SUniqueVert & vert = m_transUniqueVerts[ vertToUniqueVec[idx] ];
-            triVerts[j].pos = vert.pos;
-            triVerts[j].w   = vert.w;
-            triVerts[j].u   = pVert[idx].uv.u;
-            triVerts[j].v   = pVert[idx].uv.v;
-        }
+        // Get IBO indices for this triangle
+        const uint iboIdx[TRI] = { pIBO[vIndex], pIBO[vIndex+1], pIBO[vIndex+2] };
+        vIndex += TRI;
 
-        int behindCount = 0;
-        for( int j = 0; j < TRI; ++j )
-            if( triVerts[j].w < nearClip ) ++behindCount;
+        // Look up transformed unique verts directly
+        const SUniqueVert & v0 = m_transUniqueVerts[ vertToUniqueVec[iboIdx[0]] ];
+        const SUniqueVert & v1 = m_transUniqueVerts[ vertToUniqueVec[iboIdx[1]] ];
+        const SUniqueVert & v2 = m_transUniqueVerts[ vertToUniqueVec[iboIdx[2]] ];
+
+        // Count how many verts are behind the near clip plane
+        int behindCount = (v0.w < nearClip) + (v1.w < nearClip) + (v2.w < nearClip);
 
         if( behindCount == TRI ) continue;
 
+        // Clipped output verts
         SClipVert clipped[MAX_CLIP_VERTS];
         int clipCount = 0;
 
         if( behindCount == 0 )
         {
-            clipCount = TRI;
-            for( int j = 0; j < TRI; ++j ) clipped[j] = triVerts[j];
-        }
-        else
-        {
-            int startI = TRI - 1;
-            for( int endI = 0; endI < TRI; ++endI )
+            // No clipping needed — project directly from unique verts + pVert UVs
+            CVertex projected[TRI];
+            for( int j = 0; j < TRI; ++j )
             {
-                bool startInside = (triVerts[startI].w >= nearClip);
-                bool endInside   = (triVerts[endI].w >= nearClip);
+                const SUniqueVert & uv = m_transUniqueVerts[ vertToUniqueVec[iboIdx[j]] ];
+                float oneOverW = 1.0f / uv.w;
 
-                if( startInside )
+                projected[j].vert.x = (uv.pos.x * oneOverW * m_halfScreen.w) + m_halfScreen.w;
+                projected[j].vert.y = (uv.pos.y * oneOverW * m_halfScreen.h) + m_halfScreen.h;
+                projected[j].vert.z = oneOverW;
+                projected[j].uv.u = pVert[iboIdx[j]].uv.u * oneOverW;
+                projected[j].uv.v = pVert[iboIdx[j]].uv.v * oneOverW;
+            }
+
+            CRender3d render3d( pText, &m_surfaceData, m_zBuffer.data(), color32, applyColor );
+            render3d.m_vec[0] = projected[0];
+            render3d.m_vec[1] = projected[1];
+            render3d.m_vec[2] = projected[2];
+
+            if( !render3d.Cull( m_surfaceData.w, m_surfaceData.h ) )
+            {
+                CalcTriYBounds( render3d );
+                triList.push_back( render3d );
+            }
+
+            continue;
+        }
+
+        // Build clip verts only when clipping is needed
+        const SUniqueVert * triUV[TRI] = { &v0, &v1, &v2 };
+        SClipVert triVerts[TRI];
+        for( int j = 0; j < TRI; ++j )
+        {
+            triVerts[j].pos = triUV[j]->pos;
+            triVerts[j].w   = triUV[j]->w;
+            triVerts[j].u   = pVert[iboIdx[j]].uv.u;
+            triVerts[j].v   = pVert[iboIdx[j]].uv.v;
+        }
+
+        // Sutherland-Hodgman clip against near plane (W >= nearClip)
+        int startI = TRI - 1;
+        for( int endI = 0; endI < TRI; ++endI )
+        {
+            bool startInside = (triVerts[startI].w >= nearClip);
+            bool endInside   = (triVerts[endI].w >= nearClip);
+
+            if( startInside )
+            {
+                if( endInside )
                 {
-                    if( endInside )
-                    {
-                        clipped[clipCount++] = triVerts[endI];
-                    }
-                    else
-                    {
-                        float deltaW = triVerts[endI].w - triVerts[startI].w;
-                        float p = (nearClip - triVerts[startI].w) / deltaW;
-                        clipped[clipCount].pos.x = triVerts[startI].pos.x + (triVerts[endI].pos.x - triVerts[startI].pos.x) * p;
-                        clipped[clipCount].pos.y = triVerts[startI].pos.y + (triVerts[endI].pos.y - triVerts[startI].pos.y) * p;
-                        clipped[clipCount].pos.z = triVerts[startI].pos.z + (triVerts[endI].pos.z - triVerts[startI].pos.z) * p;
-                        clipped[clipCount].w = nearClip;
-                        clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
-                        clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
-                        ++clipCount;
-                    }
+                    clipped[clipCount++] = triVerts[endI];
                 }
-                else if( endInside )
+                else
                 {
                     float deltaW = triVerts[endI].w - triVerts[startI].w;
                     float p = (nearClip - triVerts[startI].w) / deltaW;
@@ -1310,11 +1353,23 @@ void CSoftwareRender::renderFixedFunction3D( const CMatrix & matrix, const CVisu
                     clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
                     clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
                     ++clipCount;
-                    clipped[clipCount++] = triVerts[endI];
                 }
-
-                startI = endI;
             }
+            else if( endInside )
+            {
+                float deltaW = triVerts[endI].w - triVerts[startI].w;
+                float p = (nearClip - triVerts[startI].w) / deltaW;
+                clipped[clipCount].pos.x = triVerts[startI].pos.x + (triVerts[endI].pos.x - triVerts[startI].pos.x) * p;
+                clipped[clipCount].pos.y = triVerts[startI].pos.y + (triVerts[endI].pos.y - triVerts[startI].pos.y) * p;
+                clipped[clipCount].pos.z = triVerts[startI].pos.z + (triVerts[endI].pos.z - triVerts[startI].pos.z) * p;
+                clipped[clipCount].w = nearClip;
+                clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
+                clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
+                ++clipCount;
+                clipped[clipCount++] = triVerts[endI];
+            }
+
+            startI = endI;
         }
 
         if( clipCount < TRI ) continue;
