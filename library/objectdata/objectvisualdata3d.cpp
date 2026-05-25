@@ -196,6 +196,22 @@ void CObjectVisualData3D::createFromData( const std::string & group, CSize<int> 
 
         m_pIBO = CVertBufMgr::Instance().createIBO( group, m_meshFile,
             meshLoader.m_indices.data(), sizeof(uint) * m_indexCount );
+
+        // Build unique vertex position pointers into the VBO
+        m_vertToUniqueVec = std::move( meshLoader.m_vertToUniqueVec );
+
+        CVertex * pVertBase = (CVertex *)m_pVBO;
+        m_uniqueVerts.resize( meshLoader.m_uniqueVerts.size() );
+
+        // For each unique position, find the first vertex that maps to it 
+        // and point into the VBO copy
+        for( uint i = 0; i < m_vertToUniqueVec.size(); ++i )
+        {
+            uint uniqueIdx = m_vertToUniqueVec[i];
+            // Only set the pointer once (first vertex with this unique index)
+            if( m_uniqueVerts[uniqueIdx] == nullptr )
+                m_uniqueVerts[uniqueIdx] = &pVertBase[i].vert;
+        }
     }
 
 }
@@ -299,4 +315,22 @@ bool CObjectVisualData3D::getBlendAlpha() const
 bool CObjectVisualData3D::getFixedFunction() const
 {
     return m_fixedFunction;
+}
+
+
+/************************************************************************
+*    desc:  Get the unique verts
+************************************************************************/
+const std::vector<CPoint<float>*> & CObjectVisualData3D::getUniqueVerts() const
+{
+    return m_uniqueVerts;
+}
+
+
+/************************************************************************
+*    desc:  Get the vertex to unique position mapping
+************************************************************************/
+const std::vector<uint> & CObjectVisualData3D::getVertToUniqueVec() const
+{
+    return m_vertToUniqueVec;
 }

@@ -72,6 +72,12 @@ public:
     // Get fixed function flag
     bool getFixedFunction() const;
 
+    // Get the unique verts
+    const std::vector<CPoint<float>*> & getUniqueVerts() const;
+
+    // Get the vertex to unique position mapping
+    const std::vector<uint> & getVertToUniqueVec() const;
+
 private:
 
     // Loaded texture data
@@ -115,6 +121,12 @@ private:
 
     // Use fixed-function rendering instead of shaders
     bool m_fixedFunction;
+
+    // Pointers to unique vertex positions within the VBO
+    std::vector<CPoint<float>*> m_uniqueVerts;
+
+    // Per-vertex mapping to unique position index
+    std::vector<uint> m_vertToUniqueVec;
 };
 
 #endif

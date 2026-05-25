@@ -37,6 +37,9 @@ void CObjMeshLoader::load( const std::string & filePath )
     // Map from "v/vt/vn" key string to vertex index for deduplication
     std::map<std::string, uint> vertexMap;
 
+    // Map from OBJ position index to unique position index
+    std::map<int, uint> positionMap;
+
     std::string line;
 
     while( std::getline( file, line ) )
@@ -102,6 +105,20 @@ void CObjMeshLoader::load( const std::string & filePath )
                     m_vertices.push_back( vertex );
                     vertexMap[triplet] = newIndex;
                     m_indices.push_back( newIndex );
+
+                    // Track unique positions by OBJ position index
+                    auto posIt = positionMap.find( indices[0] );
+                    if( posIt == positionMap.end() )
+                    {
+                        uint uniqueIdx = static_cast<uint>(m_uniqueVerts.size());
+                        positionMap[indices[0]] = uniqueIdx;
+                        m_uniqueVerts.push_back( &m_vertices.back().vert );
+                        m_vertToUniqueVec.push_back( uniqueIdx );
+                    }
+                    else
+                    {
+                        m_vertToUniqueVec.push_back( posIt->second );
+                    }
                 }
             }
         }

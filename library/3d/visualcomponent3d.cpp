@@ -28,7 +28,9 @@ CVisualComponent3d::CVisualComponent3d( const CObjectData3D & objectData )
       m_pIBO( m_visualData.getIBO() ),
       m_vertexCount( m_visualData.getVertexCount() ),
       m_IndexCount( m_visualData.getIndexCount() ),
-      m_fixedFunction( m_visualData.getFixedFunction() )
+      m_fixedFunction( m_visualData.getFixedFunction() ),
+      m_uniqueVerts( m_visualData.getUniqueVerts() ),
+      m_vertToUniqueVec( m_visualData.getVertToUniqueVec() )
 {
 }
 
@@ -55,9 +57,9 @@ void CVisualComponent3d::render( const CMatrix & matrix )
         finalMatrix *= matrix;
 
         if( m_fixedFunction )
-                CSoftwareRender::Instance().renderFixedFunction3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color );
+                CSoftwareRender::Instance().renderFixedFunction3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_uniqueVerts, m_vertToUniqueVec );
         else
-                CSoftwareRender::Instance().render3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_visualData.getShader() );
+                CSoftwareRender::Instance().render3D( finalMatrix, m_vertexCount, m_IndexCount, m_pTexture, m_pVBO, m_pIBO, m_color, m_visualData.getShader(), m_uniqueVerts, m_vertToUniqueVec );
     }
 }
 

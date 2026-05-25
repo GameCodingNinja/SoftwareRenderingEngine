@@ -28,6 +28,12 @@ public:
 
     // Index data
     std::vector<uint> m_indices;
+
+    // Pointers to unique vertex positions within m_vertices
+    std::vector<CPoint<float>*> m_uniqueVerts;
+
+    // Maps each vertex index to its unique position index
+    std::vector<uint> m_vertToUniqueVec;
 };
 
 #endif

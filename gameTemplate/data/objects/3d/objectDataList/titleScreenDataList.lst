@@ -38,6 +38,7 @@
           <mesh file="data/objects/3d/mesh/cube.obj"/>
           <shader name="default"/>
         </mesh>
+        <fixedFunction enable="false" blendAlpha="false"/>
       </visual>
     </object>
 

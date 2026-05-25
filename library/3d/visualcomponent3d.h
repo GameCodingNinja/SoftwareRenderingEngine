@@ -10,6 +10,7 @@
 
 // Standard lib dependencies
 #include <string>
+#include <vector>
 
 // Game lib dependencies
 #include <common/ivisualcomponent.h>
@@ -75,6 +76,10 @@ private:
 
     // Use fixed-function rendering
     bool m_fixedFunction;
+
+    // Unique vertex data for optimized transforms
+    const std::vector<CPoint<float>*> & m_uniqueVerts;
+    const std::vector<uint> & m_vertToUniqueVec;
 };
 
 #endif

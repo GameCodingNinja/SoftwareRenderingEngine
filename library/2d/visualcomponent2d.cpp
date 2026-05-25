@@ -57,7 +57,7 @@ void CVisualComponent2d::render( const CMatrix & matrix )
         {
             // Calculate the final matrix
             CMatrix finalMatrix;
-            finalMatrix.setScale( m_visualData.getVertexScale() );
+            finalMatrix.setScale( m_visualData.getVertexScale() ); // Needed for 2d to pre-scale a 2d image to it's pixel size
             finalMatrix *= matrix;
 
             if( m_fixedFunction )
