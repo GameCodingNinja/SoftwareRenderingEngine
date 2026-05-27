@@ -156,6 +156,10 @@ CColor<float> CSoftwareRender::computeVertexLighting(
 {
     CColor<float> litColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+    // Lazy-compute normalized eye direction (only needed for specular)
+    CPoint<float> toEye;
+    bool haveToEye = false;
+
     for( const auto & light : lights )
     {
         switch( light.m_type )
@@ -182,15 +186,17 @@ CColor<float> CSoftwareRender::computeVertexLighting(
                 // Specular
                 if( light.m_specular && NdotL > 0.0f )
                 {
-                    // Reflect = 2 * (N . L) * N - L
+                    if( !haveToEye )
+                    {
+                        toEye.set( -viewPos.x, -viewPos.y, -viewPos.z );
+                        toEye.normalize();
+                        haveToEye = true;
+                    }
+
                     float twoNdotL = 2.0f * NdotL;
                     CPoint<float> reflect( twoNdotL * transNorm.x - toLight.x,
                                            twoNdotL * transNorm.y - toLight.y,
                                            twoNdotL * transNorm.z - toLight.z );
-
-                    // View direction (eye at origin in view space)
-                    CPoint<float> toEye( -viewPos.x, -viewPos.y, -viewPos.z );
-                    toEye.normalize();
 
                     float spec = reflect.getDotProduct( toEye );
                     if( spec > 0.0f )
@@ -209,11 +215,20 @@ CColor<float> CSoftwareRender::computeVertexLighting(
                 CPoint<float> toLight( light.m_position.x - viewPos.x,
                                        light.m_position.y - viewPos.y,
                                        light.m_position.z - viewPos.z );
-                float dist = toLight.getLength();
-                float atten = 1.0f - dist / light.m_radius;
-                if( atten < 0.0f ) atten = 0.0f;
 
-                toLight.normalize();
+                // Early-out if outside radius (avoid sqrt)
+                float distSq = toLight.getLengthSquared();
+                float radiusSq = light.m_radius * light.m_radius;
+                if( distSq >= radiusSq )
+                    continue;
+
+                float dist = std::sqrt( distSq );
+                float invDist = (dist > 0.0f) ? (1.0f / dist) : 0.0f;
+                toLight.x *= invDist;
+                toLight.y *= invDist;
+                toLight.z *= invDist;
+
+                float atten = 1.0f - dist / light.m_radius;
                 float NdotL = transNorm.getDotProduct( toLight );
                 if( NdotL < 0.0f ) NdotL = 0.0f;
 
@@ -225,13 +240,17 @@ CColor<float> CSoftwareRender::computeVertexLighting(
                 // Specular
                 if( light.m_specular && NdotL > 0.0f )
                 {
+                    if( !haveToEye )
+                    {
+                        toEye.set( -viewPos.x, -viewPos.y, -viewPos.z );
+                        toEye.normalize();
+                        haveToEye = true;
+                    }
+
                     float twoNdotL = 2.0f * NdotL;
                     CPoint<float> reflect( twoNdotL * transNorm.x - toLight.x,
                                            twoNdotL * transNorm.y - toLight.y,
                                            twoNdotL * transNorm.z - toLight.z );
-
-                    CPoint<float> toEye( -viewPos.x, -viewPos.y, -viewPos.z );
-                    toEye.normalize();
 
                     float spec = reflect.getDotProduct( toEye );
                     if( spec > 0.0f )
@@ -614,13 +633,6 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CMatrix & modelVie
         modelViewMatrix.transform3x3( m_transNormals[i], pVert[i].norm );
         m_transNormals[i].normalize();
     }
-
-#ifdef LIGHTING_PHONG
-    // Compute view-space positions per unique vert for per-pixel lighting
-    m_viewSpacePositions.resize( uniqueCount );
-    for( uint i = 0; i < uniqueCount; ++i )
-        modelViewMatrix.transform( m_viewSpacePositions[i], *uniqueVerts[i] );
-#endif
 
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per mesh
     CColor<uint32_t> color32( (uint32_t)(color.r * 255.0f), (uint32_t)(color.g * 255.0f), (uint32_t)(color.b * 255.0f), (uint32_t)(color.a * 255.0f) );

@@ -119,9 +119,6 @@ private:
     // Reusable scratch buffer for transformed normals (per-vertex)
     std::vector<CPoint<float>> m_transNormals;
 
-    // Reusable scratch buffer for view-space positions (per unique vert, Phong only)
-    std::vector<CPoint<float>> m_viewSpacePositions;
-
     // Active light list pointer (nullptr = use defaults)
     const std::vector<CLight> * m_pLights;
 
