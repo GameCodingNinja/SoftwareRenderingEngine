@@ -21,7 +21,7 @@ public:
     // uv
     CUV<float> uv;
 
-    // Normal
+    // Normal (Gouraud: stores lit color/W, Phong: stores normal/W)
     CPoint<float> norm;
 };
 

@@ -91,11 +91,13 @@ private:
         CPoint<float> norm;
     };
 
-    // Compute per-vertex Gouraud lighting color
-    CColor<float> computeVertexLighting(
+public:
+
+    // Compute lighting color from a normal and position against a light list
+    static CColor<float> computeVertexLighting(
         const CPoint<float> & transNorm,
         const CPoint<float> & viewPos,
-        const std::vector<CLight> & lights ) const;
+        const std::vector<CLight> & lights );
 
 private:
 
@@ -116,6 +118,9 @@ private:
 
     // Reusable scratch buffer for transformed normals (per-vertex)
     std::vector<CPoint<float>> m_transNormals;
+
+    // Reusable scratch buffer for view-space positions (per unique vert, Phong only)
+    std::vector<CPoint<float>> m_viewSpacePositions;
 
     // Active light list pointer (nullptr = use defaults)
     const std::vector<CLight> * m_pLights;

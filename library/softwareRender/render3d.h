@@ -10,6 +10,12 @@
 
 // Game lib dependencies
 #include <softwareRender/renderdefs.h>
+#include <common/lightdefs.h>
+
+#ifdef LIGHTING_PHONG
+#include <common/light.h>
+#include <vector>
+#endif
 
 // Forward declaration(s)
 class CTexture;
@@ -26,6 +32,9 @@ public:
         m_color(color),
         m_shader(nullptr),
         m_applyColor(applyColor)
+#ifdef LIGHTING_PHONG
+        ,m_pLights(nullptr)
+#endif
     {
     }
 
@@ -36,6 +45,9 @@ public:
         m_color(color),
         m_shader(shader),
         m_applyColor(false)
+#ifdef LIGHTING_PHONG
+        ,m_pLights(nullptr)
+#endif
     {
         if( m_shader == nullptr )
             m_shader = NShaderDefault::shaderDefault;
@@ -65,6 +77,14 @@ public:
 
     // Fixed-function flag
     bool m_applyColor;
+
+#ifdef LIGHTING_PHONG
+    // Light list for per-pixel lighting
+    const std::vector<CLight> * m_pLights;
+
+    // Per-vertex view-space positions for Phong interpolation (not in CVertex to keep layout stable)
+    CPoint<float> m_viewPos[TRI];
+#endif
 
     // Cull if the projected points are outside the screen
     bool Cull( int screenW, int screenH )

@@ -152,7 +152,7 @@ void CSoftwareRender::clearLights()
 CColor<float> CSoftwareRender::computeVertexLighting(
     const CPoint<float> & transNorm,
     const CPoint<float> & viewPos,
-    const std::vector<CLight> & lights ) const
+    const std::vector<CLight> & lights )
 {
     CColor<float> litColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -615,6 +615,13 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CMatrix & modelVie
         m_transNormals[i].normalize();
     }
 
+#ifdef LIGHTING_PHONG
+    // Compute view-space positions per unique vert for per-pixel lighting
+    m_viewSpacePositions.resize( uniqueCount );
+    for( uint i = 0; i < uniqueCount; ++i )
+        modelViewMatrix.transform( m_viewSpacePositions[i], *uniqueVerts[i] );
+#endif
+
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per mesh
     CColor<uint32_t> color32( (uint32_t)(color.r * 255.0f), (uint32_t)(color.g * 255.0f), (uint32_t)(color.b * 255.0f), (uint32_t)(color.a * 255.0f) );
 
@@ -667,12 +674,22 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CMatrix & modelVie
                 projected[j].norm.y = litColor.g * oneOverW;
                 projected[j].norm.z = litColor.b * oneOverW;
 #endif
+
+#ifdef LIGHTING_PHONG
+                // Store normal/W for per-pixel lighting
+                projected[j].norm.x = m_transNormals[iboIdx[j]].x * oneOverW;
+                projected[j].norm.y = m_transNormals[iboIdx[j]].y * oneOverW;
+                projected[j].norm.z = m_transNormals[iboIdx[j]].z * oneOverW;
+#endif
             }
 
             CRender3d render3d( pText, &m_surfaceData, m_zBuffer.data(), color32, shader );
             render3d.m_vec[0] = projected[0];
             render3d.m_vec[1] = projected[1];
             render3d.m_vec[2] = projected[2];
+#ifdef LIGHTING_PHONG
+            render3d.m_pLights = &lights;
+#endif
 
             if( !render3d.Cull( m_surfaceData.w, m_surfaceData.h ) )
             {
@@ -779,6 +796,13 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CMatrix & modelVie
             projected[j].norm.y = litColor.g * oneOverW;
             projected[j].norm.z = litColor.b * oneOverW;
 #endif
+
+#ifdef LIGHTING_PHONG
+            // Store interpolated normal/W for per-pixel lighting
+            projected[j].norm.x = clipped[j].norm.x * oneOverW;
+            projected[j].norm.y = clipped[j].norm.y * oneOverW;
+            projected[j].norm.z = clipped[j].norm.z * oneOverW;
+#endif
         }
 
         // Fan-triangulate the clipped polygon (3 verts = 1 tri, 4 verts = 2 tris)
@@ -789,6 +813,9 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CMatrix & modelVie
             render3d.m_vec[0] = projected[0];
             render3d.m_vec[1] = projected[j];
             render3d.m_vec[2] = projected[j + 1];
+#ifdef LIGHTING_PHONG
+            render3d.m_pLights = &lights;
+#endif
 
             // Only keep visible triangles
             if( !render3d.Cull( m_surfaceData.w, m_surfaceData.h ) )
@@ -866,6 +893,10 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
     int64_t fixZ, fixStepZ;
 #ifdef LIGHTING_GOURAUD
     float lr, lg, lb, stepLR, stepLG, stepLB;
+#endif
+#ifdef LIGHTING_PHONG
+    float pnx, pny, pnz, stepPNX, stepPNY, stepPNZ;
+    float phongZ, phongStepZ;
 #endif
     int64_t fixTx1, fixTy1;
     uint * pDBuffer;
@@ -982,6 +1013,18 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                 stepLB = (rightSlope.m_slope.norm.z - lb) / width;
 #endif
 
+#ifdef LIGHTING_PHONG
+                pnx = leftSlope.m_slope.norm.x;
+                pny = leftSlope.m_slope.norm.y;
+                pnz = leftSlope.m_slope.norm.z;
+                stepPNX = (rightSlope.m_slope.norm.x - pnx) / width;
+                stepPNY = (rightSlope.m_slope.norm.y - pny) / width;
+                stepPNZ = (rightSlope.m_slope.norm.z - pnz) / width;
+
+                phongZ = z;
+                phongStepZ = stepZ;
+#endif
+
                 // Clip the scan-line
                 if( xStart < 0 )
                 {
@@ -995,6 +1038,13 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                     lr += (stepLR * clip);
                     lg += (stepLG * clip);
                     lb += (stepLB * clip);
+#endif
+
+#ifdef LIGHTING_PHONG
+                    pnx += (stepPNX * clip);
+                    pny += (stepPNY * clip);
+                    pnz += (stepPNZ * clip);
+                    phongZ += (phongStepZ * clip);
 #endif
 
                     xStart = 0;
@@ -1104,6 +1154,25 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                                 if( pb > 255 ) pb = 255;
                                 *pDBuffer = (pixel & 0xFF000000) | (pr << 16) | (pg << 8) | pb;
 #endif
+
+#ifdef LIGHTING_PHONG
+                                // Per-pixel Phong: recover normal and position, compute lighting
+                                float pRealZ = 1.0f / phongZ;
+                                CPoint<float> pixNorm( pnx * pRealZ, pny * pRealZ, pnz * pRealZ );
+                                pixNorm.normalize();
+                                CPoint<float> pixPos;
+
+                                CColor<float> litColor = CSoftwareRender::computeVertexLighting( pixNorm, pixPos, *render.m_pLights );
+
+                                uint32_t pixel = *pDBuffer;
+                                uint32_t pr = (uint32_t)(((pixel >> 16) & 0xFF) * litColor.r);
+                                uint32_t pg = (uint32_t)(((pixel >> 8)  & 0xFF) * litColor.g);
+                                uint32_t pb = (uint32_t)(( pixel        & 0xFF) * litColor.b);
+                                if( pr > 255 ) pr = 255;
+                                if( pg > 255 ) pg = 255;
+                                if( pb > 255 ) pb = 255;
+                                *pDBuffer = (pixel & 0xFF000000) | (pr << 16) | (pg << 8) | pb;
+#endif
                             }
                         }
 
@@ -1114,6 +1183,12 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                         fixLR += fixLRStep;
                         fixLG += fixLGStep;
                         fixLB += fixLBStep;
+#endif
+#ifdef LIGHTING_PHONG
+                        pnx += stepPNX;
+                        pny += stepPNY;
+                        pnz += stepPNZ;
+                        phongZ += phongStepZ;
 #endif
                         ++pDBuffer;
                         ++pZBuffer;
@@ -1204,6 +1279,25 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                                 if( pb > 255 ) pb = 255;
                                 *pDBuffer = (pixel & 0xFF000000) | (pr << 16) | (pg << 8) | pb;
 #endif
+
+#ifdef LIGHTING_PHONG
+                                // Per-pixel Phong: recover normal and position, compute lighting
+                                float pRealZ = 1.0f / phongZ;
+                                CPoint<float> pixNorm( pnx * pRealZ, pny * pRealZ, pnz * pRealZ );
+                                pixNorm.normalize();
+                                CPoint<float> pixPos;
+
+                                CColor<float> litColor = CSoftwareRender::computeVertexLighting( pixNorm, pixPos, *render.m_pLights );
+
+                                uint32_t pixel = *pDBuffer;
+                                uint32_t pr = (uint32_t)(((pixel >> 16) & 0xFF) * litColor.r);
+                                uint32_t pg = (uint32_t)(((pixel >> 8)  & 0xFF) * litColor.g);
+                                uint32_t pb = (uint32_t)(( pixel        & 0xFF) * litColor.b);
+                                if( pr > 255 ) pr = 255;
+                                if( pg > 255 ) pg = 255;
+                                if( pb > 255 ) pb = 255;
+                                *pDBuffer = (pixel & 0xFF000000) | (pr << 16) | (pg << 8) | pb;
+#endif
                             }
                         }
 
@@ -1214,6 +1308,12 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                         fixLR += fixLRStep;
                         fixLG += fixLGStep;
                         fixLB += fixLBStep;
+#endif
+#ifdef LIGHTING_PHONG
+                        pnx += stepPNX;
+                        pny += stepPNY;
+                        pnz += stepPNZ;
+                        phongZ += phongStepZ;
 #endif
                         ++pDBuffer;
                         ++pZBuffer;

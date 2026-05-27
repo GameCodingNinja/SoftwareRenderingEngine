@@ -75,7 +75,7 @@ public:
                 m_step.uv.u   = (m_pVert[m_vNext].uv.u   - m_pVert[m_vTop].uv.u)   / m_length;
                 m_step.uv.v   = (m_pVert[m_vNext].uv.v   - m_pVert[m_vTop].uv.v)   / m_length;
 
-#ifdef LIGHTING_GOURAUD
+#if defined(LIGHTING_GOURAUD) || defined(LIGHTING_PHONG)
                 m_step.norm.x = (m_pVert[m_vNext].norm.x - m_pVert[m_vTop].norm.x) / m_length;
                 m_step.norm.y = (m_pVert[m_vNext].norm.y - m_pVert[m_vTop].norm.y) / m_length;
                 m_step.norm.z = (m_pVert[m_vNext].norm.z - m_pVert[m_vTop].norm.z) / m_length;
@@ -87,7 +87,7 @@ public:
                 m_slope.uv.u   = m_pVert[m_vTop].uv.u;
                 m_slope.uv.v   = m_pVert[m_vTop].uv.v;
 
-#ifdef LIGHTING_GOURAUD
+#if defined(LIGHTING_GOURAUD) || defined(LIGHTING_PHONG)
                 m_slope.norm.x = m_pVert[m_vTop].norm.x;
                 m_slope.norm.y = m_pVert[m_vTop].norm.y;
                 m_slope.norm.z = m_pVert[m_vTop].norm.z;
@@ -117,7 +117,7 @@ public:
         m_slope.uv.u   += m_step.uv.u;
         m_slope.uv.v   += m_step.uv.v;
 
-#ifdef LIGHTING_GOURAUD
+#if defined(LIGHTING_GOURAUD) || defined(LIGHTING_PHONG)
         m_slope.norm.x += m_step.norm.x;
         m_slope.norm.y += m_step.norm.y;
         m_slope.norm.z += m_step.norm.z;
@@ -135,7 +135,7 @@ public:
         m_slope.uv.u   += m_step.uv.u   * lines;
         m_slope.uv.v   += m_step.uv.v   * lines;
 
-#ifdef LIGHTING_GOURAUD
+#if defined(LIGHTING_GOURAUD) || defined(LIGHTING_PHONG)
         m_slope.norm.x += m_step.norm.x * lines;
         m_slope.norm.y += m_step.norm.y * lines;
         m_slope.norm.z += m_step.norm.z * lines;
@@ -179,7 +179,7 @@ private:
             m_slope.uv.u   += m_step.uv.u   * step;
             m_slope.uv.v   += m_step.uv.v   * step;
 
-#ifdef LIGHTING_GOURAUD
+#if defined(LIGHTING_GOURAUD) || defined(LIGHTING_PHONG)
             m_slope.norm.x += m_step.norm.x * step;
             m_slope.norm.y += m_step.norm.y * step;
             m_slope.norm.z += m_step.norm.z * step;
