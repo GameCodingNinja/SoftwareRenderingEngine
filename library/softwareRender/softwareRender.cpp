@@ -85,10 +85,23 @@ void BinTriangles( const std::vector<T> & triList, std::vector<std::vector<const
 *    desc:  Constructor
 ************************************************************************/
 CSoftwareRender::CSoftwareRender()
+    : m_pLights(nullptr)
 {
     // Init the thread pool if not already active
     if( !CThreadPool::Instance().isActive() )
         CThreadPool::Instance().init( 2, -1 );
+
+    // Setup default lights (ambient + directional)
+    CLight ambient;
+    ambient.m_type = ELightType::AMBIENT;
+    ambient.m_intensity = 0.2f;
+    m_defaultLights.push_back( ambient );
+
+    CLight directional;
+    directional.m_type = ELightType::DIRECTIONAL;
+    directional.m_direction = CPoint<float>(0.0f, 0.0f, -1.0f);
+    directional.m_intensity = 1.0f;
+    m_defaultLights.push_back( directional );
 }
 
 /************************************************************************
@@ -115,6 +128,131 @@ void CSoftwareRender::setSurface( IFrameBuffer * pFrameBuffer )
 
     // Allocate z-buffer for 3D rendering
     m_zBuffer.resize( m_surfaceData.w * m_surfaceData.h, 0 );
+}
+
+/***************************************************************************
+*   desc:  Set the active lights for rendering
+****************************************************************************/
+void CSoftwareRender::setLights( const std::vector<CLight> & lights )
+{
+    m_pLights = &lights;
+}
+
+/***************************************************************************
+*   desc:  Clear the active lights (reverts to default)
+****************************************************************************/
+void CSoftwareRender::clearLights()
+{
+    m_pLights = nullptr;
+}
+
+/***************************************************************************
+*   desc:  Compute per-vertex Gouraud lighting color
+****************************************************************************/
+CColor<float> CSoftwareRender::computeVertexLighting(
+    const CPoint<float> & transNorm,
+    const CPoint<float> & viewPos,
+    const std::vector<CLight> & lights ) const
+{
+    CColor<float> litColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    for( const auto & light : lights )
+    {
+        switch( light.m_type )
+        {
+            case ELightType::AMBIENT:
+            {
+                litColor.r += light.m_color.r * light.m_intensity;
+                litColor.g += light.m_color.g * light.m_intensity;
+                litColor.b += light.m_color.b * light.m_intensity;
+                break;
+            }
+
+            case ELightType::DIRECTIONAL:
+            {
+                // Negate direction to get light-to-surface vector
+                CPoint<float> toLight( -light.m_direction.x, -light.m_direction.y, -light.m_direction.z );
+                float NdotL = transNorm.getDotProduct( toLight );
+                if( NdotL < 0.0f ) NdotL = 0.0f;
+
+                litColor.r += light.m_color.r * light.m_intensity * NdotL;
+                litColor.g += light.m_color.g * light.m_intensity * NdotL;
+                litColor.b += light.m_color.b * light.m_intensity * NdotL;
+
+                // Specular
+                if( light.m_specular && NdotL > 0.0f )
+                {
+                    // Reflect = 2 * (N . L) * N - L
+                    float twoNdotL = 2.0f * NdotL;
+                    CPoint<float> reflect( twoNdotL * transNorm.x - toLight.x,
+                                           twoNdotL * transNorm.y - toLight.y,
+                                           twoNdotL * transNorm.z - toLight.z );
+
+                    // View direction (eye at origin in view space)
+                    CPoint<float> toEye( -viewPos.x, -viewPos.y, -viewPos.z );
+                    toEye.normalize();
+
+                    float spec = reflect.getDotProduct( toEye );
+                    if( spec > 0.0f )
+                    {
+                        spec = std::pow( spec, light.m_shininess );
+                        litColor.r += light.m_color.r * light.m_intensity * spec;
+                        litColor.g += light.m_color.g * light.m_intensity * spec;
+                        litColor.b += light.m_color.b * light.m_intensity * spec;
+                    }
+                }
+                break;
+            }
+
+            case ELightType::POINT:
+            {
+                CPoint<float> toLight( light.m_position.x - viewPos.x,
+                                       light.m_position.y - viewPos.y,
+                                       light.m_position.z - viewPos.z );
+                float dist = toLight.getLength();
+                float atten = 1.0f - dist / light.m_radius;
+                if( atten < 0.0f ) atten = 0.0f;
+
+                toLight.normalize();
+                float NdotL = transNorm.getDotProduct( toLight );
+                if( NdotL < 0.0f ) NdotL = 0.0f;
+
+                float diffuse = light.m_intensity * NdotL * atten;
+                litColor.r += light.m_color.r * diffuse;
+                litColor.g += light.m_color.g * diffuse;
+                litColor.b += light.m_color.b * diffuse;
+
+                // Specular
+                if( light.m_specular && NdotL > 0.0f )
+                {
+                    float twoNdotL = 2.0f * NdotL;
+                    CPoint<float> reflect( twoNdotL * transNorm.x - toLight.x,
+                                           twoNdotL * transNorm.y - toLight.y,
+                                           twoNdotL * transNorm.z - toLight.z );
+
+                    CPoint<float> toEye( -viewPos.x, -viewPos.y, -viewPos.z );
+                    toEye.normalize();
+
+                    float spec = reflect.getDotProduct( toEye );
+                    if( spec > 0.0f )
+                    {
+                        spec = std::pow( spec, light.m_shininess ) * atten;
+                        litColor.r += light.m_color.r * light.m_intensity * spec;
+                        litColor.g += light.m_color.g * light.m_intensity * spec;
+                        litColor.b += light.m_color.b * light.m_intensity * spec;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    // Clamp to [0, 1]
+    if( litColor.r > 1.0f ) litColor.r = 1.0f;
+    if( litColor.g > 1.0f ) litColor.g = 1.0f;
+    if( litColor.b > 1.0f ) litColor.b = 1.0f;
+
+    return litColor;
 }
 
 /***************************************************************************
@@ -412,9 +550,10 @@ void CSoftwareRender::clearZBuffer()
 *          the near plane (W >= nearClip), following the legacy tri3D approach.
 *          Clipping is done in clip space before projection.
 ****************************************************************************/
-void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d & visualComponent )
+void CSoftwareRender::render3D( const CMatrix & matrix, const CMatrix & modelViewMatrix, const CVisualComponent3d & visualComponent )
 {
     CVertex * pVert = (CVertex *)visualComponent.getVBO();
+    const uint vertCount = visualComponent.getVertexCount();
     const uint indexCount = visualComponent.getIndexCount();
     uint * pIBO = visualComponent.getIBO();
     const CTexture * pText = visualComponent.getTexture();
@@ -422,6 +561,9 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d
     const std::vector<uint> & vertToUniqueVec = visualComponent.getVertToUniqueVec();
     const CColor<float> & color = visualComponent.getColor();
     FragmentShaderFunc shader = visualComponent.getShader();
+
+    // Use active lights or fall back to defaults
+    const std::vector<CLight> & lights = (m_pLights && !m_pLights->empty()) ? *m_pLights : m_defaultLights;
 
     // Get raw matrix data for W computation
     const float * mat = matrix();
@@ -460,6 +602,17 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d
                                 + ( uniqueVerts[i]->z * mat[CMatrix::m23] )
                                 + mat[CMatrix::m33];
 #endif
+    }
+
+    // Transform normals per-vertex using model-view matrix (no projection)
+    // Normals must not be transformed by the projection matrix
+    m_transNormals.resize( vertCount );
+
+    for( uint i = 0; i < vertCount; ++i )
+    {
+        // Transform normal using upper-left 3x3 of model-view (rotation only, no translation)
+        modelViewMatrix.transform3x3( m_transNormals[i], pVert[i].norm );
+        m_transNormals[i].normalize();
     }
 
     // Convert float color (0.0-1.0) to fixed-point (0-255) once per mesh
@@ -506,6 +659,14 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d
                 projected[j].vert.z = oneOverW;
                 projected[j].uv.u = pVert[iboIdx[j]].uv.u * oneOverW;
                 projected[j].uv.v = pVert[iboIdx[j]].uv.v * oneOverW;
+
+#ifdef LIGHTING_GOURAUD
+                // Compute per-vertex lighting, store as color in norm (r,g,b) with perspective divide
+                CColor<float> litColor = computeVertexLighting( m_transNormals[iboIdx[j]], uv.pos, lights );
+                projected[j].norm.x = litColor.r * oneOverW;
+                projected[j].norm.y = litColor.g * oneOverW;
+                projected[j].norm.z = litColor.b * oneOverW;
+#endif
             }
 
             CRender3d render3d( pText, &m_surfaceData, m_zBuffer.data(), color32, shader );
@@ -531,6 +692,7 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d
             triVerts[j].w   = triUV[j]->w;
             triVerts[j].u   = pVert[iboIdx[j]].uv.u;
             triVerts[j].v   = pVert[iboIdx[j]].uv.v;
+            triVerts[j].norm = m_transNormals[iboIdx[j]];
         }
 
         // Sutherland-Hodgman clip against near plane (W >= nearClip)
@@ -561,6 +723,9 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d
                     clipped[clipCount].w = nearClip;
                     clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
                     clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
+                    clipped[clipCount].norm.x = triVerts[startI].norm.x + (triVerts[endI].norm.x - triVerts[startI].norm.x) * p;
+                    clipped[clipCount].norm.y = triVerts[startI].norm.y + (triVerts[endI].norm.y - triVerts[startI].norm.y) * p;
+                    clipped[clipCount].norm.z = triVerts[startI].norm.z + (triVerts[endI].norm.z - triVerts[startI].norm.z) * p;
                     ++clipCount;
                 }
             }
@@ -578,6 +743,9 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d
                     clipped[clipCount].w = nearClip;
                     clipped[clipCount].u = triVerts[startI].u + (triVerts[endI].u - triVerts[startI].u) * p;
                     clipped[clipCount].v = triVerts[startI].v + (triVerts[endI].v - triVerts[startI].v) * p;
+                    clipped[clipCount].norm.x = triVerts[startI].norm.x + (triVerts[endI].norm.x - triVerts[startI].norm.x) * p;
+                    clipped[clipCount].norm.y = triVerts[startI].norm.y + (triVerts[endI].norm.y - triVerts[startI].norm.y) * p;
+                    clipped[clipCount].norm.z = triVerts[startI].norm.z + (triVerts[endI].norm.z - triVerts[startI].norm.z) * p;
                     ++clipCount;
 
                     clipped[clipCount++] = triVerts[endI];
@@ -603,6 +771,14 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CVisualComponent3d
             projected[j].vert.z = oneOverW;
             projected[j].uv.u = clipped[j].u * oneOverW;
             projected[j].uv.v = clipped[j].v * oneOverW;
+
+#ifdef LIGHTING_GOURAUD
+            // Compute lighting from interpolated clip normal + position
+            CColor<float> litColor = computeVertexLighting( clipped[j].norm, clipped[j].pos, lights );
+            projected[j].norm.x = litColor.r * oneOverW;
+            projected[j].norm.y = litColor.g * oneOverW;
+            projected[j].norm.z = litColor.b * oneOverW;
+#endif
         }
 
         // Fan-triangulate the clipped polygon (3 verts = 1 tri, 4 verts = 2 tris)
@@ -688,6 +864,9 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
     int xStart, xEnd, width, height, slopeCount(TRI);
     float u, v, z, stepU, stepV, stepZ;
     int64_t fixZ, fixStepZ;
+#ifdef LIGHTING_GOURAUD
+    float lr, lg, lb, stepLR, stepLG, stepLB;
+#endif
     int64_t fixTx1, fixTy1;
     uint * pDBuffer;
     int32_t * pZBuffer;
@@ -793,6 +972,16 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                 stepU = (rightSlope.m_slope.uv.u - u) / width;
                 stepV = (rightSlope.m_slope.uv.v - v) / width;
 
+#ifdef LIGHTING_GOURAUD
+                lr = leftSlope.m_slope.norm.x;
+                lg = leftSlope.m_slope.norm.y;
+                lb = leftSlope.m_slope.norm.z;
+
+                stepLR = (rightSlope.m_slope.norm.x - lr) / width;
+                stepLG = (rightSlope.m_slope.norm.y - lg) / width;
+                stepLB = (rightSlope.m_slope.norm.z - lb) / width;
+#endif
+
                 // Clip the scan-line
                 if( xStart < 0 )
                 {
@@ -801,6 +990,12 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                     z += (stepZ * clip);
                     u += (stepU * clip);
                     v += (stepV * clip);
+
+#ifdef LIGHTING_GOURAUD
+                    lr += (stepLR * clip);
+                    lg += (stepLG * clip);
+                    lb += (stepLB * clip);
+#endif
 
                     xStart = 0;
                     width = xEnd;
@@ -859,6 +1054,26 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                     int64_t fixTxStep = (fixTx2 - fixTx1) >> RUN_SHIFT;
                     int64_t fixTyStep = (fixTy2 - fixTy1) >> RUN_SHIFT;
 
+#ifdef LIGHTING_GOURAUD
+                    // Recover light color at start and end of subdivision
+                    float lightR1 = lr * realZ;
+                    float lightG1 = lg * realZ;
+                    float lightB1 = lb * realZ;
+                    float nextLR = lr + stepLR * RUN_LENGTH;
+                    float nextLG = lg + stepLG * RUN_LENGTH;
+                    float nextLB = lb + stepLB * RUN_LENGTH;
+                    float lightR2 = nextLR * nextRealZ;
+                    float lightG2 = nextLG * nextRealZ;
+                    float lightB2 = nextLB * nextRealZ;
+                    // Fixed-point light color (8.16 format for smooth interpolation)
+                    int32_t fixLR = (int32_t)(lightR1 * 65536.0f);
+                    int32_t fixLG = (int32_t)(lightG1 * 65536.0f);
+                    int32_t fixLB = (int32_t)(lightB1 * 65536.0f);
+                    int32_t fixLRStep = ((int32_t)(lightR2 * 65536.0f) - fixLR) >> RUN_SHIFT;
+                    int32_t fixLGStep = ((int32_t)(lightG2 * 65536.0f) - fixLG) >> RUN_SHIFT;
+                    int32_t fixLBStep = ((int32_t)(lightB2 * 65536.0f) - fixLB) >> RUN_SHIFT;
+#endif
+
                     int64_t fixTx = fixTx1;
                     int64_t fixTy = fixTy1;
 
@@ -875,12 +1090,31 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                             if( texY >= textureH ) texY = textureH - 1;
 
                             if( render.m_shader( *(pText + texY * textureW + texX), pDBuffer, texX, texY, render.m_color ) )
+                            {
                                 *pZBuffer = (int32_t)fixZ;
+
+#ifdef LIGHTING_GOURAUD
+                                // Apply light color modulation to the written pixel
+                                uint32_t pixel = *pDBuffer;
+                                uint32_t pr = ((pixel >> 16) & 0xFF) * fixLR >> 16;
+                                uint32_t pg = ((pixel >> 8)  & 0xFF) * fixLG >> 16;
+                                uint32_t pb = (pixel         & 0xFF) * fixLB >> 16;
+                                if( pr > 255 ) pr = 255;
+                                if( pg > 255 ) pg = 255;
+                                if( pb > 255 ) pb = 255;
+                                *pDBuffer = (pixel & 0xFF000000) | (pr << 16) | (pg << 8) | pb;
+#endif
+                            }
                         }
 
                         fixZ += fixStepZ;
                         fixTx += fixTxStep;
                         fixTy += fixTyStep;
+#ifdef LIGHTING_GOURAUD
+                        fixLR += fixLRStep;
+                        fixLG += fixLGStep;
+                        fixLB += fixLBStep;
+#endif
                         ++pDBuffer;
                         ++pZBuffer;
                     }
@@ -889,6 +1123,12 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                     u = nextU;
                     v = nextV;
                     z = nextZ;
+                    realZ = nextRealZ;
+#ifdef LIGHTING_GOURAUD
+                    lr = nextLR;
+                    lg = nextLG;
+                    lb = nextLB;
+#endif
 
                     // Reuse the last calculations as the first
                     fixTx1 = fixTx2;
@@ -913,6 +1153,27 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                     int64_t fixTxStep = (fixTx2 - fixTx1) / length;
                     int64_t fixTyStep = (fixTy2 - fixTy1) / length;
 
+#ifdef LIGHTING_GOURAUD
+                    // Recover light color at start and end of remainder
+                    realZ = 1.0f / z;
+                    float lightR1 = lr * realZ;
+                    float lightG1 = lg * realZ;
+                    float lightB1 = lb * realZ;
+                    float nextLR = lr + stepLR * length;
+                    float nextLG = lg + stepLG * length;
+                    float nextLB = lb + stepLB * length;
+                    float lightR2 = nextLR * nextRealZ;
+                    float lightG2 = nextLG * nextRealZ;
+                    float lightB2 = nextLB * nextRealZ;
+                    // Fixed-point light color (8.16 format for smooth interpolation)
+                    int32_t fixLR = (int32_t)(lightR1 * 65536.0f);
+                    int32_t fixLG = (int32_t)(lightG1 * 65536.0f);
+                    int32_t fixLB = (int32_t)(lightB1 * 65536.0f);
+                    int32_t fixLRStep = ((int32_t)(lightR2 * 65536.0f) - fixLR) / length;
+                    int32_t fixLGStep = ((int32_t)(lightG2 * 65536.0f) - fixLG) / length;
+                    int32_t fixLBStep = ((int32_t)(lightB2 * 65536.0f) - fixLB) / length;
+#endif
+
                     int64_t fixTx = fixTx1;
                     int64_t fixTy = fixTy1;
 
@@ -929,12 +1190,31 @@ void RenderTriStrip3d( const CRender3d & render, int yMin, int yMax )
                             if( texY >= textureH ) texY = textureH - 1;
 
                             if( render.m_shader( *(pText + texY * textureW + texX), pDBuffer, texX, texY, render.m_color ) )
+                            {
                                 *pZBuffer = (int32_t)fixZ;
+
+#ifdef LIGHTING_GOURAUD
+                                // Apply light color modulation to the written pixel
+                                uint32_t pixel = *pDBuffer;
+                                uint32_t pr = ((pixel >> 16) & 0xFF) * fixLR >> 16;
+                                uint32_t pg = ((pixel >> 8)  & 0xFF) * fixLG >> 16;
+                                uint32_t pb = (pixel         & 0xFF) * fixLB >> 16;
+                                if( pr > 255 ) pr = 255;
+                                if( pg > 255 ) pg = 255;
+                                if( pb > 255 ) pb = 255;
+                                *pDBuffer = (pixel & 0xFF000000) | (pr << 16) | (pg << 8) | pb;
+#endif
+                            }
                         }
 
                         fixZ += fixStepZ;
                         fixTx += fixTxStep;
                         fixTy += fixTyStep;
+#ifdef LIGHTING_GOURAUD
+                        fixLR += fixLRStep;
+                        fixLG += fixLGStep;
+                        fixLB += fixLBStep;
+#endif
                         ++pDBuffer;
                         ++pZBuffer;
                     }

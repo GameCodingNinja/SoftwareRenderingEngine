@@ -45,7 +45,7 @@ CVisualComponent2d::~CVisualComponent2d()
 /************************************************************************
 *    desc:  do the render
 ************************************************************************/
-void CVisualComponent2d::render( const CMatrix & matrix )
+void CVisualComponent2d::render( const CMatrix & matrix, const CMatrix & )
 {
     if( isActive() )
     {

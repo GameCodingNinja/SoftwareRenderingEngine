@@ -13,6 +13,7 @@
 
 // Game lib dependencies
 #include <sprite/sprite.h>
+#include <common/camera.h>
 
 class CTitleScreenState : public CCommonState
 {
@@ -48,6 +49,10 @@ private:
     CSprite m_enemy;
     CSprite m_logo;
     CSprite m_cube;
+
+    // Cameras
+    CCamera m_orthoCam;
+    CCamera m_perspCam;
 
     // Allow for the state change
     bool m_allowStateChange;

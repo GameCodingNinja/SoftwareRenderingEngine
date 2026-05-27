@@ -62,10 +62,10 @@ float * CVertBufMgr::createQuadVBO( const std::string & group, const std::string
         // Layout: vert(x,y,z), uv(u,v), norm(x,y,z)
         float vertexData[] =
         {
-            -0.5f, -0.5f, 0.0,  uv.x1, uv.y1,  0.0, 0.0, 0.0,
-             0.5f, -0.5f, 0.0,  uv.x2, uv.y1,  0.0, 0.0, 0.0,
-             0.5f,  0.5f, 0.0,  uv.x2, uv.y2,  0.0, 0.0, 0.0,
-            -0.5f,  0.5f, 0.0,  uv.x1, uv.y2,  0.0, 0.0, 0.0
+            -0.5f, -0.5f, 0.0,  uv.x1, uv.y1,  0.0, 0.0, 1.0,
+             0.5f, -0.5f, 0.0,  uv.x2, uv.y1,  0.0, 0.0, 1.0,
+             0.5f,  0.5f, 0.0,  uv.x2, uv.y2,  0.0, 0.0, 1.0,
+            -0.5f,  0.5f, 0.0,  uv.x1, uv.y2,  0.0, 0.0, 1.0
         };
 
         uint size = sizeof(CQuad2D) / sizeof(float);

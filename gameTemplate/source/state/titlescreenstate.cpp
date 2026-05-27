@@ -13,6 +13,7 @@
 #include <objectdata/objectdatamanager.h>
 #include <system/device.h>
 #include <utilities/highresolutiontimer.h>
+#include <utilities/settings.h>
 
 
 /************************************************************************
@@ -25,6 +26,7 @@ CTitleScreenState::CTitleScreenState()
       m_enemy( CObjectDataMgr::Instance().getData( "(title_screen)", "enemy" ) ),
       m_logo( CObjectDataMgr::Instance().getData( "(3d)", "logo" ) ),
       m_cube( CObjectDataMgr::Instance().getData( "(3d)", "cube" ) ),
+      m_orthoCam( CSettings::Instance().getMinZdist(), CSettings::Instance().getMaxZdist() ),
       m_allowStateChange(false)
 {
     // Set the game states for this object
@@ -105,16 +107,13 @@ void CTitleScreenState::render()
     // Render common content (menus, UI, etc.)
     CCommonState::render();
 
-    const CMatrix & matrix = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_ORTHOGRAPHIC );
+    m_background.render( m_orthoCam );
+    m_background2.render( m_orthoCam );
+    m_background3.render( m_orthoCam );
+    //m_enemy.render( m_orthoCam );
 
-    m_background.render( matrix );
-    m_background2.render( matrix );
-    m_background3.render( matrix );
-    //m_enemy.render( matrix );
-
-    const CMatrix & matrix3d = CDevice::Instance().GetProjectionMatrix( NDefs::EPT_PERSPECTIVE );
-    m_logo.render( matrix3d );
-    m_cube.render( matrix3d );
+    m_logo.render( m_perspCam );
+    m_cube.render( m_perspCam );
 
 }	// Render
 

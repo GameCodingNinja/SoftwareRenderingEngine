@@ -26,7 +26,7 @@ public:
     virtual ~iVisualComponent(){}
 
     // do the render
-    virtual void render( const CMatrix & matrix ) = 0;
+    virtual void render( const CMatrix & matrix, const CMatrix & viewMatrix ) = 0;
 
     // Is this component active?
     virtual bool isActive() = 0;

@@ -35,7 +35,7 @@ public:
     virtual ~CVisualComponent2d();
 
     // do the render
-    void render( const CMatrix & matrix ) override;
+    void render( const CMatrix & matrix, const CMatrix & viewMatrix ) override;
 
     // Is this component active?
     bool isActive() override;

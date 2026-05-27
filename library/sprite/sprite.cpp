@@ -14,6 +14,7 @@
 #include <objectdata/objectdata3d.h>
 #include <2d/visualcomponent2d.h>
 #include <3d/visualcomponent3d.h>
+#include <common/camera.h>
 
 /************************************************************************
 *    desc:  Constructer
@@ -52,10 +53,10 @@ void CSprite::Update()
 /************************************************************************
 *    desc:  do the render                                                            
 ************************************************************************/
-void CSprite::render( const CMatrix & matrix )
+void CSprite::render( const CCamera & camera )
 {
     if( isVisible() )
-        m_upVisualComponent->render( m_matrix * matrix );
+        m_upVisualComponent->render( m_matrix * camera.getFinalMatrix(), m_matrix * camera.getMatrix() );
 
 }
 

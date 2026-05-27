@@ -19,6 +19,7 @@
 
 // Forward declaration(s)
 class CMatrix;
+class CCamera;
 class iVisualComponent;
 
 class CSprite : public CObject
@@ -44,7 +45,7 @@ public:
     void Update();
 
     // do the render
-    void render( const CMatrix & matrix );
+    void render( const CCamera & camera );
 
 private:
 

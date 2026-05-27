@@ -44,7 +44,7 @@ CVisualComponent3d::~CVisualComponent3d()
 /************************************************************************
 *    desc:  do the render
 ************************************************************************/
-void CVisualComponent3d::render( const CMatrix & matrix )
+void CVisualComponent3d::render( const CMatrix & matrix, const CMatrix & viewMatrix )
 {
     if( isActive() )
     {
@@ -56,10 +56,15 @@ void CVisualComponent3d::render( const CMatrix & matrix )
         finalMatrix.setScale( m_visualData.getVertexScale() );
         finalMatrix *= matrix;
 
+        // Model-view matrix (no projection) for normal transformation
+        CMatrix modelViewMatrix;
+        modelViewMatrix.setScale( m_visualData.getVertexScale() );
+        modelViewMatrix *= viewMatrix;
+
         if( m_fixedFunction )
                 CSoftwareRender::Instance().renderFixedFunction3D( finalMatrix, *this );
         else
-                CSoftwareRender::Instance().render3D( finalMatrix, *this );
+                CSoftwareRender::Instance().render3D( finalMatrix, modelViewMatrix, *this );
     }
 }
 

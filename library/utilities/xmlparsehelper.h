@@ -32,6 +32,10 @@ namespace NParseHelper
     CPoint<float> loadPosition( const XMLNode & node );
     CPoint<float> loadPosition( const XMLNode & node, bool & loaded );
 
+    // Load the direction
+    CPoint<float> loadDirection( const XMLNode & node );
+    CPoint<float> loadDirection( const XMLNode & node, bool & loaded );
+
     // Load the rotation
     CPoint<float> loadRotation( const XMLNode & node );
     CPoint<float> loadRotation( const XMLNode & node, bool & loaded );

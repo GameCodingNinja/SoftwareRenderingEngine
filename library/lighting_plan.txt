@@ -1,0 +1,526 @@
+================================================================================
+  3D Lighting Implementation Plan — Software Rendering Engine
+================================================================================
+
+
+1. NEW FILE: common/light.h — CLight Class
+================================================================================
+
+  - Enum ELightType { DIRECTIONAL, POINT, AMBIENT }
+  - Members:
+      ELightType    m_type
+      CPoint<float> m_position     — World-space position (point lights)
+      CPoint<float> m_direction    — Normalized direction (directional lights)
+      CColor<float> m_color        — Light color (r,g,b,a) 0.0-1.0
+      float         m_intensity    — Scalar multiplier
+      float         m_radius       — Falloff radius (point lights)
+      bool          m_specular     — Enable specular highlights (directional/point)
+      float         m_shininess    — Specular exponent (controls highlight tightness)
+  - Constructor overloads for each type for convenience
+  - All members public for fast access in hot loops
+  - Specular is a property of directional and point lights, not a
+    separate light type. When m_specular is true, the light contributes
+    both diffuse and specular. When false, diffuse only.
+
+
+2. DEFINE: LIGHTING_GOURAUD vs LIGHTING_PHONG
+================================================================================
+
+  - Add to CMakeLists.txt or a new common/lightdefs.h:
+      #define LIGHTING_GOURAUD
+      // #define LIGHTING_PHONG
+  - Gouraud: compute lighting per-vertex, interpolate resulting color
+    across the triangle during rasterization. Fast.
+  - Phong: interpolate normals across the triangle, compute lighting
+    per-pixel in the rasterizer inner loop. Accurate but slow.
+  - Both paths compile, only one active at a time via #ifdef.
+
+
+3. DEFAULT LIGHT
+================================================================================
+
+  - CSoftwareRender holds default lights as members:
+      std::vector<CLight> m_defaultLights — contains two lights:
+        1. Ambient — white, intensity 0.2. Prevents pure-black shadows
+           on surfaces facing away from the directional light.
+        2. Directional — white, direction (0, 0, -1), intensity 1.0,
+           no specular. Provides main shading.
+  - If no lights have been set (m_pLights is nullptr or empty), the
+    renderer uses m_defaultLights automatically.
+  - This ensures objects are always visible with sensible shading even
+    if the game hasn't set up any lights yet.
+
+
+4. NEW FILE: managers/lightmanager.h/.cpp — CLightMgr Singleton
+================================================================================
+
+  Singleton that stores named light groups. Follows the same pattern
+  as CTextureMgr and CVertBufMgr.
+
+  class CLightMgr
+  {
+  public:
+
+      static CLightMgr & Instance()
+      {
+          static CLightMgr lightMgr;
+          return lightMgr;
+      }
+
+      // Add a light to a named group
+      void add( const std::string & group, const CLight & light );
+
+      // Get the light vector for a group
+      const std::vector<CLight> & get( const std::string & group ) const;
+
+      // Delete a light group
+      void deleteGroup( const std::string & group );
+
+      // Clear all groups
+      void clear();
+
+  private:
+
+      CLightMgr();
+      ~CLightMgr();
+
+      // Map of named light groups
+      std::map<const std::string, std::vector<CLight>> m_lightVecMap;
+  };
+
+  Additional methods:
+    // Load the list table (maps group names to data files)
+    void loadListTable( const std::string & filePath );
+
+    // Load a group's lights from a data file (called by loadListTable)
+    void loadFromFile( const std::string & group, const std::string & filePath );
+
+    // Add a light programmatically
+    void add( const std::string & group, const CLight & light );
+
+  Usage:
+    // Load from XML (two-tier: table → data files)
+    CLightMgr::Instance().loadListTable( "data/objects/lightDataList/dataListTable.lst" );
+
+    // Or add programmatically
+    CLightMgr::Instance().add( "level1", CLight( AMBIENT, white, 0.2 ) );
+
+    // Activate a group for rendering
+    CSoftwareRender::Instance().setLights( CLightMgr::Instance().get("level1") );
+
+    // Cleanup on state change
+    CLightMgr::Instance().deleteGroup( "level1" );
+
+
+  XML STRUCTURE — Two-Tier Pattern
+  ==================================
+
+  Follows the same pattern as objectDataList: a listTable file maps
+  group names to individual data files. This allows different states
+  or levels to load different light sets independently.
+
+
+  FILE 1: data/objects/lightDataList/dataListTable.lst
+  ----------------------------------------------------
+
+  <listTable>
+
+    <groupList groupName="(title_screen)">
+      <file path="data/objects/lightDataList/titleScreenLightList.lst"/>
+    </groupList>
+
+    <groupList groupName="(level1)">
+      <file path="data/objects/lightDataList/level1LightList.lst"/>
+    </groupList>
+
+  </listTable>
+
+
+  FILE 2: data/objects/lightDataList/titleScreenLightList.lst
+  -----------------------------------------------------------
+
+  <lightDataList>
+
+    <lightList>
+
+      <light type="ambient">
+        <color r="1" g="1" b="1" a="1"/>
+        <intensity value="0.2"/>
+      </light>
+
+      <light type="directional">
+        <direction x="0" y="-1" z="-1"/>
+        <color r="1" g="1" b="1" a="1"/>
+        <intensity value="1.0"/>
+        <specular enable="true" shininess="32"/>
+      </light>
+
+      <light type="point">
+        <position x="5" y="10" z="3"/>
+        <color r="1" g="0.5" b="0" a="1"/>
+        <intensity value="1.5"/>
+        <radius value="50"/>
+        <specular enable="true" shininess="16"/>
+      </light>
+
+    </lightList>
+
+  </lightDataList>
+
+
+  FILE 3: data/objects/lightDataList/level1LightList.lst
+  ------------------------------------------------------
+
+  <lightDataList>
+
+    <lightList>
+
+      <light type="ambient">
+        <color r="0.2" g="0.2" b="0.4" a="1"/>
+        <intensity value="0.15"/>
+      </light>
+
+      <light type="directional">
+        <direction x="1" y="-1" z="0"/>
+        <color r="0.8" g="0.9" b="1" a="1"/>
+        <intensity value="0.8"/>
+        <specular enable="false"/>
+      </light>
+
+    </lightList>
+
+  </lightDataList>
+
+
+  XML PARSING — CLightMgr::loadListTable()
+  ==========================================
+
+  void CLightMgr::loadListTable( const std::string & filePath )
+  {
+      const XMLNode node = XMLNode::openFileHelper( filePath.c_str(), "listTable" );
+
+      for( int i = 0; i < node.nChildNode("groupList"); ++i )
+      {
+          const XMLNode groupNode = node.getChildNode( "groupList", i );
+          const std::string group = groupNode.getAttribute( "groupName" );
+
+          for( int j = 0; j < groupNode.nChildNode("file"); ++j )
+          {
+              const XMLNode fileNode = groupNode.getChildNode( "file", j );
+              const std::string path = fileNode.getAttribute( "path" );
+
+              loadFromFile( group, path );
+          }
+      }
+  }
+
+
+  XML PARSING — CLightMgr::loadFromFile()
+  =========================================
+
+  Uses NParseHelper functions from xmlparsehelper.h/.cpp for color and
+  position parsing. Add a new NParseHelper::loadDirection() for the
+  <direction> node (same xyz pattern as loadPosition but looks for
+  "direction" child node and normalizes the result).
+
+  New helper to add to xmlparsehelper.h/.cpp:
+
+    CPoint<float> loadDirection( const XMLNode & node );
+    CPoint<float> loadDirection( const XMLNode & node, bool & loaded );
+
+    // Implementation: same as loadPosition but uses "direction" child
+    // node and calls normalize() on the result.
+
+  void CLightMgr::loadFromFile( const std::string & group, const std::string & filePath )
+  {
+      const XMLNode node = XMLNode::openFileHelper( filePath.c_str(), "lightDataList" );
+      const XMLNode listNode = node.getChildNode( "lightList" );
+
+      if( listNode.isEmpty() )
+          return;
+
+      auto & lightVec = m_lightVecMap[group];
+
+      for( int i = 0; i < listNode.nChildNode("light"); ++i )
+      {
+          const XMLNode lightNode = listNode.getChildNode( "light", i );
+          const std::string type = lightNode.getAttribute( "type" );
+
+          CLight light;
+
+          // Parse type
+          if( type == "ambient" )
+              light.m_type = ELightType::AMBIENT;
+          else if( type == "directional" )
+              light.m_type = ELightType::DIRECTIONAL;
+          else if( type == "point" )
+              light.m_type = ELightType::POINT;
+
+          // Parse color — uses NParseHelper::loadColor()
+          light.m_color = NParseHelper::loadColor( lightNode, light.m_color );
+
+          // Parse intensity (defaults to 1.0)
+          const XMLNode intensityNode = lightNode.getChildNode("intensity");
+          if( !intensityNode.isEmpty() )
+              light.m_intensity = std::atof( intensityNode.getAttribute("value") );
+
+          // Parse direction — uses NParseHelper::loadDirection()
+          // (auto-normalizes)
+          bool hasDir;
+          light.m_direction = NParseHelper::loadDirection( lightNode, hasDir );
+
+          // Parse position — uses NParseHelper::loadPosition()
+          bool hasPos;
+          light.m_position = NParseHelper::loadPosition( lightNode, hasPos );
+
+          // Parse radius (point lights)
+          const XMLNode radiusNode = lightNode.getChildNode("radius");
+          if( !radiusNode.isEmpty() )
+              light.m_radius = std::atof( radiusNode.getAttribute("value") );
+
+          // Parse specular (directional/point lights)
+          const XMLNode specNode = lightNode.getChildNode("specular");
+          if( !specNode.isEmpty() )
+          {
+              light.m_specular = (std::string(specNode.getAttribute("enable")) == "true");
+              if( specNode.isAttributeSet("shininess") )
+                  light.m_shininess = std::atof( specNode.getAttribute("shininess") );
+          }
+
+          lightVec.push_back( light );
+      }
+  }
+
+
+5. TRANSFORM NORMALS — softwareRender.cpp (render3D)
+================================================================================
+
+  Normals must be transformed to view space for lighting. The vertex
+  normals live in pVert[idx].norm. They need the upper-left 3x3 of the
+  matrix (rotation only, no translation) for correct transforms.
+  For non-uniform scale, the inverse-transpose is needed. CMatrix
+  already has a transform overload for CNormal.
+
+  - Add a new scratch buffer: std::vector<CPoint<float>> m_transNormals
+  - Normals are per-vertex (not per-unique-position) because the same
+    position can have different normals (hard edges on a cube). So
+    normals must be transformed per-vertex, not per-unique-vert.
+  - Transform all vertCount normals using the upper-left 3x3 of the
+    matrix. Re-normalize after transform.
+  - Store in m_transNormals indexed by vertex index (same size as
+    pVert array, same indexing as IBO).
+
+
+6. GOURAUD PATH — Per-Vertex Lighting
+================================================================================
+
+  Compute lighting at each vertex, store as a per-vertex color that gets
+  interpolated across the triangle during rasterization.
+
+  a) After transforming normals, compute per-vertex light contribution
+     during triangle assembly (at IBO lookup time):
+
+     For each triangle vertex (by IBO index):
+       CColor<float> litColor(0,0,0,1);
+       CPoint<float> & N = m_transNormals[idx];
+
+       For each CLight in the light vector:
+
+         AMBIENT:
+           litColor += light.m_color * light.m_intensity;
+
+         DIRECTIONAL:
+           float NdotL = max(0, dot(N, -light.m_direction));
+           litColor += light.m_color * light.m_intensity * NdotL;
+
+           if( light.m_specular ):
+             CPoint<float> reflect = 2 * NdotL * N - (-light.m_direction);
+             CPoint<float> toEye = -vertViewPos normalized;
+             float spec = pow(max(0, dot(reflect, toEye)), light.m_shininess);
+             litColor += light.m_color * light.m_intensity * spec;
+
+         POINT:
+           CPoint<float> toLight = light.m_position - vertWorldPos;
+           float dist = toLight.getLength();
+           toLight.normalize();
+           float NdotL = max(0, dot(N, toLight));
+           float atten = max(0, 1.0 - dist / light.m_radius);
+           litColor += light.m_color * light.m_intensity * NdotL * atten;
+
+           if( light.m_specular ):
+             CPoint<float> reflect = 2 * NdotL * N - toLight;
+             CPoint<float> toEye = -vertViewPos normalized;
+             float spec = pow(max(0, dot(reflect, toEye)), light.m_shininess);
+             litColor += light.m_color * light.m_intensity * spec * atten;
+
+       Clamp litColor components to [0,1].
+
+  b) Store per-vertex light colors in the projected CVertex::norm field
+     (repurpose norm.x/y/z as r/g/b since normals are unused after
+     projection). No new fields needed.
+
+  c) CTriangleSlope already interpolates CVertex fields across edges.
+     Add norm.x/y/z interpolation (reinterpreted as r/g/b light color).
+     The slope's Init/Inc already handles vert and uv — extend for norm.
+
+  d) In the rasterizer inner loop, multiply the texel color by the
+     interpolated light color before writing to the framebuffer.
+     This is a per-pixel multiply but the lighting itself was per-vertex.
+
+
+7. PHONG PATH — Per-Pixel Lighting
+================================================================================
+
+  Interpolate the view-space normal across the triangle, compute full
+  lighting at every pixel.
+
+  a) Instead of computing light color per-vertex, store the transformed
+     normal in the projected vertex's norm field.
+
+  b) CTriangleSlope interpolates norm.x/y/z across edges (same mechanism
+     as Gouraud, but now it's the actual normal vector, not a color).
+
+  c) In the rasterizer scanline loop, at each pixel:
+     - Reconstruct the interpolated normal (re-normalize for accuracy)
+     - Reconstruct world/view-space position from depth + screen coords
+       (or interpolate view-space position alongside)
+     - Run the same lighting equations from step 5a per-pixel
+     - Multiply texel by computed light color
+
+  d) This is expensive in the inner loop. Use SSE for the dot products
+     and normalize. Consider skipping re-normalization for speed (the
+     interpolated normal is approximately unit length for smooth surfaces).
+
+
+8. SClipVert — Add Normal for Clipping Interpolation
+================================================================================
+
+  SClipVert currently holds pos, w, u, v. Add:
+    CPoint<float> norm;
+
+  During clipping, interpolate the normal alongside pos/w/u/v:
+    clipped[clipCount].norm.x = triVerts[startI].norm.x +
+      (triVerts[endI].norm.x - triVerts[startI].norm.x) * p;
+    (same for y, z)
+
+  This ensures clipped vertices have correct interpolated normals.
+
+
+9. CRender3d — Pass Light Data to Rasterizer Threads
+================================================================================
+
+  CRender3d is the per-triangle render packet passed to worker threads.
+
+  #ifdef LIGHTING_GOURAUD:
+    - m_vec[].norm carries per-vertex light color (r,g,b).
+      No light vector needed at rasterize time — lighting is baked
+      into the interpolated color.
+
+  #ifdef LIGHTING_PHONG:
+    - m_vec[].norm carries interpolated normal direction.
+    - Add: const std::vector<CLight> * m_pLights (pointer, no copy)
+    - Rasterizer computes lighting per-pixel using m_pLights.
+    - May also need interpolated view-space position for specular
+      (point lights need vertex position for the toEye vector).
+
+
+10. CSoftwareRender Interface — Light Management
+================================================================================
+
+  - Add to CSoftwareRender:
+      void setLights( const std::vector<CLight> & lights );
+      const std::vector<CLight> * m_pLights;
+      std::vector<CLight> m_defaultLights;  // ambient + directional
+
+  - Lights are set globally, not per-object — they don't change
+    between draw calls within a frame.
+  - render3D checks m_pLights:
+      If nullptr or empty → use &m_defaultLights
+      Otherwise → use m_pLights
+
+
+11. RASTERIZER CHANGES — Inner Loop Modification
+================================================================================
+
+  In RenderTriStrip3d (the shader path):
+
+  #ifdef LIGHTING_GOURAUD:
+    - CTriangleSlope interpolates norm.x/y/z (light r/g/b) per scanline
+    - Add stepR/stepG/stepB per scanline, similar to stepU/stepV/stepZ
+    - In the inner pixel loop, after fetching texel:
+        uint32_t r = (texelR * lightR) >> 8;
+        uint32_t g = (texelG * lightG) >> 8;
+        uint32_t b = (texelB * lightB) >> 8;
+    - Use fixed-point for light color interpolation (same pattern as UV)
+
+  #ifdef LIGHTING_PHONG:
+    - CTriangleSlope interpolates norm.x/y/z (actual normal) per scanline
+    - Add stepNx/stepNy/stepNz per scanline
+    - In the inner pixel loop, after fetching texel:
+        Re-normalize interpolated normal (or skip for speed)
+        Compute lighting for all lights
+        Multiply texel by result
+    - This adds dot products + normalize per pixel — use SSE
+
+
+12. CTriangleSlope — Extend to Interpolate Normals
+================================================================================
+
+  CTriangleSlope::Init() and Inc() currently interpolate:
+    vert.x, vert.y, vert.z (screen pos + 1/W)
+    uv.u, uv.v
+
+  Add interpolation for:
+    norm.x, norm.y, norm.z
+
+  These are already part of CVertex, so the slope just needs to
+  include them in its step calculations and per-scanline increment.
+
+  For Gouraud: norm holds light color (r,g,b) — values 0.0 to 1.0
+  For Phong: norm holds interpolated normal direction
+
+
+13. FILES TOUCHED
+================================================================================
+
+  NEW:
+    common/light.h           — CLight class + ELightType enum
+    common/lightdefs.h       — #define LIGHTING_GOURAUD / LIGHTING_PHONG
+    managers/lightmanager.h   — CLightMgr singleton header
+    managers/lightmanager.cpp — CLightMgr implementation
+
+  MODIFIED:
+    softwareRender/softwareRender.h   — setLights(), m_pLights,
+                                        m_defaultLights, m_transNormals
+    softwareRender/softwareRender.cpp — normal transforms, per-vertex lighting
+                                        (Gouraud), default light fallback,
+                                        pass light data to CRender3d
+    softwareRender/render3d.h         — m_pLights pointer (Phong only)
+    softwareRender/renderdefs.h       — possibly update FragmentShaderFunc sig
+    softwareRender/triangleslope.h    — add norm interpolation to Init/Inc
+    softwareRender/softwareRender.cpp — SClipVert norm interpolation in clipping
+    utilities/xmlparsehelper.h        — add NParseHelper::loadDirection()
+    utilities/xmlparsehelper.cpp      — loadDirection() implementation
+    3d/visualcomponent3d.cpp          — no change (lights set globally)
+
+
+14. PERFORMANCE CONSIDERATIONS
+================================================================================
+
+  - Gouraud is 3 lighting calcs per triangle, Phong is per-pixel.
+    For a 100-pixel triangle, that's 3 vs ~100 lighting calcs.
+  - Specular adds one pow() per light per vertex (Gouraud) or per pixel
+    (Phong). Only computed when light.m_specular is true.
+  - Use SSE for dot products in Phong path (hot inner loop).
+  - Point light distance calc uses sqrt — consider using squared
+    distance with squared radius for the attenuation check.
+  - Ambient is a constant add — can be pre-computed once per frame
+    and applied as a base color before per-vertex lighting.
+  - Light color multiply in rasterizer uses integer math (0-255 range,
+    shift by 8) — no floating point in the inner loop for Gouraud.
+  - For Phong, skip re-normalization when the normal is near unit length
+    (flat or gently curved surfaces). Use fast inverse sqrt if needed.
+  - The default lights (ambient + directional) avoid any branching in
+    the renderer — there's always at least one light to process.
+  - The default ambient at 0.2 intensity means unlit faces still show
+    ~20% brightness instead of pure black.

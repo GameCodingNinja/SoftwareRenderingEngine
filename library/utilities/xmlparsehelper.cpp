@@ -80,6 +80,46 @@ namespace NParseHelper
 
 
     /************************************************************************
+    *    desc:  Load the direction
+    *
+    *    param: node - passed in node
+    ************************************************************************/
+    CPoint<float> loadDirection( const XMLNode & node, bool & loaded )
+    {
+        CPoint<float> point;
+
+        loaded = false;
+
+        XMLNode directionNode = node.getChildNode( "direction" );
+
+        if( !directionNode.isEmpty() )
+        {
+            loaded = true;
+
+            if( directionNode.isAttributeSet( "x" ) )
+                point.x = std::atof( directionNode.getAttribute( "x" ) );
+
+            if( directionNode.isAttributeSet( "y" ) )
+                point.y = std::atof( directionNode.getAttribute( "y" ) );
+
+            if( directionNode.isAttributeSet( "z" ) )
+                point.z = std::atof( directionNode.getAttribute( "z" ) );
+
+            point.normalize();
+        }
+
+        return point;
+
+    }
+
+    CPoint<float> loadDirection( const XMLNode & node )
+    {
+        bool dummy;
+        return loadDirection( node, dummy );
+    }
+
+
+    /************************************************************************
     *    desc:  Load the rotation
     *
     *    param: node - passed in node
