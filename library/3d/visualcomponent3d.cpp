@@ -14,6 +14,7 @@
 #include <common/quad2d.h>
 #include <utilities/statcounter.h>
 #include <softwareRender/softwareRender.h>
+#include <common/camera.h>
 
 /************************************************************************
 *    desc:  Constructer
@@ -44,27 +45,28 @@ CVisualComponent3d::~CVisualComponent3d()
 /************************************************************************
 *    desc:  do the render
 ************************************************************************/
-void CVisualComponent3d::render( const CMatrix & matrix, const CMatrix & viewMatrix )
+void CVisualComponent3d::render( const CMatrix & modelMatrix, const CCamera & camera )
 {
     if( isActive() )
     {
         // Increment our stat counter to keep track of what is going on.
         CStatCounter::Instance().incDisplayCounter();
 
-        // Apply vertex scale (quads use it for aspect ratio, mesh files default to 1,1,1)
-        CMatrix finalMatrix;
-        finalMatrix.setScale( m_visualData.getVertexScale() );
-        finalMatrix *= matrix;
+        // MVP matrix: vertexScale * model * view * projection
+        CMatrix mvpMatrix;
+        mvpMatrix.setScale( m_visualData.getVertexScale() );
+        mvpMatrix *= modelMatrix;
+        mvpMatrix.mergeMatrix( camera.getFinalMatrix() );
 
-        // Model-view matrix (no projection) for normal transformation
-        CMatrix modelViewMatrix;
-        modelViewMatrix.setScale( m_visualData.getVertexScale() );
-        modelViewMatrix *= viewMatrix;
+        // World-space model matrix for normal transformation (no view/projection)
+        CMatrix worldMatrix;
+        worldMatrix.setScale( m_visualData.getVertexScale() );
+        worldMatrix *= modelMatrix;
 
         if( m_fixedFunction )
-                CSoftwareRender::Instance().renderFixedFunction3D( finalMatrix, *this );
+                CSoftwareRender::Instance().renderFixedFunction3D( mvpMatrix, *this );
         else
-                CSoftwareRender::Instance().render3D( finalMatrix, modelViewMatrix, *this );
+                CSoftwareRender::Instance().render3D( mvpMatrix, worldMatrix, *this );
     }
 }
 

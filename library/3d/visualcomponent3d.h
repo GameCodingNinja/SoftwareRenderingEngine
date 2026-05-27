@@ -36,7 +36,7 @@ public:
     virtual ~CVisualComponent3d();
 
     // do the render
-    void render( const CMatrix & matrix, const CMatrix & viewMatrix ) override;
+    void render( const CMatrix & modelMatrix, const CCamera & camera ) override;
 
     // Is this component active?
     bool isActive() override;

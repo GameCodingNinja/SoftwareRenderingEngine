@@ -14,6 +14,7 @@
 #include <common/quad2d.h>
 #include <utilities/statcounter.h>
 #include <softwareRender/softwareRender.h>
+#include <common/camera.h>
 
 /************************************************************************
 *    desc:  Constructer
@@ -45,7 +46,7 @@ CVisualComponent2d::~CVisualComponent2d()
 /************************************************************************
 *    desc:  do the render
 ************************************************************************/
-void CVisualComponent2d::render( const CMatrix & matrix, const CMatrix & )
+void CVisualComponent2d::render( const CMatrix & modelMatrix, const CCamera & camera )
 {
     if( isActive() )
     {
@@ -55,10 +56,11 @@ void CVisualComponent2d::render( const CMatrix & matrix, const CMatrix & )
         // If this is a quad, we need to take into account the vertex scale
         if( m_visualData.getGenerationType() == NDefs::EGT_QUAD )
         {
-            // Calculate the final matrix
+            // Calculate the final matrix: vertexScale * model * view * projection
             CMatrix finalMatrix;
             finalMatrix.setScale( m_visualData.getVertexScale() ); // Needed for 2d to pre-scale a 2d image to it's pixel size
-            finalMatrix *= matrix;
+            finalMatrix *= modelMatrix;
+            finalMatrix.mergeMatrix( camera.getFinalMatrix() );
 
             if( m_fixedFunction )
                 CSoftwareRender::Instance().renderFixedFunction2D( finalMatrix, *this );

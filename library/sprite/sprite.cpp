@@ -56,7 +56,7 @@ void CSprite::Update()
 void CSprite::render( const CCamera & camera )
 {
     if( isVisible() )
-        m_upVisualComponent->render( m_matrix * camera.getFinalMatrix(), m_matrix * camera.getMatrix() );
+        m_upVisualComponent->render( m_matrix, camera );
 
 }
 

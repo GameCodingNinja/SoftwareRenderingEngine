@@ -14,6 +14,7 @@
 
 // Forward declaration(s)
 class CMatrix;
+class CCamera;
 
 class iVisualComponent
 {
@@ -26,7 +27,7 @@ public:
     virtual ~iVisualComponent(){}
 
     // do the render
-    virtual void render( const CMatrix & matrix, const CMatrix & viewMatrix ) = 0;
+    virtual void render( const CMatrix & modelMatrix, const CCamera & camera ) = 0;
 
     // Is this component active?
     virtual bool isActive() = 0;
