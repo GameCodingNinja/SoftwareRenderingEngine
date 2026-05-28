@@ -35,16 +35,16 @@ public:
     // Light color
     CColor<float> m_color = CColor<float>(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Scalar intensity multiplier
+    // Scalar intensity multiplier (0.0 = off, 1.0 = full, >1.0 = overbright)
     float m_intensity = 1.0f;
 
-    // Falloff radius (point lights)
+    // Falloff radius for point lights (0.0 = no reach, larger = wider coverage)
     float m_radius = 50.0f;
 
     // Enable specular highlights (directional/point)
     bool m_specular = false;
 
-    // Specular exponent (controls highlight tightness)
+    // Specular exponent (1.0 = broad highlight, 128.0 = tight pinpoint)
     float m_shininess = 32.0f;
 };
 

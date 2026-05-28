@@ -14,7 +14,7 @@
 #include <system/device.h>
 #include <utilities/highresolutiontimer.h>
 #include <utilities/settings.h>
-
+#include <managers/cameramanager.h>
 
 /************************************************************************
 *    desc:  Constructer                                                             
@@ -26,7 +26,8 @@ CTitleScreenState::CTitleScreenState()
       m_enemy( CObjectDataMgr::Instance().getData( "(title_screen)", "enemy" ) ),
       m_logo( CObjectDataMgr::Instance().getData( "(3d)", "logo" ) ),
       m_cube( CObjectDataMgr::Instance().getData( "(3d)", "cube" ) ),
-      m_orthoCam( CSettings::Instance().getMinZdist(), CSettings::Instance().getMaxZdist() ),
+      m_orthoCam( CCameraMgr::Instance().getDefault() ),
+      m_perspCam( CCameraMgr::Instance().get("3d") ),
       m_allowStateChange(false)
 {
     // Set the game states for this object

@@ -29,6 +29,15 @@ These rules apply to all hot pixel loops and rasterizer code:
 4. Prefer `__m128`/`__m128i` SSE types and `_mm_*` intrinsics in pixel-processing code.
 5. Keep inner loops tight — avoid function calls, virtual dispatch, and heap allocation inside hot paths.
 
+## Lighting
+- **Shading models:** Gouraud (per-vertex) and Phong (per-pixel), selected via compile-time define in `../library/common/lightdefs.h`. Only one can be active — they are mutually exclusive.
+- **Light types:** Ambient, Directional, Point. Defined in `../library/common/light.h`. Default lights (ambient + directional) are set up in `CSoftwareRender`'s constructor.
+- **Normal transformation:** Normals are transformed into world space using only the model matrix (no view/projection) so lighting is correct regardless of camera position/rotation.
+- **Gouraud:** Lighting is computed per-vertex in `render3D()`, the resulting color is perspective-divided and interpolated across the triangle via `CTriangleSlope`. The rasterizer recovers the color per-pixel using affine subdivision (16-pixel runs) with 8.16 fixed-point precision.
+- **Phong:** The world-space normal (divided by W) is interpolated per-pixel. At each pixel the normal is recovered via perspective divide, normalized, and full lighting is computed via `computeVertexLighting()`. Point lights are not yet wired up for Phong (zero position is passed).
+- **`CVertex` layout must not change** between shading models. Phong stores extra per-triangle data on `CRender3d` (not in `CVertex`) to keep the vertex buffer layout stable.
+- **Render interface:** `CSprite::render(const CCamera &)` passes the sprite's model matrix and camera to the visual component. `CVisualComponent3d` builds the MVP matrix and world matrix internally.
+
 ## Fixed-Function Pipeline
 Ignore the fixed function rendering pipeline for development. It's just there for speed comparisons.
 

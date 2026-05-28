@@ -54,19 +54,19 @@ void CVisualComponent3d::render( const CMatrix & modelMatrix, const CCamera & ca
 
         // MVP matrix: vertexScale * model * view * projection
         CMatrix mvpMatrix;
-        mvpMatrix.setScale( m_visualData.getVertexScale() );
+        mvpMatrix.setScale( m_visualData.getVertexScale() ); // Needed for 2d to pre-scale a 2d image to it's pixel size for a 3D quad
         mvpMatrix *= modelMatrix;
         mvpMatrix.mergeMatrix( camera.getFinalMatrix() );
 
         // World-space model matrix for normal transformation (no view/projection)
         CMatrix worldMatrix;
-        worldMatrix.setScale( m_visualData.getVertexScale() );
+        worldMatrix.setScale( m_visualData.getVertexScale() ); // Needed for 2d to pre-scale a 2d image to it's pixel size for a 3D quad
         worldMatrix *= modelMatrix;
 
         if( m_fixedFunction )
-                CSoftwareRender::Instance().renderFixedFunction3D( mvpMatrix, *this );
+            CSoftwareRender::Instance().renderFixedFunction3D( mvpMatrix, *this );
         else
-                CSoftwareRender::Instance().render3D( mvpMatrix, worldMatrix, *this );
+            CSoftwareRender::Instance().render3D( mvpMatrix, worldMatrix, *this );
     }
 }
 

@@ -87,10 +87,6 @@ void BinTriangles( const std::vector<T> & triList, std::vector<std::vector<const
 CSoftwareRender::CSoftwareRender()
     : m_pLights(nullptr)
 {
-    // Init the thread pool if not already active
-    if( !CThreadPool::Instance().isActive() )
-        CThreadPool::Instance().init( 2, -1 );
-
     // Setup default lights (ambient + directional)
     CLight ambient;
     ambient.m_type = ELightType::AMBIENT;
@@ -102,6 +98,13 @@ CSoftwareRender::CSoftwareRender()
     directional.m_direction = CPoint<float>(0.0f, 0.0f, -1.0f);
     directional.m_intensity = 1.0f;
     m_defaultLights.push_back( directional );
+
+    /*CLight point;
+    point.m_type = ELightType::POINT;
+    point.m_position = CPoint<float>(0.0f, 0.0f, 6.0f);
+    point.m_intensity = 1.0f;
+    point.m_radius = 15.0f;
+    m_defaultLights.push_back( point );*/
 }
 
 /************************************************************************

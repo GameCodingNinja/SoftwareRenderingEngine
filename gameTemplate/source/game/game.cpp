@@ -22,6 +22,7 @@
 #include <utilities/settings.h>
 #include <utilities/highresolutiontimer.h>
 #include <utilities/statcounter.h>
+#include <utilities/threadpool.h>
 #include <system/device.h>
 #include <system/iwindow.h>
 #include <system/iframebuffer.h>
@@ -57,6 +58,9 @@ CGame::CGame()
 
     // Load the camera data early because many objects init the default camera in their constructor
     CCameraMgr::Instance().load( "data/objects/camera.lst" );
+
+    // Init the thread pool
+    CThreadPool::Instance().init( 2, -1 );
 
 }   // constructor
 
