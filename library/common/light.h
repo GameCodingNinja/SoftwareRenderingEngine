@@ -16,7 +16,8 @@ enum class ELightType
 {
     AMBIENT,
     DIRECTIONAL,
-    POINT
+    POINT,
+    SPOT
 };
 
 class CLight
@@ -38,10 +39,16 @@ public:
     // Scalar intensity multiplier (0.0 = off, 1.0 = full, >1.0 = overbright)
     float m_intensity = 1.0f;
 
-    // Falloff radius for point lights (0.0 = no reach, larger = wider coverage)
+    // Falloff radius for point/spot lights (0.0 = no reach, larger = wider coverage)
     float m_radius = 50.0f;
 
-    // Enable specular highlights (directional/point)
+    // Spot light cone angles stored as cosines of the half-angle
+    // Inner = full intensity, outer = zero, smooth falloff between
+    // Range: 0.0 (180° hemisphere) to 1.0 (infinitely narrow), inner > outer
+    float m_innerCone = 0.9f;   // cos(~25 degrees)
+    float m_outerCone = 0.7f;   // cos(~45 degrees)
+
+    // Enable specular highlights (directional/point/spot)
     bool m_specular = false;
 
     // Specular exponent (1.0 = broad highlight, 128.0 = tight pinpoint)

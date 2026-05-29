@@ -31,7 +31,7 @@ These rules apply to all hot pixel loops and rasterizer code:
 
 ## Lighting
 - **Shading models:** Gouraud (per-vertex) and Phong (per-pixel), selected via compile-time define in `../library/common/lightdefs.h`. Only one can be active — they are mutually exclusive.
-- **Light types:** Ambient, Directional, Point. Defined in `../library/common/light.h`. Default lights (ambient + directional) are set up in `CSoftwareRender`'s constructor.
+- **Light types:** Ambient, Directional, Point, Spot. Defined in `../library/common/light.h`. Default lights (ambient + directional) are set up in `CSoftwareRender`'s constructor. Spot lights use `m_innerCone`/`m_outerCone` (cosines of half-angles) for smooth cone falloff.
 - **Normal transformation:** Normals are transformed into world space using only the model matrix (no view/projection) so lighting is correct regardless of camera position/rotation.
 - **Gouraud:** Lighting is computed per-vertex in `render3D()`, the resulting color is perspective-divided and interpolated across the triangle via `CTriangleSlope`. The rasterizer recovers the color per-pixel using affine subdivision (16-pixel runs) with 8.16 fixed-point precision.
 - **Phong:** The world-space normal (divided by W) is interpolated per-pixel. At each pixel the normal is recovered via perspective divide, normalized, and full lighting is computed via `computeVertexLighting()`. Point lights are not yet wired up for Phong (zero position is passed).

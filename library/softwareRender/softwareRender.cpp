@@ -99,12 +99,15 @@ CSoftwareRender::CSoftwareRender()
     directional.m_intensity = 1.0f;
     m_defaultLights.push_back( directional );
 
-    /*CLight point;
-    point.m_type = ELightType::POINT;
-    point.m_position = CPoint<float>(0.0f, 0.0f, 6.0f);
-    point.m_intensity = 1.0f;
-    point.m_radius = 15.0f;
-    m_defaultLights.push_back( point );*/
+    /*CLight spot;
+    spot.m_type = ELightType::SPOT;
+    spot.m_position = CPoint<float>(-3.0f, 3.0f, 0.0f);
+    spot.m_direction = CPoint<float>(0.55f, -0.38f, -0.74f); // upper-left-front, aimed at cube at (1.4, 0, -6)
+    spot.m_intensity = 2.0f;
+    spot.m_radius = 15.0f;
+    spot.m_innerCone = 0.7f;    // ~45 degrees
+    spot.m_outerCone = 0.5f;    // ~60 degrees
+    m_defaultLights.push_back( spot );*/
 }
 
 /************************************************************************
@@ -232,6 +235,75 @@ CColor<float> CSoftwareRender::computeVertexLighting(
                 toLight.z *= invDist;
 
                 float atten = 1.0f - dist / light.m_radius;
+                float NdotL = transNorm.getDotProduct( toLight );
+                if( NdotL < 0.0f ) NdotL = 0.0f;
+
+                float diffuse = light.m_intensity * NdotL * atten;
+                litColor.r += light.m_color.r * diffuse;
+                litColor.g += light.m_color.g * diffuse;
+                litColor.b += light.m_color.b * diffuse;
+
+                // Specular
+                if( light.m_specular && NdotL > 0.0f )
+                {
+                    if( !haveToEye )
+                    {
+                        toEye.set( -viewPos.x, -viewPos.y, -viewPos.z );
+                        toEye.normalize();
+                        haveToEye = true;
+                    }
+
+                    float twoNdotL = 2.0f * NdotL;
+                    CPoint<float> reflect( twoNdotL * transNorm.x - toLight.x,
+                                           twoNdotL * transNorm.y - toLight.y,
+                                           twoNdotL * transNorm.z - toLight.z );
+
+                    float spec = reflect.getDotProduct( toEye );
+                    if( spec > 0.0f )
+                    {
+                        spec = std::pow( spec, light.m_shininess ) * atten;
+                        litColor.r += light.m_color.r * light.m_intensity * spec;
+                        litColor.g += light.m_color.g * light.m_intensity * spec;
+                        litColor.b += light.m_color.b * light.m_intensity * spec;
+                    }
+                }
+                break;
+            }
+
+            case ELightType::SPOT:
+            {
+                CPoint<float> toLight( light.m_position.x - viewPos.x,
+                                       light.m_position.y - viewPos.y,
+                                       light.m_position.z - viewPos.z );
+
+                // Early-out if outside radius
+                float distSq = toLight.getLengthSquared();
+                float radiusSq = light.m_radius * light.m_radius;
+                if( distSq >= radiusSq )
+                    continue;
+
+                float dist = std::sqrt( distSq );
+                float invDist = (dist > 0.0f) ? (1.0f / dist) : 0.0f;
+                toLight.x *= invDist;
+                toLight.y *= invDist;
+                toLight.z *= invDist;
+
+                // Cone test: dot(-toLight, direction) gives cosine of angle from spot axis
+                float spotDot = (-toLight.x * light.m_direction.x)
+                              + (-toLight.y * light.m_direction.y)
+                              + (-toLight.z * light.m_direction.z);
+
+                if( spotDot <= light.m_outerCone )
+                    continue;
+
+                // Smooth falloff between outer and inner cone
+                float spotAtten = 1.0f;
+                if( spotDot < light.m_innerCone )
+                    spotAtten = (spotDot - light.m_outerCone) / (light.m_innerCone - light.m_outerCone);
+
+                float distAtten = 1.0f - dist / light.m_radius;
+                float atten = distAtten * spotAtten;
+
                 float NdotL = transNorm.getDotProduct( toLight );
                 if( NdotL < 0.0f ) NdotL = 0.0f;
 
