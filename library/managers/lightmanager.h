@@ -8,6 +8,9 @@
 #ifndef __light_manager_h__
 #define __light_manager_h__
 
+// Physical component dependency
+#include <managers/managerbase.h>
+
 // Standard lib dependencies
 #include <string>
 #include <map>
@@ -16,7 +19,7 @@
 // Game lib dependencies
 #include <common/light.h>
 
-class CLightMgr
+class CLightMgr : public CManagerBase
 {
 public:
 
@@ -27,20 +30,14 @@ public:
         return lightMgr;
     }
 
-    // Load the list table (maps group names to data files)
-    void loadListTable( const std::string & filePath );
+    // Load all lights for a specific group
+    void LoadGroup( const std::string & group );
 
-    // Load a group's lights from a data file
-    void loadFromFile( const std::string & group, const std::string & filePath );
-
-    // Add a light to a named group
-    void add( const std::string & group, const CLight & light );
+    // Free a group's lights
+    void FreeGroup( const std::string & group );
 
     // Get the light vector for a group
     const std::vector<CLight> & get( const std::string & group ) const;
-
-    // Delete a light group
-    void deleteGroup( const std::string & group );
 
     // Clear all groups
     void clear();
@@ -52,6 +49,9 @@ private:
 
     // Destructor
     ~CLightMgr();
+
+    // Load lights from an XML data file
+    void LoadFromXML( const std::string & group, const std::string & filePath );
 
 private:
 

@@ -46,12 +46,6 @@ public:
     // Set the surface data from a framebuffer
     void setSurface( IFrameBuffer * pFrameBuffer );
 
-    // Set the active lights for rendering
-    void setLights( const std::vector<CLight> & lights );
-
-    // Clear the active lights (reverts to default)
-    void clearLights();
-
     // Render 2D (orthographic)
     void render2D( const CMatrix & matrix, const CVisualComponent2d & visualComponent );
 
@@ -118,9 +112,6 @@ private:
 
     // Reusable scratch buffer for transformed normals (per-vertex)
     std::vector<CPoint<float>> m_transNormals;
-
-    // Active light list pointer (nullptr = use defaults)
-    const std::vector<CLight> * m_pLights;
 
     // Default lights (ambient + directional)
     std::vector<CLight> m_defaultLights;

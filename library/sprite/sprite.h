@@ -16,10 +16,12 @@
 
 // Standard lib dependencies
 #include <memory>
+#include <vector>
 
 // Forward declaration(s)
 class CMatrix;
 class CCamera;
+class CLight;
 class iVisualComponent;
 
 class CSprite : public CObject
@@ -43,6 +45,9 @@ public:
 
     // Update the sprite 
     void Update();
+
+    // Set the active lights
+    void setLights( const std::vector<CLight> & lights );
 
     // do the render
     void render( const CCamera & camera );

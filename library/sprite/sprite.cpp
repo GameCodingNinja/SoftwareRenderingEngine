@@ -15,6 +15,7 @@
 #include <2d/visualcomponent2d.h>
 #include <3d/visualcomponent3d.h>
 #include <common/camera.h>
+#include <common/light.h>
 
 /************************************************************************
 *    desc:  Constructer
@@ -30,9 +31,7 @@ CSprite::CSprite( const iObjectData & objectData )
     {
         m_upVisualComponent.reset( new CVisualComponent3d( static_cast<const CObjectData3D &>(objectData) ) );
     }
-
 }
-
 
 /************************************************************************
 *    desc:  destructer                                                             
@@ -41,7 +40,6 @@ CSprite::~CSprite()
 {
 }
 
-
 /************************************************************************
 *    desc:  Update the sprite                                                           
 ************************************************************************/
@@ -49,6 +47,13 @@ void CSprite::Update()
 {
 }
 
+/************************************************************************
+*    desc:  Set the active lights
+************************************************************************/
+void CSprite::setLights( const std::vector<CLight> & lights )
+{
+    m_upVisualComponent.get()->setLights( lights );
+}
 
 /************************************************************************
 *    desc:  do the render                                                            
@@ -60,7 +65,6 @@ void CSprite::render( const CCamera & camera )
 
 }
 
-
 /************************************************************************
 *    desc:  Get the visual component                                                            
 ************************************************************************/
@@ -69,7 +73,6 @@ iVisualComponent * CSprite::GetVisualComponent()
     return m_upVisualComponent.get();
 
 }
-
 
 /************************************************************************
 *    desc:  Get the object data                                                            

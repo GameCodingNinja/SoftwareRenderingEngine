@@ -18,6 +18,7 @@
 #include <utilities/highresolutiontimer.h>
 #include <utilities/exceptionhandling.h>
 #include <utilities/settings.h>
+#include <managers/lightmanager.h>
 
 /************************************************************************
 *    desc:  Constructer                                                             
@@ -41,6 +42,9 @@ void CStartUpState::Load()
     CObjectDataMgr::Instance().LoadListTable( "data/objects/3d/objectDataList/dataListTable.lst" );
     CObjectDataMgr::Instance().LoadGroup( "(title_screen)" );
     CObjectDataMgr::Instance().LoadGroup( "(3d)" );
+
+    CLightMgr::Instance().LoadListTable( "data/objects/lightDataList/dataListTable.lst" );
+    CLightMgr::Instance().LoadGroup( "(default)" );
 
 }   // Load
 

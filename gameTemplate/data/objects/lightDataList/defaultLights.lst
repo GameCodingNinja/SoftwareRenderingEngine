@@ -1,0 +1,36 @@
+<lightList>
+
+    <!-- Ambient light -->
+    <light type="ambient">
+        <color r="1" g="1" b="1"/>
+        <intensity value="0.2"/>
+    </light>
+
+    <!-- Directional light -->
+    <light type="directional">
+        <color r="1" g="1" b="1"/>
+        <intensity value="1.0"/>
+        <direction x="0" y="0" z="-1"/>
+    </light>
+
+    <!-- Point light example
+    <light type="point">
+        <color r="1" g="1" b="1"/>
+        <intensity value="1.0"/>
+        <position x="2" y="2" z="0"/>
+        <radius value="15"/>
+    </light>
+    -->
+
+    <!-- Spot light example
+    <light type="spot">
+        <color r="1" g="1" b="1"/>
+        <intensity value="2.0"/>
+        <position x="-3" y="3" z="0"/>
+        <direction x="0.55" y="-0.38" z="-0.74"/>
+        <radius value="15"/>
+        <cone inner="0.7" outer="0.5"/>
+    </light>
+    -->
+
+</lightList>

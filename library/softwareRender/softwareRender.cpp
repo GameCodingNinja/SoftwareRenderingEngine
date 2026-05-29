@@ -85,7 +85,6 @@ void BinTriangles( const std::vector<T> & triList, std::vector<std::vector<const
 *    desc:  Constructor
 ************************************************************************/
 CSoftwareRender::CSoftwareRender()
-    : m_pLights(nullptr)
 {
     // Setup default lights (ambient + directional)
     CLight ambient;
@@ -134,22 +133,6 @@ void CSoftwareRender::setSurface( IFrameBuffer * pFrameBuffer )
 
     // Allocate z-buffer for 3D rendering
     m_zBuffer.resize( m_surfaceData.w * m_surfaceData.h, 0 );
-}
-
-/***************************************************************************
-*   desc:  Set the active lights for rendering
-****************************************************************************/
-void CSoftwareRender::setLights( const std::vector<CLight> & lights )
-{
-    m_pLights = &lights;
-}
-
-/***************************************************************************
-*   desc:  Clear the active lights (reverts to default)
-****************************************************************************/
-void CSoftwareRender::clearLights()
-{
-    m_pLights = nullptr;
 }
 
 /***************************************************************************
@@ -657,7 +640,8 @@ void CSoftwareRender::render3D( const CMatrix & matrix, const CMatrix & modelVie
     FragmentShaderFunc shader = visualComponent.getShader();
 
     // Use active lights or fall back to defaults
-    const std::vector<CLight> & lights = (m_pLights && !m_pLights->empty()) ? *m_pLights : m_defaultLights;
+    const std::vector<CLight> * pLights = visualComponent.getLights();
+    const std::vector<CLight> & lights = (pLights && !pLights->empty()) ? *pLights : m_defaultLights;
 
     // Get raw matrix data for W computation
     const float * mat = matrix();

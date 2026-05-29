@@ -10,7 +10,6 @@
 
 // Standard lib dependencies
 #include <string>
-#include <vector>
 
 // Game lib dependencies
 #include <common/ivisualcomponent.h>
@@ -75,6 +74,12 @@ public:
     // Is fixed function rendering
     bool isFixedFunction() const;
 
+    // Set the active lights
+    void setLights( const std::vector<CLight> & lights );
+
+    // Get the active lights
+    const std::vector<CLight> * getLights() const;
+
 private:
 
     // Reference to object visual data
@@ -108,6 +113,9 @@ private:
     // Unique vertex data for optimized transforms
     const std::vector<CPoint<float>*> & m_uniqueVerts;
     const std::vector<uint> & m_vertToUniqueVec;
+
+    // Active lights (nullptr = use renderer defaults)
+    const std::vector<CLight> * m_pLights;
 };
 
 #endif

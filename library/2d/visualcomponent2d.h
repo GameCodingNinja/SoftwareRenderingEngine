@@ -47,6 +47,10 @@ public:
     // Set the texture from index
     void setTexture( uint index ) override;
 
+    // Set/get the active lights (no-op for 2D)
+    void setLights( const std::vector<CLight> & ) override {}
+    const std::vector<CLight> * getLights() const override { return nullptr; }
+
     // Get the texture
     const CTexture * getTexture() const;
 

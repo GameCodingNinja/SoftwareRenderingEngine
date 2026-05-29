@@ -11,10 +11,12 @@
 // Game lib dependencies
 #include <common/color.h>
 #include <common/defs.h>
+#include <vector>
 
 // Forward declaration(s)
 class CMatrix;
 class CCamera;
+class CLight;
 
 class iVisualComponent
 {
@@ -38,6 +40,10 @@ public:
 
     // Set the texture from index
     virtual void setTexture( uint index ) = 0;
+
+    // Set/get the active lights
+    virtual void setLights( const std::vector<CLight> & lights ) {};
+    virtual const std::vector<CLight> * getLights() const { return nullptr; };
 };
 
 #endif

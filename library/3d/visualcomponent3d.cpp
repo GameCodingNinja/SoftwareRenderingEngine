@@ -31,7 +31,8 @@ CVisualComponent3d::CVisualComponent3d( const CObjectData3D & objectData )
       m_IndexCount( m_visualData.getIndexCount() ),
       m_fixedFunction( m_visualData.getFixedFunction() ),
       m_uniqueVerts( m_visualData.getUniqueVerts() ),
-      m_vertToUniqueVec( m_visualData.getVertToUniqueVec() )
+      m_vertToUniqueVec( m_visualData.getVertToUniqueVec() ),
+      m_pLights( nullptr )
 {
 }
 
@@ -178,4 +179,22 @@ FragmentShaderFunc CVisualComponent3d::getShader() const
 bool CVisualComponent3d::isFixedFunction() const
 {
     return m_fixedFunction;
+}
+
+
+/************************************************************************
+*    desc:  Set the active lights
+************************************************************************/
+void CVisualComponent3d::setLights( const std::vector<CLight> & lights )
+{
+    m_pLights = &lights;
+}
+
+
+/************************************************************************
+*    desc:  Get the active lights
+************************************************************************/
+const std::vector<CLight> * CVisualComponent3d::getLights() const
+{
+    return m_pLights;
 }

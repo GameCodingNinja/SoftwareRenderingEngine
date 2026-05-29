@@ -14,6 +14,9 @@
 #include <utilities/exceptionhandling.h>
 #include <utilities/genfunc.h>
 
+// Standard lib dependencies
+#include <cstring>
+
 /************************************************************************
 *    desc:  Constructor
 ************************************************************************/
@@ -29,34 +32,38 @@ CLightMgr::~CLightMgr()
 }
 
 /************************************************************************
-*    desc:  Load the list table
+*    desc:  Load all lights for a specific group
 ************************************************************************/
-void CLightMgr::loadListTable( const std::string & filePath )
+void CLightMgr::LoadGroup( const std::string & group )
 {
-    const XMLNode node = XMLNode::openFileHelper( filePath.c_str(), "listTable" );
+    // Make sure the group we are looking has been defined in the list table file
+    auto listTableIter = m_listTableMap.find( group );
+    if( listTableIter == m_listTableMap.end() )
+        throw NExcept::CCriticalException("Light Load Group Error!",
+            NGenFunc::FormatString("Light group name can't be found (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
 
-    for( int i = 0; i < node.nChildNode("groupList"); ++i )
+    // Load the group data if it doesn't already exist
+    if( m_lightVecMap.find( group ) == m_lightVecMap.end() )
     {
-        const XMLNode groupNode = node.getChildNode( "groupList", i );
-        const std::string group = groupNode.getAttribute( "groupName" );
+        // Create a new group vector
+        m_lightVecMap.insert( std::make_pair(group, std::vector<CLight>()) );
 
-        for( int j = 0; j < groupNode.nChildNode("file"); ++j )
-        {
-            const XMLNode fileNode = groupNode.getChildNode( "file", j );
-            const std::string path = fileNode.getAttribute( "path" );
-
-            loadFromFile( group, path );
-        }
+        for( size_t i = 0; i < listTableIter->second.size(); ++i )
+            LoadFromXML( group, listTableIter->second[i] );
+    }
+    else
+    {
+        throw NExcept::CCriticalException("Light Load Group Error!",
+            NGenFunc::FormatString("Light group has already been loaded (%s).\n\n%s\nLine: %d", group, __FUNCTION__, __LINE__));
     }
 }
 
 /************************************************************************
-*    desc:  Load a group's lights from a data file
+*    desc:  Load lights from an XML data file
 ************************************************************************/
-void CLightMgr::loadFromFile( const std::string & group, const std::string & filePath )
+void CLightMgr::LoadFromXML( const std::string & group, const std::string & filePath )
 {
-    const XMLNode node = XMLNode::openFileHelper( filePath.c_str(), "lightDataList" );
-    const XMLNode listNode = node.getChildNode( "lightList" );
+    const XMLNode listNode = XMLNode::openFileHelper( filePath.c_str(), "lightList" );
 
     if( listNode.isEmpty() )
         return;
@@ -77,6 +84,8 @@ void CLightMgr::loadFromFile( const std::string & group, const std::string & fil
             light.m_type = ELightType::DIRECTIONAL;
         else if( type == "point" )
             light.m_type = ELightType::POINT;
+        else if( type == "spot" )
+            light.m_type = ELightType::SPOT;
 
         // Parse color
         light.m_color = NParseHelper::loadColor( lightNode, light.m_color );
@@ -99,6 +108,16 @@ void CLightMgr::loadFromFile( const std::string & group, const std::string & fil
         if( !radiusNode.isEmpty() )
             light.m_radius = std::atof( radiusNode.getAttribute("value") );
 
+        // Parse spot cone angles
+        const XMLNode coneNode = lightNode.getChildNode("cone");
+        if( !coneNode.isEmpty() )
+        {
+            if( coneNode.isAttributeSet("inner") )
+                light.m_innerCone = std::atof( coneNode.getAttribute("inner") );
+            if( coneNode.isAttributeSet("outer") )
+                light.m_outerCone = std::atof( coneNode.getAttribute("outer") );
+        }
+
         // Parse specular
         const XMLNode specNode = lightNode.getChildNode("specular");
         if( !specNode.isEmpty() )
@@ -113,11 +132,13 @@ void CLightMgr::loadFromFile( const std::string & group, const std::string & fil
 }
 
 /************************************************************************
-*    desc:  Add a light to a named group
+*    desc:  Free a group's lights
 ************************************************************************/
-void CLightMgr::add( const std::string & group, const CLight & light )
+void CLightMgr::FreeGroup( const std::string & group )
 {
-    m_lightVecMap[group].push_back( light );
+    auto iter = m_lightVecMap.find( group );
+    if( iter != m_lightVecMap.end() )
+        m_lightVecMap.erase( iter );
 }
 
 /************************************************************************
@@ -132,16 +153,6 @@ const std::vector<CLight> & CLightMgr::get( const std::string & group ) const
                 group.c_str(), __FUNCTION__, __LINE__));
 
     return iter->second;
-}
-
-/************************************************************************
-*    desc:  Delete a light group
-************************************************************************/
-void CLightMgr::deleteGroup( const std::string & group )
-{
-    auto iter = m_lightVecMap.find( group );
-    if( iter != m_lightVecMap.end() )
-        m_lightVecMap.erase( iter );
 }
 
 /************************************************************************

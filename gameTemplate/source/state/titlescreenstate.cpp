@@ -15,6 +15,7 @@
 #include <utilities/highresolutiontimer.h>
 #include <utilities/settings.h>
 #include <managers/cameramanager.h>
+#include <managers/lightmanager.h>
 
 /************************************************************************
 *    desc:  Constructer                                                             
@@ -47,6 +48,10 @@ CTitleScreenState::CTitleScreenState()
     m_logo.setScale( CPoint<float>(2, 2, 2) );
     m_cube.setPos( CPoint<float>( 1.4, 0, -6) );
     m_cube.setScale( CPoint<float>(.8, .8, .8) );
+
+    const auto & lights = CLightMgr::Instance().get("(default)");
+    m_logo.setLights(lights);
+    m_cube.setLights(lights);
 
     m_background.setRot( CPoint<float>(180,0,0) );
 
