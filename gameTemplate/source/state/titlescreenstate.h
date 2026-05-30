@@ -50,9 +50,9 @@ private:
     CSprite m_logo;
     CSprite m_cube;
 
-    // Cameras
-    CCamera m_orthoCam;
-    CCamera m_perspCam;
+    // Cameras (references to managed cameras so projection rebuilds propagate)
+    CCamera & m_orthoCam;
+    CCamera & m_perspCam;
 
     // Allow for the state change
     bool m_allowStateChange;

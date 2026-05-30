@@ -131,6 +131,33 @@ void CSoftwareRender::setSurface( IFrameBuffer * pFrameBuffer )
     m_halfScreen.w = m_surfaceData.w / 2;
     m_halfScreen.h = m_surfaceData.h / 2;
 
+    // Compute the aspect-locked display rect for 2D rendering.
+    // This is the largest rect with the native aspect ratio that
+    // fits inside the framebuffer, centered. 2D content renders
+    // into this rect; the rest stays black from the clear.
+    float nativeAspect = CSettings::Instance().getNativeAspectRatio();
+    float fbAspect = (float)m_surfaceData.w / (float)m_surfaceData.h;
+
+    float displayW, displayH;
+
+    if( fbAspect > nativeAspect )
+    {
+        // Framebuffer is wider — use full height, constrain width
+        displayH = (float)m_surfaceData.h;
+        displayW = nativeAspect * displayH;
+    }
+    else
+    {
+        // Framebuffer is taller — use full width, constrain height
+        displayW = (float)m_surfaceData.w;
+        displayH = displayW / nativeAspect;
+    }
+
+    m_halfDisplay.w = displayW / 2.f;
+    m_halfDisplay.h = displayH / 2.f;
+    m_displayOffset.w = ((float)m_surfaceData.w - displayW) / 2.f;
+    m_displayOffset.h = ((float)m_surfaceData.h - displayH) / 2.f;
+
     // Allocate z-buffer for 3D rendering
     m_zBuffer.resize( m_surfaceData.w * m_surfaceData.h, 0 );
 }
@@ -354,9 +381,9 @@ void CSoftwareRender::render2D( const CMatrix & matrix, const CVisualComponent2d
         // Transform the verts
         matrix.transform( pTrans[i].vert, pVert[i].vert );
 
-        // Convert to screen coordinates
-        pTrans[i].vert.x = (pTrans[i].vert.x * m_halfScreen.w) + m_halfScreen.w;
-        pTrans[i].vert.y = (pTrans[i].vert.y * m_halfScreen.h) + m_halfScreen.h;
+        // Convert to screen coordinates using the aspect-locked display rect
+        pTrans[i].vert.x = (pTrans[i].vert.x * m_halfDisplay.w) + m_halfDisplay.w + m_displayOffset.w;
+        pTrans[i].vert.y = (pTrans[i].vert.y * m_halfDisplay.h) + m_halfDisplay.h + m_displayOffset.h;
 
         // Transform the UV to pixel coordinates
         pTrans[i].uv.u = pVert[i].uv.u * pText->m_size.w;
@@ -1420,8 +1447,8 @@ void CSoftwareRender::renderFixedFunction2D( const CMatrix & matrix, const CVisu
     {
         matrix.transform( pTrans[i].vert, pVert[i].vert );
 
-        pTrans[i].vert.x = (pTrans[i].vert.x * m_halfScreen.w) + m_halfScreen.w;
-        pTrans[i].vert.y = (pTrans[i].vert.y * m_halfScreen.h) + m_halfScreen.h;
+        pTrans[i].vert.x = (pTrans[i].vert.x * m_halfDisplay.w) + m_halfDisplay.w + m_displayOffset.w;
+        pTrans[i].vert.y = (pTrans[i].vert.y * m_halfDisplay.h) + m_halfDisplay.h + m_displayOffset.h;
 
         pTrans[i].uv.u = pVert[i].uv.u * pText->m_size.w;
         pTrans[i].uv.v = pVert[i].uv.v * pText->m_size.h;

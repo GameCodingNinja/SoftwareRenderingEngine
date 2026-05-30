@@ -63,6 +63,9 @@ public:
     // Get ratios
     float getDeviceRatio() const;
 
+    // Get the native aspect ratio (fixed at startup, never changes)
+    float getNativeAspectRatio() const;
+
     // Get/Set VSync
     bool getVSync() const;
     void setVSync( bool value );
@@ -105,6 +108,9 @@ private:
     // Ratio for devices (mice) to correctly calculate movement
     // between the default height and actual height
     float m_deviceRatio;
+
+    // Native aspect ratio (w/h) from startup resolution — never changes
+    float m_nativeAspectRatio;
 
     // Full screen flag loaded from file
     bool m_fullScreen;

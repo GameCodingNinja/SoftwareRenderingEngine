@@ -98,8 +98,12 @@ private:
     // Surface data for the render target
     CSurfaceData m_surfaceData;
 
-    // Half size of view port
+    // Half size of full framebuffer (used by 3D perspective)
     CSize<float> m_halfScreen;
+
+    // Aspect-locked display rect for 2D orthographic rendering
+    CSize<float> m_halfDisplay;
+    CSize<float> m_displayOffset;
 
     // Z-buffer for 3D depth testing
     std::vector<int32_t> m_zBuffer;

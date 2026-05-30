@@ -18,7 +18,8 @@
 ************************************************************************/
 CSettings::CSettings() :
     m_size(1024,768),
-    m_default_size(1280,768),
+    m_default_size(1024,768),
+    m_nativeAspectRatio(1024.f/768.f),
     m_fullScreen(false),
     m_vSync(true),
     m_viewAngle(45.f),
@@ -70,6 +71,9 @@ void CSettings::loadFromXML( const std::string & filePath )
                 m_default_size.h = std::atof(defResNode.getAttribute("height"));
             }
         }
+
+        // Set the native aspect ratio once from the startup resolution
+        m_nativeAspectRatio = m_size.w / m_size.h;
 
         calcRatio();
 
@@ -229,6 +233,14 @@ const CSize<float> & CSettings::getScreenRatio() const
 float CSettings::getDeviceRatio() const
 {
     return m_deviceRatio;
+}
+
+/************************************************************************
+*    DESC:  Get the native aspect ratio (fixed at startup)
+************************************************************************/
+float CSettings::getNativeAspectRatio() const
+{
+    return m_nativeAspectRatio;
 }
 
 /************************************************************************
