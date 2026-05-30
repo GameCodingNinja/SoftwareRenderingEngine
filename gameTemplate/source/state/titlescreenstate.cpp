@@ -56,8 +56,8 @@ CTitleScreenState::CTitleScreenState()
     m_background.setRot( CPoint<float>(180,0,0) );
 
     CMixEngine::Instance().init();
-    wav = NWavCodec::load("data/sound/Adventure - Dashing Through New Lands (live).wav");
-    CMixEngine::Instance().playSound(wav);
+    m_testSound = NCodecFactory::load("data/sound/testSound.wav");
+    CMixEngine::Instance().playSound(m_testSound);
 
 }	// Constructer
 

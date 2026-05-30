@@ -15,6 +15,7 @@
 #include <sprite/sprite.h>
 #include <common/camera.h>
 #include <sound/mixengine.h>
+#include <sound/codecfactory.h>
 
 class CTitleScreenState : public CCommonState
 {
@@ -54,7 +55,7 @@ private:
     // Cameras (references to managed cameras so projection rebuilds propagate)
     CCamera & m_orthoCam;
     CCamera & m_perspCam;
-    SWavData wav;
+    SWavData m_testSound;
 
     // Allow for the state change
     bool m_allowStateChange;

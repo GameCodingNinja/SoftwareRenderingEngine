@@ -39,6 +39,10 @@ set(LIBRARY_SOURCES
     soil/image_DXT.c
     sound/mixengine.cpp
     sound/wavcodec.cpp
+    sound/oggcodec.cpp
+    sound/mp3codec.cpp
+    sound/flaccodec.cpp
+    sound/codecfactory.cpp
     sound/audiodevicefactory.cpp )
 
 # Linux-only source files
