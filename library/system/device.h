@@ -12,9 +12,7 @@
 #include <string>
 #include <memory>
 
-// Game lib dependencies
-#include <common/matrix.h>
-#include <common/defs.h>
+
 
 // Forward declaration(s)
 class IWindow;
@@ -37,9 +35,6 @@ public:
     // Show/Hide the Window
     void ShowWindow( bool visible );
 
-    // Get the projection matrix
-    const CMatrix & GetProjectionMatrix( NDefs::EProjectionType type ) const;
-
     // Get the native window
     IWindow* GetNativeWindow();
 
@@ -49,8 +44,8 @@ public:
     // Set full screen or windowed mode
     void SetFullScreen( bool fullscreen );
 
-    // Create the projection matrixes
-    void CreateProjMatrix();
+    // Handle the resolution change
+    void HandleResolutionChange( int width, int height );
 
 private:
 
@@ -64,10 +59,6 @@ private:
 
     // The window we'll be rendering to
     std::unique_ptr<IWindow> m_upWindow;
-
-    // Projection matrices
-    CMatrix m_perspectiveMatrix;
-    CMatrix m_orthographicMatrix;
 
 };
 

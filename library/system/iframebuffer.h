@@ -27,6 +27,9 @@ public:
     // Clear the pixel buffer to zero (black)
     virtual void Clear() = 0;
 
+    // Resize the framebuffer to new dimensions
+    virtual void Resize(int width, int height) = 0;
+
     // Display the pixel buffer contents in the window
     virtual void Flip() = 0;
 };

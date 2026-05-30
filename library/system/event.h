@@ -21,6 +21,9 @@ enum EEventType : uint32_t
     // Application events (0x100 range)
     EVENT_QUIT              = 0x100,
 
+    // Window events (0x200 range)
+    EVENT_WINDOW_RESIZE     = 0x200,
+
     // Keyboard events (0x300 range)
     EVENT_KEY_DOWN          = 0x300,
     EVENT_KEY_UP            = 0x301,
@@ -229,6 +232,17 @@ struct CMouseButtonEvent
 
 
 /************************************************************************
+*    Window resize event data
+************************************************************************/
+struct CWindowResizeEvent
+{
+    EEventType type;        // EVENT_WINDOW_RESIZE
+    int width;              // New window width
+    int height;             // New window height
+};
+
+
+/************************************************************************
 *    User-defined event data
 ************************************************************************/
 struct CUserEvent
@@ -251,6 +265,7 @@ union CEvent
     CKeyEvent key;                  // Keyboard event data
     CMouseMotionEvent motion;       // Mouse motion event data
     CMouseButtonEvent button;       // Mouse button event data
+    CWindowResizeEvent resize;      // Window resize event data
     CUserEvent user;                // User-defined event data
 };
 

@@ -914,6 +914,8 @@ void CMatrix::orthographicRH( float w, float h, float zn, float zf )
     //  0    0    1/(zn-zf)   0
     //  0    0    zn/(zn-zf)  1
 
+    initilizeMatrix();
+
     matrix[m00] = 2 / w;
     matrix[m11] = 2 / h;
     matrix[m22] = 1 / (zn-zf);
@@ -927,6 +929,8 @@ void CMatrix::orthographicLH( float w, float h, float zn, float zf )
     //  0    2/h  0           0
     //  0    0    1/(zf-zn)   0
     //  0    0   -zn/(zf-zn)  1
+
+    initilizeMatrix();
 
     matrix[m00] = 2 / w;
     matrix[m11] = 2 / h;
@@ -947,6 +951,8 @@ void CMatrix::perspectiveFovRH( float fovy, float aspect, float zn, float zf )
     //  0        0        zf/(zn-zf)        -1
     //  0        0        zn*zf/(zn-zf)      0
 
+    initilizeMatrix();
+
     float yScale = 1 / tan(fovy/2);
     float xScale = yScale / aspect;
 
@@ -955,6 +961,7 @@ void CMatrix::perspectiveFovRH( float fovy, float aspect, float zn, float zf )
     matrix[m22] = zf / (zn-zf);
     matrix[m23] = -1;
     matrix[m32] = zn * zf / (zn-zf);
+    matrix[m33] = 0;
 }
 
 void CMatrix::perspectiveFovLH( float fovy, float aspect, float zn, float zf )
@@ -967,6 +974,8 @@ void CMatrix::perspectiveFovLH( float fovy, float aspect, float zn, float zf )
     //  0          0       zf/(zf-zn)         1
     //  0          0       -zn*zf/(zf-zn)     0
 
+    initilizeMatrix();
+
     float yScale = 1 / tan(fovy/2);
     float xScale = yScale / aspect;
 
@@ -975,6 +984,7 @@ void CMatrix::perspectiveFovLH( float fovy, float aspect, float zn, float zf )
     matrix[m22] = zf / (zf-zn);
     matrix[m23] = 1;
     matrix[m32] = -zn * zf / (zf-zn);
+    matrix[m33] = 0;
 }
 
 /************************************************************************

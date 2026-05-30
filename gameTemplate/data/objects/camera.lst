@@ -3,7 +3,7 @@
     <default projectType="orthographic" minZDist="5" maxZDist="1000" view_angle="45.0"/>
 
     <camera id="3d" projectType="perspective" minZDist="5" maxZDist="1000" view_angle="45.0">
-        <position x="0" y="0" z="0"/>
+        <position x="0" y="0" z="1"/>
     </camera>
   
 </cameraList>

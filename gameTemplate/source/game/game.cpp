@@ -172,6 +172,16 @@ bool CGame::HandleEvent( const CEvent & rEvent )
     if( rEvent.type == EVENT_QUIT )
         return true;
 
+    // Handle resolution change between frames, not during rendering
+    if( rEvent.type == EVENT_WINDOW_RESIZE )
+    {
+        CDevice::Instance().HandleResolutionChange(
+            rEvent.resize.width, rEvent.resize.height );
+
+        // Update the local framebuffer pointer
+        m_pFrameBuffer = CDevice::Instance().GetFrameBuffer();
+    }
+
     // Handle events
     spGameState->HandleEvent( rEvent );
 

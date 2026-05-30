@@ -403,6 +403,24 @@ void CX11Window::PollEvents()
                 break;
             }
 
+            case ConfigureNotify:
+            {
+                int newWidth = xev.xconfigure.width;
+                int newHeight = xev.xconfigure.height;
+
+                // Only push the event on actual size changes
+                if( m_upFrameBuffer != nullptr &&
+                    (newWidth != m_upFrameBuffer->getWidth() ||
+                     newHeight != m_upFrameBuffer->getHeight()) )
+                {
+                    event.resize.type = EVENT_WINDOW_RESIZE;
+                    event.resize.width = newWidth;
+                    event.resize.height = newHeight;
+                    CEventQueue::Instance().PushEvent(event);
+                }
+                break;
+            }
+
             case ClientMessage:
             {
                 if( static_cast<Atom>(xev.xclient.data.l[0]) == m_wmDeleteMessage )

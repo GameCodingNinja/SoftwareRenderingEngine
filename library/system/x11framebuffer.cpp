@@ -151,6 +151,74 @@ void CX11FrameBuffer::Clear()
 
 
 /************************************************************************
+*    desc:  Resize the framebuffer to new dimensions
+************************************************************************/
+void CX11FrameBuffer::Resize(int width, int height)
+{
+    // Early out if dimensions haven't changed
+    if( width == m_width && height == m_height )
+        return;
+
+    // Destroy old XImages and pixel buffers
+    for( int i = 0; i < 2; ++i )
+    {
+        if( m_pImage[i] != nullptr )
+        {
+            m_pImage[i]->data = nullptr;
+            XDestroyImage(m_pImage[i]);
+            m_pImage[i] = nullptr;
+        }
+
+        if( m_pPixels[i] != nullptr )
+        {
+            delete[] m_pPixels[i];
+            m_pPixels[i] = nullptr;
+        }
+    }
+
+    // Update dimensions
+    m_width = width;
+    m_height = height;
+
+    // Recreate pixel buffers and XImages
+    int screen = DefaultScreen(m_pDisplay);
+    int depth = DefaultDepth(m_pDisplay, screen);
+    Visual* pVisual = DefaultVisual(m_pDisplay, screen);
+
+    for( int i = 0; i < 2; ++i )
+    {
+        // Allocate the pixel buffer
+        m_pPixels[i] = new uint32_t[m_width * m_height];
+        std::memset(m_pPixels[i], 0, m_width * m_height * sizeof(uint32_t));
+
+        // Create an XImage wrapping our pixel buffer
+        m_pImage[i] = XCreateImage(
+            m_pDisplay,
+            pVisual,
+            depth,
+            ZPixmap,
+            0,                              // offset
+            reinterpret_cast<char*>(m_pPixels[i]),
+            m_width,
+            m_height,
+            32,                             // bitmap_pad (bits)
+            0 );                            // bytes_per_line (0 = auto)
+
+        if( m_pImage[i] == nullptr )
+            throw NExcept::CCriticalException("X11 Framebuffer Error!",
+                "Failed to create XImage during resize.");
+
+        // Set byte order to match the host
+        m_pImage[i]->byte_order = LSBFirst;
+    }
+
+    // Reset to first buffer
+    m_backIndex = 0;
+
+}
+
+
+/************************************************************************
 *    desc:  Blit the back buffer to the window and swap
 ************************************************************************/
 void CX11FrameBuffer::Flip()

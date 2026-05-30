@@ -142,6 +142,77 @@ void CWindowsFrameBuffer::Clear()
 
 
 /************************************************************************
+*    desc:  Resize the framebuffer to new dimensions
+************************************************************************/
+void CWindowsFrameBuffer::Resize(int width, int height)
+{
+    // Early out if dimensions haven't changed
+    if( width == m_width && height == m_height )
+        return;
+
+    // Destroy old DIB sections
+    for( int i = 0; i < 2; ++i )
+    {
+        if( m_hMemDC[i] != nullptr )
+        {
+            if( m_hOldBitmap[i] != nullptr )
+                SelectObject(m_hMemDC[i], m_hOldBitmap[i]);
+
+            DeleteDC(m_hMemDC[i]);
+            m_hMemDC[i] = nullptr;
+        }
+
+        if( m_hBitmap[i] != nullptr )
+        {
+            DeleteObject(m_hBitmap[i]);
+            m_hBitmap[i] = nullptr;
+        }
+
+        m_pPixels[i] = nullptr;
+    }
+
+    // Update dimensions
+    m_width = width;
+    m_height = height;
+
+    // Recreate both DIB sections
+    BITMAPINFO bmi;
+    std::memset(&bmi, 0, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = m_width;
+    bmi.bmiHeader.biHeight = -m_height;     // Negative = top-down
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    for( int i = 0; i < 2; ++i )
+    {
+        m_hMemDC[i] = CreateCompatibleDC(m_hDC);
+        if( m_hMemDC[i] == nullptr )
+            throw NExcept::CCriticalException("Windows Framebuffer Error!",
+                "Failed to create compatible DC on resize.");
+
+        m_hBitmap[i] = CreateDIBSection(
+            m_hDC, &bmi, DIB_RGB_COLORS,
+            reinterpret_cast<void**>(&m_pPixels[i]),
+            nullptr, 0 );
+
+        if( m_hBitmap[i] == nullptr || m_pPixels[i] == nullptr )
+            throw NExcept::CCriticalException("Windows Framebuffer Error!",
+                "Failed to create DIB section on resize.");
+
+        m_hOldBitmap[i] = static_cast<HBITMAP>(SelectObject(m_hMemDC[i], m_hBitmap[i]));
+
+        std::memset(m_pPixels[i], 0, m_width * m_height * sizeof(uint32_t));
+    }
+
+    // Reset back buffer index
+    m_backIndex = 0;
+
+}
+
+
+/************************************************************************
 *    desc:  Blit the back buffer to the window and swap
 ************************************************************************/
 void CWindowsFrameBuffer::Flip()

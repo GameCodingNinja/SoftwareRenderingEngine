@@ -739,6 +739,19 @@ void CWaylandWindow::OnXdgSurfaceConfigure(struct xdg_surface* surface, uint32_t
     xdg_surface_ack_configure(surface, serial);
     m_configured = true;
 
+    // Push a resize event if the size changed
+    if( m_upFrameBuffer != nullptr &&
+        (m_width != m_upFrameBuffer->getWidth() ||
+         m_height != m_upFrameBuffer->getHeight()) )
+    {
+        CEvent event;
+        std::memset(&event, 0, sizeof(event));
+        event.resize.type = EVENT_WINDOW_RESIZE;
+        event.resize.width = m_width;
+        event.resize.height = m_height;
+        CEventQueue::Instance().PushEvent(event);
+    }
+
 }
 
 

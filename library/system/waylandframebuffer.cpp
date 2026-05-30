@@ -110,6 +110,7 @@ struct wl_buffer* CWaylandFrameBuffer::CreateBuffer(struct wl_shm* pShm, uint32_
 CWaylandFrameBuffer::CWaylandFrameBuffer(
     struct wl_display* pDisplay, struct wl_shm* pShm, struct wl_surface* pSurface, int width, int height, bool vSync) :
     m_pDisplay(pDisplay),
+    m_pShm(pShm),
     m_pSurface(pSurface),
     m_backIndex(0),
     m_shmSize(width * height * 4),
@@ -200,6 +201,56 @@ int CWaylandFrameBuffer::getHeight() const
 void CWaylandFrameBuffer::Clear()
 {
     std::memset(m_pPixels[m_backIndex], 0, m_shmSize);
+
+}
+
+
+/************************************************************************
+*    desc:  Resize the framebuffer to new dimensions
+************************************************************************/
+void CWaylandFrameBuffer::Resize(int width, int height)
+{
+    // Early out if dimensions haven't changed
+    if( width == m_width && height == m_height )
+        return;
+
+    // Destroy frame callback if set
+    if( m_pFrameCallback != nullptr )
+    {
+        wl_callback_destroy(m_pFrameCallback);
+        m_pFrameCallback = nullptr;
+    }
+
+    // Destroy old buffers and unmap pixel data
+    for( int i = 0; i < 2; ++i )
+    {
+        if( m_pBuffer[i] != nullptr )
+        {
+            wl_buffer_destroy(m_pBuffer[i]);
+            m_pBuffer[i] = nullptr;
+        }
+
+        if( m_pPixels[i] != nullptr )
+        {
+            munmap(m_pPixels[i], m_shmSize);
+            m_pPixels[i] = nullptr;
+        }
+    }
+
+    // Update dimensions and buffer size
+    m_width = width;
+    m_height = height;
+    m_shmSize = width * height * 4;
+
+    // Recreate both buffers
+    m_pBuffer[0] = CreateBuffer(m_pShm, m_pPixels[0]);
+    m_pBuffer[1] = CreateBuffer(m_pShm, m_pPixels[1]);
+
+    // Reset state
+    m_backIndex = 0;
+    m_bufferReleased[0].store(true);
+    m_bufferReleased[1].store(true);
+    m_frameReady.store(true);
 
 }
 

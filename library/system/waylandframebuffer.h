@@ -44,6 +44,9 @@ public:
     // Clear the pixel buffer to zero (black)
     void Clear() override;
 
+    // Resize the framebuffer to new dimensions
+    void Resize(int width, int height) override;
+
     // Swap buffers and display the back buffer contents
     void Flip() override;
 
@@ -60,6 +63,7 @@ private:
 
     // Wayland handles (not owned — the window class owns these)
     struct wl_display* m_pDisplay;
+    struct wl_shm* m_pShm;
     struct wl_surface* m_pSurface;
 
     // Double buffer: two wl_buffers and their pixel data

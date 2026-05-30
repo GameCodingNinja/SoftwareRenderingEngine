@@ -37,6 +37,9 @@ public:
     // Clear the pixel buffer to zero (black)
     void Clear() override;
 
+    // Resize the framebuffer to new dimensions
+    void Resize(int width, int height) override;
+
     // Swap buffers and display the back buffer contents
     void Flip() override;
 

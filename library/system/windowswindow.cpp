@@ -402,6 +402,25 @@ LRESULT CWindowsWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
             return 0;
         }
 
+        case WM_SIZE:
+        {
+            int newWidth = LOWORD(lParam);
+            int newHeight = HIWORD(lParam);
+
+            // Only push the event on actual size changes with valid dimensions
+            if( newWidth > 0 && newHeight > 0 &&
+                m_upFrameBuffer != nullptr &&
+                (newWidth != m_upFrameBuffer->getWidth() ||
+                 newHeight != m_upFrameBuffer->getHeight()) )
+            {
+                event.resize.type = EVENT_WINDOW_RESIZE;
+                event.resize.width = newWidth;
+                event.resize.height = newHeight;
+                CEventQueue::Instance().PushEvent(event);
+            }
+            return 0;
+        }
+
         case WM_KEYDOWN:
         {
             event.key.type = EVENT_KEY_DOWN;

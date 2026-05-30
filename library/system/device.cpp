@@ -14,6 +14,7 @@
 #include <utilities/genfunc.h>
 #include <common/size.h>
 #include <softwareRender/softwareRender.h>
+#include <managers/cameramanager.h>
 #include <system/windowfactory.h>
 #include <system/iwindow.h>
 #include <system/iframebuffer.h>
@@ -25,14 +26,12 @@ CDevice::CDevice()
 {
 }
 
-
 /************************************************************************
 *    desc:  destructer                                                             
 ************************************************************************/
 CDevice::~CDevice()
 {
 }
-
 
 /***************************************************************************
 *   desc:  Create the window
@@ -52,47 +51,6 @@ void CDevice::Create()
     // Set the full screen
     if( CSettings::Instance().getFullScreen() )
         SetFullScreen( CSettings::Instance().getFullScreen() );
-
-    // Create the projection matrixes
-    CreateProjMatrix();
-    
-}
-
-
-/************************************************************************
-*    desc:  Create the projection matrixes
-************************************************************************/
-void CDevice::CreateProjMatrix()
-{
-    // Calc the aspect ratio
-    float aspectRatio = CSettings::Instance().getSize().getW() / 
-                        CSettings::Instance().getSize().getH();
-
-    m_perspectiveMatrix.perspectiveFovRH(
-        CSettings::Instance().getViewAngle(),
-        aspectRatio,
-        CSettings::Instance().getMinZdist(),
-        CSettings::Instance().getMaxZdist() );
-
-    m_orthographicMatrix.orthographicRH(
-        CSettings::Instance().getDefaultSize().getW(),
-        CSettings::Instance().getDefaultSize().getH(),
-        CSettings::Instance().getMinZdist(),
-        CSettings::Instance().getMaxZdist() );
-
-}
-
-
-/************************************************************************
-*    desc:  Get the projection matrix
-************************************************************************/
-const CMatrix & CDevice::GetProjectionMatrix( NDefs::EProjectionType type ) const
-{
-    if( type == NDefs::EPT_PERSPECTIVE )
-        return m_perspectiveMatrix;
-    else
-        return m_orthographicMatrix;
-
 }
 
 
@@ -102,9 +60,7 @@ const CMatrix & CDevice::GetProjectionMatrix( NDefs::EProjectionType type ) cons
 void CDevice::ShowWindow( bool visible )
 {
     m_upWindow->Show( visible );
-
 }
-
 
 /***************************************************************************
 *   desc:  Set full screen or windowed mode
@@ -114,9 +70,26 @@ void CDevice::SetFullScreen( bool fullscreen )
     m_upWindow->SetFullScreen( fullscreen );
 
     NGenFunc::PostDebugMsg( "SetFullScreen called" );
-
 }
 
+/***************************************************************************
+*   desc:  Handle the resolution change
+ ****************************************************************************/
+void CDevice::HandleResolutionChange( int width, int height )
+{
+    // Resize the framebuffer to the new dimensions
+    m_upWindow->GetFrameBuffer()->Resize( width, height );
+
+    // Update the settings with the new size and recalculate ratios
+    CSettings::Instance().setSize( CSize<float>(width, height) );
+    CSettings::Instance().calcRatio();
+
+    // Set the software render surface to the resized framebuffer
+    CSoftwareRender::Instance().setSurface( m_upWindow->GetFrameBuffer() );
+
+    // Rebuild all camera projection matrixes
+    CCameraMgr::Instance().rebuildProjectionMatrix();
+}
 
 /***************************************************************************
 *   desc:  Get the native window
@@ -124,9 +97,7 @@ void CDevice::SetFullScreen( bool fullscreen )
 IWindow * CDevice::GetNativeWindow()
 {
     return m_upWindow.get();
-
 }
-
 
 /***************************************************************************
 *   desc:  Get the frame buffer
@@ -134,5 +105,4 @@ IWindow * CDevice::GetNativeWindow()
 IFrameBuffer * CDevice::GetFrameBuffer()
 {
     return m_upWindow->GetFrameBuffer();
-
 }
