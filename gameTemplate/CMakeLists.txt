@@ -28,12 +28,14 @@ if(UNIX)
     find_package(PkgConfig REQUIRED)
     find_package(X11 REQUIRED)
     pkg_search_module(WAYLAND_CLIENT REQUIRED wayland-client)
+    pkg_search_module(ALSA REQUIRED alsa)
 endif()
 
 # List all the include directories
 include_directories(
     ${X11_INCLUDE_DIR}
     ${WAYLAND_CLIENT_INCLUDE_DIRS}
+    ${ALSA_INCLUDE_DIRS}
     ../
     ../library )
 

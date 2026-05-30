@@ -36,7 +36,10 @@ set(LIBRARY_SOURCES
     common/bitmask.cpp
     soil/stb_image_aug.c
     soil/image_helper.c
-    soil/image_DXT.c )
+    soil/image_DXT.c
+    sound/mixengine.cpp
+    sound/wavcodec.cpp
+    sound/audiodevicefactory.cpp )
 
 # Linux-only source files
 if(UNIX)
@@ -46,14 +49,16 @@ if(UNIX)
         system/waylandframebuffer.cpp
         system/waylandwindow.cpp
         system/xdg-shell-protocol.c
-        system/xdg-decoration-protocol.c )
+        system/xdg-decoration-protocol.c
+        sound/alsaaudiodevice.cpp )
 endif()
 
 # Windows-only source files
 if(WIN32)
     list(APPEND LIBRARY_SOURCES
         system/windowsframebuffer.cpp
-        system/windowswindow.cpp )
+        system/windowswindow.cpp
+        sound/wasapiaudiodevice.cpp )
 endif()
 
 # Add the files to the library
@@ -72,4 +77,5 @@ include_directories(
     2d
     3d
     common
-    soil )
+    soil
+    sound )

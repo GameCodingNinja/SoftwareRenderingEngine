@@ -30,7 +30,8 @@ else()
         gametemplate
         library
         ${X11_LIBRARIES}
-        ${WAYLAND_CLIENT_LIBRARIES} )
+        ${WAYLAND_CLIENT_LIBRARIES}
+        ${ALSA_LIBRARIES} )
 endif()
 
 install(TARGETS gametemplate DESTINATION ${CMAKE_BINARY_DIR})
