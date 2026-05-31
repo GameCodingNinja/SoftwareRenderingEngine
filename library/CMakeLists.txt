@@ -43,7 +43,10 @@ set(LIBRARY_SOURCES
     sound/mp3codec.cpp
     sound/flaccodec.cpp
     sound/codecfactory.cpp
-    sound/audiodevicefactory.cpp )
+    sound/audiodevicefactory.cpp
+    sound/sound.cpp
+    sound/playlist.cpp
+    sound/soundmanager.cpp )
 
 # Linux-only source files
 if(UNIX)

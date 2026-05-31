@@ -10,6 +10,7 @@
 
 // Standard lib dependencies
 #include <cstdint>
+#include <cstring>
 
 namespace NDefs
 {
@@ -21,6 +22,16 @@ namespace NDefs
         SFX,
         MIX_BUS_MAX
     };
+
+    // Convert a bus name string to the enum value
+    inline EMixBus StringToBus( const char * str )
+    {
+        if( std::strcmp( str, "music" )   == 0 ) return MUSIC;
+        if( std::strcmp( str, "ambient" ) == 0 ) return AMBIENT;
+        if( std::strcmp( str, "voice" )   == 0 ) return VOICE;
+        if( std::strcmp( str, "sfx" )     == 0 ) return SFX;
+        return SFX;     // Default to SFX if unrecognized
+    }
 }
 
 // Max volume constant (0–128 range)
