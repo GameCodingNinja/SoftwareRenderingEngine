@@ -55,10 +55,6 @@ CTitleScreenState::CTitleScreenState()
 
     m_background.setRot( CPoint<float>(180,0,0) );
 
-    CMixEngine::Instance().init();
-    m_testSound = NCodecFactory::load("data/sound/testSound.wav");
-    CMixEngine::Instance().playSound(m_testSound);
-
 }	// Constructer
 
 
@@ -68,10 +64,6 @@ CTitleScreenState::CTitleScreenState()
 void CTitleScreenState::HandleEvent( const CEvent & rEvent )
 {
     CCommonState::HandleEvent( rEvent );
-
-    // Check for the "change state" message
-    //if( rEvent.type == NMenu::EGE_MENU_GAME_STATE_CHANGE )
-        //m_allowStateChange = true;
 
 }   // HandleEvent
 
