@@ -30,4 +30,11 @@ namespace NWavCodec
     SWavData load( const std::string & filePath );
 }
 
+namespace NAudioResample
+{
+    // Resample SWavData in-place to a target sample rate using linear interpolation.
+    // No-op if the sample rate already matches.
+    void resample( SWavData & wavData, uint32_t targetSampleRate );
+}
+
 #endif

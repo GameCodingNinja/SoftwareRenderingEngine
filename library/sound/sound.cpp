@@ -83,6 +83,14 @@ void CSound::loadFromNode( const XMLNode & node )
     // Load via the codec factory (auto-detects WAV, OGG, MP3, FLAC)
     m_spWavData = std::make_shared<SWavData>( NCodecFactory::load( file ) );
 
+    if( !m_spWavData )
+        throw NExcept::CCriticalException( "Sound Load Error!",
+            NGenFunc::FormatString( "Error loading sound (%s).\n\n%s\nLine: %d",
+                file, __FUNCTION__, __LINE__ ) );
+
+    // Resample to match the device sample rate if they differ
+    NAudioResample::resample( *m_spWavData, CMixEngine::Instance().getSpec().sampleRate );
+
     // Set the volume if defined
     if( node.isAttributeSet( "volume" ) )
         setVolume( std::atoi( node.getAttribute( "volume" ) ) );
@@ -90,11 +98,6 @@ void CSound::loadFromNode( const XMLNode & node )
     // Set the bus if defined (overrides the constructor default)
     if( node.isAttributeSet( "bus" ) )
         m_bus = NDefs::StringToBus( node.getAttribute( "bus" ) );
-
-    if( !m_spWavData )
-        throw NExcept::CCriticalException( "Sound Load Error!",
-            NGenFunc::FormatString( "Error loading sound (%s).\n\n%s\nLine: %d",
-                file, __FUNCTION__, __LINE__ ) );
 }
 
 

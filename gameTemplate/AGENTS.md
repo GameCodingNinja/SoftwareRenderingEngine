@@ -55,13 +55,14 @@ These rules apply to all hot pixel loops and rasterizer code:
 - **Architecture:** `CMixEngine` singleton owns a platform audio device (`IAudioDevice`), runs a dedicated audio thread, and mixes through 4 buses (Music, Ambient, Voice, SFX) with per-bus volume/enable and master volume.
 - **Audio device backends:** ALSA (Linux), WASAPI (Windows). `audiodevicefactory.cpp` selects via `#ifdef`, same pattern as `windowfactory.cpp`. On Linux, the ALSA backend tries devices in order: `pipewire` → `pulse` → `default` → `plughw:0,0` (PipeWire/PulseAudio systems lack a working `"default"` device).
 - **Audio thread:** Spawned by `IAudioDevice::open()`. Runs a wait→mix→write loop. Uses `snd_pcm_wait` with 100ms timeout (ALSA) or event-driven `WaitForSingleObject` (WASAPI) for clean shutdown. Thread priority is elevated (`SCHED_FIFO` on Linux, MMCSS `"Pro Audio"` on Windows).
-- **Mixing:** All mixing is done in F32 internally. The audio device converts to native format (S16LE for ALSA, F32 with AUTOCONVERTPCM for WASAPI). Inner mix loops will use SSE intrinsics in later phases.
-- **Codecs:** WAV (built-in). Phase 2 adds OGG (stb_vorbis), MP3 (minimp3), FLAC (dr_flac) — all header-only, bundled.
-- **Manager layer (Phase 4):** `CSoundMgr` inherits `CManagerBase`, mirrors `SDL3-Vulkan-Game-Engine/library/sound/` organization. XML-driven group loading, sound IDs, playlist IDs. `CSound` wraps PCM/stream data, `CPlayList` provides random/sequential playback with anti-repeat shuffle.
+- **Mixing:** All mixing is done in F32 internally. The audio device converts to native format (S16LE for ALSA, F32 with AUTOCONVERTPCM for WASAPI). Inner mix loops use SSE intrinsics (`_mm_mul_ps`, `_mm_add_ps`, `_mm_min_ps`, `_mm_max_ps`) for volume-weighted mixing and output clamping.
+- **Codecs:** WAV (built-in), OGG (stb_vorbis), MP3 (minimp3), FLAC (dr_flac) — all header-only, bundled. `NCodecFactory::load()` auto-detects format by magic bytes.
+- **Manager layer:** `CSoundMgr` inherits `CManagerBase`, mirrors `SDL3-Vulkan-Game-Engine/library/sound/` organization. XML-driven group loading, sound IDs, playlist IDs. `CSound` wraps PCM/stream data, `CPlayList` provides random/sequential playback with anti-repeat shuffle.
 - **Shutdown order:** `CMixEngine::shutdown()` must clear play state under the mutex **before** closing the device/joining the audio thread. Sound data (`SWavData`) pointed to by the mix engine may already be freed by the time the singleton destructor runs during `atexit`. Always null the pointer first.
 - **Lifetime rule:** Any `SWavData` passed to `CMixEngine::playSound()` must outlive playback — the engine stores a raw pointer. In Phase 4, `CSoundMgr` owns all sound data so game states don't manage lifetimes.
 - **Volume hierarchy:** `final = sound_vol × bus_vol × master_vol × bus_enabled`. Each bus can be independently disabled from settings.
 - **Looping:** `loopCount`: `0` = play once, `N` = repeat N times, `-1` = infinite until stopped.
+- **Game integration:** `CSoundMgr::Instance().init()` is called in `CGame::CGame()` constructor. `CSoundMgr::Instance().cleanup()` is called in `CGame::~CGame()` destructor. `LoadListTable` and `loadGroup` are called in `CStartUpState::Load()`. Sound data lives in `data/sound/`.
 
 ## Fixed-Function Pipeline
 Ignore the fixed function rendering pipeline for development. It's just there for speed comparisons.

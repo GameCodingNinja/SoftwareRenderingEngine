@@ -19,6 +19,7 @@
 #include <utilities/exceptionhandling.h>
 #include <utilities/settings.h>
 #include <managers/lightmanager.h>
+#include <sound/soundmanager.h>
 
 /************************************************************************
 *    desc:  Constructer                                                             
@@ -45,6 +46,10 @@ void CStartUpState::Load()
 
     CLightMgr::Instance().LoadListTable( "data/objects/lightDataList/dataListTable.lst" );
     CLightMgr::Instance().LoadGroup( "(default)" );
+
+    // Load the sound list table and initial sound group
+    CSoundMgr::Instance().LoadListTable( "data/sound/soundListTable.lst" );
+    CSoundMgr::Instance().loadGroup( "(menu)" );
 
 }   // Load
 

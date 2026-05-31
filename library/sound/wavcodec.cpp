@@ -198,3 +198,46 @@ SWavData NWavCodec::load( const std::string & filePath )
 
     return wavData;
 }
+
+
+/************************************************************************
+*    DESC:  Resample SWavData in-place to a target sample rate
+*           using linear interpolation. No-op if rates already match.
+************************************************************************/
+void NAudioResample::resample( SWavData & wavData, uint32_t targetSampleRate )
+{
+    if( wavData.sampleRate == targetSampleRate || wavData.sampleRate == 0 || wavData.frameCount == 0 )
+        return;
+
+    const double ratio = static_cast<double>(targetSampleRate) / wavData.sampleRate;
+    const uint32_t newFrameCount = static_cast<uint32_t>( wavData.frameCount * ratio );
+    const uint16_t channels = wavData.channels;
+
+    std::vector<float> newSamples( newFrameCount * channels );
+
+    for( uint32_t i = 0; i < newFrameCount; ++i )
+    {
+        const double srcPos = i / ratio;
+        const uint32_t srcIndex = static_cast<uint32_t>( srcPos );
+        const float frac = static_cast<float>( srcPos - srcIndex );
+
+        // Clamp next index to last valid frame
+        const uint32_t srcNext = std::min( srcIndex + 1, wavData.frameCount - 1 );
+
+        for( uint16_t ch = 0; ch < channels; ++ch )
+        {
+            const float s0 = wavData.samples[srcIndex * channels + ch];
+            const float s1 = wavData.samples[srcNext * channels + ch];
+            newSamples[i * channels + ch] = s0 + (s1 - s0) * frac;
+        }
+    }
+
+    wavData.samples = std::move( newSamples );
+    wavData.frameCount = newFrameCount;
+
+    NGenFunc::PostDebugMsg( NGenFunc::FormatString(
+        "Resampled: %d Hz → %d Hz (%d frames)",
+        wavData.sampleRate, targetSampleRate, newFrameCount ) );
+
+    wavData.sampleRate = targetSampleRate;
+}

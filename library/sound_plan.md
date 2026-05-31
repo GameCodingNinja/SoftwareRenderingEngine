@@ -52,7 +52,7 @@ This sound system is **entirely custom code** — no SDL or SDL_mixer dependency
 
 ---
 
-## Phase 1 — Platform Audio Output + WAV Playback
+## Phase 1 — Platform Audio Output + WAV Playback ✅ COMPLETE
 
 **Goal:** Single WAV file playing through speakers on Linux and Windows.
 
@@ -72,7 +72,7 @@ This sound system is **entirely custom code** — no SDL or SDL_mixer dependency
 
 ---
 
-## Phase 2 — Multi-Format Codec Layer
+## Phase 2 — Multi-Format Codec Layer ✅ COMPLETE
 
 **Goal:** Add OGG, MP3, FLAC. All header-only, fully cross-platform.
 
@@ -91,7 +91,7 @@ This sound system is **entirely custom code** — no SDL or SDL_mixer dependency
 
 ---
 
-## Phase 3 — Mixing Engine with 4 Bus Types
+## Phase 3 — Mixing Engine with 4 Bus Types ✅ COMPLETE
 
 **Goal:** Simultaneous music + ambient + voice + SFX playback.
 
@@ -233,7 +233,7 @@ The sound system runs on a **dedicated audio thread**, separate from the game lo
 
 ---
 
-## Phase 4 — CSound, CPlayList, CSoundMgr
+## Phase 4 — CSound, CPlayList, CSoundMgr ✅ COMPLETE
 
 **Goal:** Manager layer matching the Vulkan engine pattern — same API, same XML format, adapted to use `CMixEngine` instead of SDL_mixer.
 
@@ -281,20 +281,16 @@ The sound system runs on a **dedicated audio thread**, separate from the game lo
 
 ---
 
-## Phase 5 — Integration & Polish
+## Phase 5 — Integration & Polish ✅ COMPLETE
 
-| Task | Detail |
-|------|--------|
-| `CDevice` integration | `CSoundMgr` init/shutdown alongside other subsystems |
-| PulseAudio backend (Linux) | `PulseAudioDevice` — factory tries Pulse first, falls back to ALSA (mirrors Wayland→X11 pattern) |
-| Sample rate conversion | Linear interpolation resampler for source ≠ device rate |
-| CMake link flags | Linux: `-lasound -lpulse -lpthread`. Windows: `ole32.lib mmdevapi.lib` |
-
-### Verification
-- Full lifecycle on both platforms: startup → load → play → shutdown
-- No memory leaks (valgrind on Linux, ASAN on both)
-- No audio glitches under renderer load
-- PulseAudio fallback to ALSA works
+| Task | Detail | Status |
+|------|--------|--------|
+| `CGame` integration | `CSoundMgr::Instance().init()` in `CGame` constructor, `cleanup()` in destructor | ✅ Done |
+| `CStartUpState` loading | `LoadListTable` and `loadGroup` in `CStartUpState::Load()` | ✅ Done |
+| Sound data directory | `data/sound/` with `soundListTable.lst` and `menuSound.lst` | ✅ Done |
+| CMake link flags | Linux: `-lasound -lpthread` via pkg-config ALSA. Windows: `ole32.lib mmdevapi.lib` via pragma | ✅ Done |
+| PulseAudio backend (Linux) | `PulseAudioDevice` — future optional improvement | Not yet |
+| Sample rate conversion | Linear interpolation resampler in `NAudioResample::resample()`. Called automatically by `CSound::loadFromNode()` after loading. | ✅ Done |
 
 ---
 

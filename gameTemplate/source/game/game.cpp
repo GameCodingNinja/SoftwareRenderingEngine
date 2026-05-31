@@ -30,6 +30,7 @@
 #include <softwareRender/softwareRender.h>
 #include <managers/cameramanager.h>
 #include <managers/shadermanager.h>
+#include <sound/soundmanager.h>
 
 // Game dependencies
 #include "../state/startupstate.h"
@@ -59,8 +60,11 @@ CGame::CGame()
     // Load the camera data early because many objects init the default camera in their constructor
     CCameraMgr::Instance().load( "data/objects/camera.lst" );
 
+    // Initialize the sound system
+    CSoundMgr::Instance().init();
+
     // Init the thread pool
-    CThreadPool::Instance().init( 2, -1 );
+    CThreadPool::Instance().init( 2, -2 );
 
 }   // constructor
 
@@ -70,6 +74,9 @@ CGame::CGame()
 ************************************************************************/
 CGame::~CGame()
 {
+    // Clean up the sound system before the device is destroyed
+    CSoundMgr::Instance().cleanup();
+
 }	// destructer
 
 
