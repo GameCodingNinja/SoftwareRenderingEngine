@@ -64,8 +64,10 @@ endif()
 # Add the files to the library
 add_library(library STATIC ${LIBRARY_SOURCES})
 
-# Suppress -Wclass-memaccess for third-party xmlParser.cpp
-set_source_files_properties(utilities/xmlParser.cpp PROPERTIES COMPILE_FLAGS "-Wno-class-memaccess")
+# Suppress -Wclass-memaccess for third-party xmlParser.cpp (GCC/Clang only)
+if(NOT MSVC)
+    set_source_files_properties(utilities/xmlParser.cpp PROPERTIES COMPILE_FLAGS "-Wno-class-memaccess")
+endif()
 
 include_directories(
     objectdata

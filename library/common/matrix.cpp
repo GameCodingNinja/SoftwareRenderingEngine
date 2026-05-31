@@ -14,6 +14,7 @@
 #include <common/defs.h>
 
 // Standard lib dependencies
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <cstring>
 
