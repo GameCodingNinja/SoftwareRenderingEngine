@@ -46,7 +46,12 @@ set(LIBRARY_SOURCES
     sound/audiodevicefactory.cpp
     sound/sound.cpp
     sound/playlist.cpp
-    sound/soundmanager.cpp )
+    sound/soundmanager.cpp
+    node/nodedata.cpp
+    node/nodedatalist.cpp
+    node/node.cpp
+    node/nodefactory.cpp
+    gui/uicontrol.cpp )
 
 # Linux-only source files
 if(UNIX)
@@ -87,4 +92,6 @@ include_directories(
     3d
     common
     soil
-    sound )
+    sound
+    node
+    gui )

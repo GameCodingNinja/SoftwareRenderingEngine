@@ -1,0 +1,22 @@
+Software Rendering Engine - CNode
+=======================================
+
+Load the agents file.
+from the Vulkan engine, merge the node folder and files into this workspace's library folder/node. The Javascript/webGL engine does something similar
+the concept behine the CNode/iNode classes is that a node can have N children.
+A head node can have a child that is an object, a sprite, a GUI control. 
+For this reason, there's an object node, a render node, sprite node and a control node. This is bad design.
+The CNode/iNode series of classes should not include special node classes
+since this is a game engine. solutions should always consider code execution speed
+Double check the code and suggest better logic.
+develop a plan and write it to file called node_plan2.md
+The CNode implementation is for using within the strategy concept and GUI menu system 
+make sure the plan is multiphase and amp stops at each phase and asks for the user to review
+create an open questions section for the plan so that any ambiguity in the plan can be addressed by the user
+
+The node implementation is meant to be used within the strategy implementation.
+Strategy is a way to combine multiple object, sprites and GUI object that define higher level initilazitions. 
+Object level is creation details, texture, mesh, color, shader, etc. 
+Strategy level render details, is position, rotation, scale, scripts. 
+This is all about reusablility. That same object data can be reused with different position, rotation, scale, etc. 
+The goal with the menu system is to restructure it using CNode so that they are both doing the same thing.

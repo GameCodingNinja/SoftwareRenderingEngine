@@ -10,6 +10,13 @@ Consult these sibling engines for design and implementation patterns (but use be
 - `~/Development/sdl2-opengl-game-engine/gameTemplate/`
 - `~/Development/Legacy/TheEarlyYears/Funware Projects/Library/tri3D/`
 
+**Note:** The Vulkan engine and the JavaScript/WebGL engine are basically the same architecture and patterns, just in different languages/APIs. Treat them as one reference design.
+
+## Node & Strategy Architecture
+- **CNode** is a composition-based scene graph node (no subclasses). It holds a `std::variant` payload (`CObject`, `CSprite`, or `CUIControl`) and a vector of child nodes. The node system is meant to be used within the strategy system. `UI_CONTROL` is for in-game UI controls attached to sprites (e.g., health bars on ships), not for the menu system.
+- **Strategy** is the layer that combines multiple objects, sprites, and in-game UI controls into higher-level constructs. It defines render-time details: position, rotation, scale, scripts. The **object data** layer below it defines creation details: texture, mesh, color, shader, etc. This separation enables reusability — the same object data can be instantiated multiple times with different transforms and behaviors.
+- **Menu system** stays separate from the node/strategy system — menus are more straightforward and use the same GUI architecture as the other engines.
+
 ## Architecture
 - **`source/game/`** — Main game loop, entry point (`main.cpp`), game class, and soft shader header.
 - **`source/state/`** — Game state machine: `IGameState` interface, `CommonState`, `StartupState`, `TitleScreenState`.
