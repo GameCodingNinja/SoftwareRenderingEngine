@@ -31,6 +31,7 @@ CNode::CNode( uint8_t nodeId, uint8_t parentId ) :
     m_headNode(false),
     m_type(ENodeType::OBJECT),
     m_parent(nullptr),
+    m_pPayload(nullptr),
     m_radius(0.f)
 {
 }
@@ -40,6 +41,11 @@ CNode::CNode( uint8_t nodeId, uint8_t parentId ) :
 ************************************************************************/
 CNode::~CNode()
 {
+    if(m_pPayload != nullptr)
+    {
+        delete m_pPayload;
+        m_pPayload = nullptr;
+    }
 }
 
 /************************************************************************
@@ -127,22 +133,12 @@ CNode * CNode::findChild( const std::string & name )
 ************************************************************************/
 void CNode::update()
 {
-    // Dispatch to payload
-    std::visit([](auto & p)
-    {
-        using T = std::decay_t<decltype(p)>;
+    if( m_type == ENodeType::SPRITE )
+        static_cast<CSprite *>(m_pPayload)->Update();
 
-        if constexpr (std::is_same_v<T, std::unique_ptr<CSprite>>)
-            p->Update();
+    else if( m_type == ENodeType::UI_CONTROL )
+        static_cast<CUIControl *>(m_pPayload)->update();
 
-        else if constexpr (std::is_same_v<T, std::unique_ptr<CUIControl>>)
-            p->update();
-
-        // CObject has no update — intentional no-op
-
-    }, m_payload);
-
-    // Recurse children
     for( auto & child : m_children )
         child->update();
 }
@@ -152,10 +148,10 @@ void CNode::update()
 ************************************************************************/
 void CNode::transform()
 {
-    getObject()->transform();
+    m_pPayload->transform();
 
     for( auto & child : m_children )
-        child->transform( *getObject() );
+        child->transform( *m_pPayload );
 }
 
 /************************************************************************
@@ -163,10 +159,10 @@ void CNode::transform()
 ************************************************************************/
 void CNode::transform( const CObject & object )
 {
-    getObject()->transform( object );
+    m_pPayload->transform( object );
 
     for( auto & child : m_children )
-        child->transform( *getObject() );
+        child->transform( *m_pPayload );
 }
 
 /************************************************************************
@@ -174,17 +170,11 @@ void CNode::transform( const CObject & object )
 ************************************************************************/
 void CNode::render( const CCamera & camera )
 {
-    std::visit([&camera](auto & p)
-    {
-        using T = std::decay_t<decltype(p)>;
+    if( m_type == ENodeType::SPRITE )
+        static_cast<CSprite *>(m_pPayload)->render( camera );
 
-        if constexpr (std::is_same_v<T, std::unique_ptr<CSprite>>)
-            p->render( camera );
-
-        else if constexpr (std::is_same_v<T, std::unique_ptr<CUIControl>>)
-            p->render( camera );
-
-    }, m_payload);
+    else if( m_type == ENodeType::UI_CONTROL )
+        static_cast<CUIControl *>(m_pPayload)->render( camera );
 
     for( auto & child : m_children )
         child->render( camera );
@@ -243,23 +233,7 @@ ENodeType CNode::getType() const
 ************************************************************************/
 CObject * CNode::getObject()
 {
-    return std::visit([](auto & p) -> CObject *
-    {
-        using T = std::decay_t<decltype(p)>;
-
-        if constexpr (std::is_same_v<T, CObject>)
-            return &p;
-
-        else if constexpr (std::is_same_v<T, std::unique_ptr<CSprite>>)
-            return static_cast<CObject *>(p.get());
-
-        else if constexpr (std::is_same_v<T, std::unique_ptr<CUIControl>>)
-            return static_cast<CObject *>(p.get());
-
-        else
-            return nullptr;
-
-    }, m_payload);
+    return m_pPayload;
 }
 
 /************************************************************************
@@ -267,8 +241,8 @@ CObject * CNode::getObject()
 ************************************************************************/
 CSprite * CNode::getSprite()
 {
-    if( auto * p = std::get_if<std::unique_ptr<CSprite>>(&m_payload) )
-        return p->get();
+    if( m_type == ENodeType::SPRITE )
+        return static_cast<CSprite *>(m_pPayload);
 
     return nullptr;
 }
@@ -278,8 +252,8 @@ CSprite * CNode::getSprite()
 ************************************************************************/
 CUIControl * CNode::getControl()
 {
-    if( auto * p = std::get_if<std::unique_ptr<CUIControl>>(&m_payload) )
-        return p->get();
+    if( m_type == ENodeType::UI_CONTROL )
+        return static_cast<CUIControl *>(m_pPayload);
 
     return nullptr;
 }
@@ -309,19 +283,14 @@ const CSize<float> & CNode::getSize() const
 }
 
 /************************************************************************
-*    DESC:  Set the payload to a sprite
+*    DESC:  Set the payload — takes ownership via CObject base pointer
 ************************************************************************/
-void CNode::setPayload( std::unique_ptr<CSprite> pSprite )
+void CNode::setPayload( CObject * pPayload )
 {
-    m_payload = std::move(pSprite);
-}
-
-/************************************************************************
-*    DESC:  Set the payload to a UI control
-************************************************************************/
-void CNode::setPayload( std::unique_ptr<CUIControl> pControl )
-{
-    m_payload = std::move(pControl);
+    if( m_pPayload != nullptr )
+        delete m_pPayload;
+        
+    m_pPayload = pPayload;
 }
 
 /************************************************************************

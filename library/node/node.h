@@ -5,8 +5,8 @@
 *    DESCRIPTION:     Composition-based scene graph node.
 *                     One class handles tree structure, payload dispatch,
 *                     and recursive game loop operations. No subclasses.
-*                     Payloads (CObject, CSprite, CUIControl) are held
-*                     via std::variant for zero-overhead dispatch.
+*                     Payloads (CObject, CSprite, CUIControl) are owned
+*                     via a CObject base pointer and cast by m_type.
 ************************************************************************/
 
 #pragma once
@@ -20,7 +20,6 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <variant>
 #include <atomic>
 
 // Forward declaration(s)
@@ -32,8 +31,6 @@ class CNodeData;
 class CNode
 {
 public:
-
-    using NodePayload_t = std::variant<CObject, std::unique_ptr<CSprite>, std::unique_ptr<CUIControl>>;
 
     // Constructor — default group/object node
     CNode( uint8_t nodeId = defs_DEFAULT_NODE_ID, uint8_t parentId = defs_DEFAULT_NODE_ID );
@@ -108,11 +105,8 @@ public:
     // Get the size
     const CSize<float> & getSize() const;
 
-    // Set the payload to a sprite
-    void setPayload( std::unique_ptr<CSprite> pSprite );
-
-    // Set the payload to a UI control
-    void setPayload( std::unique_ptr<CUIControl> pControl );
+    // Set the payload — takes ownership via CObject base pointer
+    void setPayload( CObject * pPayload );
 
     // Set the node name
     void setName( const std::string & name );
@@ -160,8 +154,9 @@ private:
     // Child nodes — RAII ownership
     std::vector<std::unique_ptr<CNode>> m_children;
 
-    // Composition-based payload
-    NodePayload_t m_payload;
+    // Payload — CObject, CSprite, or CUIControl owned via base pointer.
+    // Cast to derived type based on m_type. Freed in destructor.
+    CObject * m_pPayload;
 
     // Accumulated bounding radius
     float m_radius;

@@ -39,41 +39,45 @@ namespace NNodeFactory
             upNode->setType( ENodeType::SPRITE );
 
             // Create the sprite from object data
-            auto upSprite = std::make_unique<CSprite>(
+            auto * pSprite = new CSprite(
                 CObjectDataMgr::Instance().getData(
                     rNodeData.getGroup(), rNodeData.getObjectName() ) );
 
             // Load transforms (position, rotation, scale) from the XML node
-            upSprite->loadTransFromNode( rNodeData.getXMLNode() );
+            pSprite->loadTransFromNode( rNodeData.getXMLNode() );
 
             // Set the sprite as the payload
-            upNode->setPayload( std::move(upSprite) );
+            upNode->setPayload( pSprite );
         }
         else if( rNodeData.getNodeType() == ENodeType::OBJECT )
         {
             upNode->setType( ENodeType::OBJECT );
 
-            // Load transforms from the XML node onto the default CObject payload
-            upNode->getObject()->loadTransFromNode( rNodeData.getXMLNode() );
+            // Create the object and load transforms
+            auto * pObject = new CObject;
+            pObject->loadTransFromNode( rNodeData.getXMLNode() );
+
+            // Set the object as the payload
+            upNode->setPayload( pObject );
         }
         else if( rNodeData.getNodeType() == ENodeType::UI_CONTROL )
         {
             upNode->setType( ENodeType::UI_CONTROL );
 
             // Create the UI control based on control type
-            auto upControl = std::make_unique<CUIControl>( rNodeData.getGroup() );
+            auto * pControl = new CUIControl( rNodeData.getGroup() );
 
             // Load from the XML node
-            upControl->loadFromNode( rNodeData.getXMLNode() );
+            pControl->loadFromNode( rNodeData.getXMLNode() );
 
             // Load transforms
-            upControl->loadTransFromNode( rNodeData.getXMLNode() );
+            pControl->loadTransFromNode( rNodeData.getXMLNode() );
 
             // Init the control
-            upControl->init();
+            pControl->init();
 
             // Set the control as the payload
-            upNode->setPayload( std::move(upControl) );
+            upNode->setPayload( pControl );
         }
         else
         {
