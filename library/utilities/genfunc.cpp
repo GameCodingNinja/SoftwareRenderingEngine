@@ -59,6 +59,32 @@ namespace NGenFunc
 
 
     /************************************************************************
+    *    desc:  Calculate a CRC-16 (CRC-16/ARC) of a string.
+    *           Matches boost::crc_16_type: poly 0x8005 reflected (0xA001),
+    *           init 0x0000, no final xor.
+    ************************************************************************/
+    uint16_t CalcCRC16( const std::string & str )
+    {
+        uint16_t crc = 0;
+
+        for( unsigned char c : str )
+        {
+            crc ^= c;
+
+            for( int i = 0; i < 8; ++i )
+            {
+                if( crc & 1 )
+                    crc = (crc >> 1) ^ 0xA001;
+                else
+                    crc >>= 1;
+            }
+        }
+
+        return crc;
+    }
+
+
+    /************************************************************************
     *    desc:  Read in a file and return it as a buffer
     ************************************************************************/
     std::shared_ptr<char[]> FileToBuf( const std::string & file, size_t & sizeInBytes )

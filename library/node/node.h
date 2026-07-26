@@ -7,6 +7,10 @@
 *                     and recursive game loop operations. No subclasses.
 *                     Payloads (CObject, CSprite, CUIControl) are owned
 *                     via a CObject base pointer and cast by m_type.
+*
+*                     Branch-only data (children, accumulated radius/size)
+*                     is held in a lazily-allocated SBranch, kept null for
+*                     leaf nodes so a lone sprite carries no branch overhead.
 ************************************************************************/
 
 #pragma once
@@ -55,9 +59,9 @@ public:
     // NOTE: This is a recursive function
     CNode * findParent( uint8_t parentId );
 
-    // Find a child by name
+    // Find a child by name CRC
     // NOTE: This is a recursive function
-    CNode * findChild( const std::string & name );
+    CNode * findChild( uint16_t crcName );
 
     // Update the nodes
     void update();
@@ -74,9 +78,6 @@ public:
 
     // Get the user id
     int getId() const;
-
-    // Get the node name
-    const std::string & getName() const;
 
     // Get the node id
     uint8_t getNodeId() const;
@@ -133,8 +134,8 @@ private:
     // User id
     int16_t m_userId;
 
-    // Node name
-    std::string m_name;
+    // Node name CRC (CRC-16 of the node name)
+    uint16_t m_crcName;
 
     // Build-time node id
     uint8_t m_nodeId;
@@ -151,16 +152,23 @@ private:
     // Parent node pointer — O(1) parent access
     CNode * m_parent;
 
-    // Child nodes — RAII ownership
-    std::vector<std::unique_ptr<CNode>> m_children;
-
     // Payload — CObject, CSprite, or CUIControl owned via base pointer.
     // Cast to derived type based on m_type. Freed in destructor.
     CObject * m_pPayload;
 
-    // Accumulated bounding radius
-    float m_radius;
+    // Branch-only data — allocated on first child, null for leaf nodes.
+    struct SBranch
+    {
+        // Child nodes — RAII ownership
+        std::vector<std::unique_ptr<CNode>> children;
 
-    // Accumulated bounding size
-    CSize<float> m_size;
+        // Accumulated bounding radius
+        float radius = 0.f;
+
+        // Accumulated bounding size
+        CSize<float> size;
+    };
+
+    // Null for leaf nodes. Freed in destructor.
+    SBranch * m_pBranch;
 };

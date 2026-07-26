@@ -78,3 +78,4 @@ Ignore the fixed function rendering pipeline for development. It's just there fo
 - C++26 standard, no exceptions to this.
 - Use `pthread` for threading (per CMake flags).
 - Header/source pairs: `foo.h` / `foo.cpp`.
+- Prefer a single exit point. Avoid early-return guard clauses and mid-function returns; wrap logic in positive conditional blocks (`if (ptr != nullptr) { ... }`) rather than `if (ptr == nullptr) return;`. Only return early when the alternative is genuinely impractical.

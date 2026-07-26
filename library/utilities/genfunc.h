@@ -12,6 +12,7 @@
 #include <memory>
 #include <cstdio>
 #include <cassert>
+#include <cstdint>
 
 namespace NGenFunc
 {
@@ -39,6 +40,9 @@ namespace NGenFunc
 
     // Count the number of occurrences of sub string
     int CountStrOccurrence( const std::string & searchStr, const std::string & subStr );
+
+    // Calculate a CRC-16 (CRC-16/ARC) of a string
+    uint16_t CalcCRC16( const std::string & str );
 
     // Read in a file and return it as a buffer
     std::shared_ptr<char[]> FileToBuf( const std::string & file );

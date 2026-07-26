@@ -13,6 +13,7 @@
 #include <sprite/sprite.h>
 #include <gui/uicontrol.h>
 #include <common/camera.h>
+#include <utilities/genfunc.h>
 
 // Standard lib dependencies
 #include <cmath>
@@ -26,13 +27,14 @@ std::atomic<handle16_t> CNode::m_hAtomicIter = defs_DEFAULT_HANDLE;
 CNode::CNode( uint8_t nodeId, uint8_t parentId ) :
     m_handle(m_hAtomicIter++),
     m_userId(defs_DEFAULT_ID),
+    m_crcName(0),
     m_nodeId(nodeId),
     m_parentId(parentId),
     m_headNode(false),
     m_type(ENodeType::OBJECT),
     m_parent(nullptr),
     m_pPayload(nullptr),
-    m_radius(0.f)
+    m_pBranch(nullptr)
 {
 }
 
@@ -46,6 +48,12 @@ CNode::~CNode()
         delete m_pPayload;
         m_pPayload = nullptr;
     }
+
+    if(m_pBranch != nullptr)
+    {
+        delete m_pBranch;
+        m_pBranch = nullptr;
+    }
 }
 
 /************************************************************************
@@ -56,12 +64,16 @@ void CNode::init()
 {
     m_headNode = true;
 
-    // Compute the accumulated size from all children
-    calcSize( this, m_size );
+    // Leaf nodes have no children — nothing to accumulate
+    if( m_pBranch != nullptr )
+    {
+        // Compute the accumulated size from all children
+        calcSize( this, m_pBranch->size );
 
-    // Calculate the radius from the accumulated size
-    m_radius = std::sqrt( (m_size.w / 2.f) * (m_size.w / 2.f) +
-                          (m_size.h / 2.f) * (m_size.h / 2.f) );
+        // Calculate the radius from the accumulated size
+        m_pBranch->radius = std::sqrt( (m_pBranch->size.w / 2.f) * (m_pBranch->size.w / 2.f) +
+                                       (m_pBranch->size.h / 2.f) * (m_pBranch->size.h / 2.f) );
+    }
 }
 
 /************************************************************************
@@ -87,7 +99,11 @@ bool CNode::addNode( std::unique_ptr<CNode> pNode )
 ************************************************************************/
 void CNode::pushBackNode( std::unique_ptr<CNode> pNode )
 {
-    m_children.push_back( std::move(pNode) );
+    // Allocate the branch data on the first child
+    if( m_pBranch == nullptr )
+        m_pBranch = new SBranch;
+
+    m_pBranch->children.push_back( std::move(pNode) );
 }
 
 /************************************************************************
@@ -96,36 +112,50 @@ void CNode::pushBackNode( std::unique_ptr<CNode> pNode )
 ************************************************************************/
 CNode * CNode::findParent( uint8_t parentId )
 {
-    if( m_nodeId == parentId )
-        return this;
+    CNode * pResult = nullptr;
 
-    for( auto & child : m_children )
+    if( m_nodeId == parentId )
     {
-        CNode * pResult = child->findParent( parentId );
-        if( pResult != nullptr )
-            return pResult;
+        pResult = this;
+    }
+    else if( m_pBranch != nullptr )
+    {
+        auto iter = m_pBranch->children.begin();
+
+        while( pResult == nullptr && iter != m_pBranch->children.end() )
+        {
+            pResult = (*iter)->findParent( parentId );
+            ++iter;
+        }
     }
 
-    return nullptr;
+    return pResult;
 }
 
 /************************************************************************
-*    DESC:  Find a child by name.
+*    DESC:  Find a child by name CRC.
 *           NOTE: This is a recursive function
 ************************************************************************/
-CNode * CNode::findChild( const std::string & name )
+CNode * CNode::findChild( uint16_t crcName )
 {
-    if( name == m_name )
-        return this;
+    CNode * pResult = nullptr;
 
-    for( auto & child : m_children )
+    if( crcName == m_crcName )
     {
-        CNode * pResult = child->findChild( name );
-        if( pResult != nullptr )
-            return pResult;
+        pResult = this;
+    }
+    else if( m_pBranch != nullptr )
+    {
+        auto iter = m_pBranch->children.begin();
+
+        while( pResult == nullptr && iter != m_pBranch->children.end() )
+        {
+            pResult = (*iter)->findChild( crcName );
+            ++iter;
+        }
     }
 
-    return nullptr;
+    return pResult;
 }
 
 /************************************************************************
@@ -139,8 +169,9 @@ void CNode::update()
     else if( m_type == ENodeType::UI_CONTROL )
         static_cast<CUIControl *>(m_pPayload)->update();
 
-    for( auto & child : m_children )
-        child->update();
+    if( m_pBranch != nullptr )
+        for( auto & child : m_pBranch->children )
+            child->update();
 }
 
 /************************************************************************
@@ -150,8 +181,9 @@ void CNode::transform()
 {
     m_pPayload->transform();
 
-    for( auto & child : m_children )
-        child->transform( *m_pPayload );
+    if( m_pBranch != nullptr )
+        for( auto & child : m_pBranch->children )
+            child->transform( *m_pPayload );
 }
 
 /************************************************************************
@@ -161,8 +193,9 @@ void CNode::transform( const CObject & object )
 {
     m_pPayload->transform( object );
 
-    for( auto & child : m_children )
-        child->transform( *m_pPayload );
+    if( m_pBranch != nullptr )
+        for( auto & child : m_pBranch->children )
+            child->transform( *m_pPayload );
 }
 
 /************************************************************************
@@ -176,8 +209,9 @@ void CNode::render( const CCamera & camera )
     else if( m_type == ENodeType::UI_CONTROL )
         static_cast<CUIControl *>(m_pPayload)->render( camera );
 
-    for( auto & child : m_children )
-        child->render( camera );
+    if( m_pBranch != nullptr )
+        for( auto & child : m_pBranch->children )
+            child->render( camera );
 }
 
 /************************************************************************
@@ -194,14 +228,6 @@ handle16_t CNode::getHandle() const
 int CNode::getId() const
 {
     return m_userId;
-}
-
-/************************************************************************
-*    DESC:  Get the node name
-************************************************************************/
-const std::string & CNode::getName() const
-{
-    return m_name;
 }
 
 /************************************************************************
@@ -271,7 +297,7 @@ CNode * CNode::getParent()
 ************************************************************************/
 float CNode::getRadius() const
 {
-    return m_radius;
+    return (m_pBranch != nullptr) ? m_pBranch->radius : 0.f;
 }
 
 /************************************************************************
@@ -279,7 +305,8 @@ float CNode::getRadius() const
 ************************************************************************/
 const CSize<float> & CNode::getSize() const
 {
-    return m_size;
+    static const CSize<float> emptySize;
+    return (m_pBranch != nullptr) ? m_pBranch->size : emptySize;
 }
 
 /************************************************************************
@@ -298,7 +325,7 @@ void CNode::setPayload( CObject * pPayload )
 ************************************************************************/
 void CNode::setName( const std::string & name )
 {
-    m_name = name;
+    m_crcName = NGenFunc::CalcCRC16( name );
 }
 
 /************************************************************************
@@ -322,17 +349,20 @@ void CNode::setType( ENodeType type )
 ************************************************************************/
 void CNode::calcSize( CNode * pNode, CSize<float> & size )
 {
-    for( auto & child : pNode->m_children )
+    if( pNode->m_pBranch != nullptr )
     {
-        const CSize<float> & childSize = child->getSize();
+        for( auto & child : pNode->m_pBranch->children )
+        {
+            const CSize<float> & childSize = child->getSize();
 
-        if( childSize.w > size.w )
-            size.w = childSize.w;
+            if( childSize.w > size.w )
+                size.w = childSize.w;
 
-        if( childSize.h > size.h )
-            size.h = childSize.h;
+            if( childSize.h > size.h )
+                size.h = childSize.h;
 
-        // Recurse into grandchildren
-        calcSize( child.get(), size );
+            // Recurse into grandchildren
+            calcSize( child.get(), size );
+        }
     }
 }
